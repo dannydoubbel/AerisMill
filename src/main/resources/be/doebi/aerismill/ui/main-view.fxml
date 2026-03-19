@@ -7,7 +7,8 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
+<BorderPane fx:id="rootPane"
+            xmlns:fx="http://javafx.com/fxml"
             fx:controller="be.doebi.aerismill.ui.MainController"
             prefWidth="1000.0"
             prefHeight="700.0">
