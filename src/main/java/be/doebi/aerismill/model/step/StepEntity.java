@@ -1,5 +1,41 @@
 package be.doebi.aerismill.model.step;
 
+/*
+STEP roadmap
+
+Phase 1 - absolute skeleton
+[X] 1. CARTESIAN_POINT
+[ ] 2. DIRECTION
+[ ] 3. AXIS2_PLACEMENT_3D
+[ ] 4. VERTEX_POINT
+[ ] 5. LINE
+[ ] 6. CIRCLE
+[ ] 7. EDGE_CURVE
+[ ] 8. ORIENTED_EDGE
+[ ] 9. EDGE_LOOP
+[ ] 10. FACE_BOUND
+[ ] 11. FACE_OUTER_BOUND
+[ ] 12. PLANE
+[ ] 13. CYLINDRICAL_SURFACE
+[ ] 14. ADVANCED_FACE
+[ ] 15. CLOSED_SHELL
+[ ] 16. MANIFOLD_SOLID_BREP
+[ ] 17. ADVANCED_BREP_SHAPE_REPRESENTATION
+
+Phase 2 - wider real-world coverage
+[ ] 18. VECTOR
+[ ] 19. CONICAL_SURFACE
+[ ] 20. TOROIDAL_SURFACE
+[ ] 21. B_SPLINE_CURVE_WITH_KNOTS
+[ ] 22. B_SPLINE_SURFACE_WITH_KNOTS
+[ ] 23. COMPLEX_ENTITY
+
+Phase 3 - product/shape root plumbing
+[ ] 24. SHAPE_REPRESENTATION
+[ ] 25. SHAPE_DEFINITION_REPRESENTATION
+[ ] 26. PRODUCT_DEFINITION_SHAPE
+*/
+
 public class StepEntity {
     private final String id;
     private final String type;
