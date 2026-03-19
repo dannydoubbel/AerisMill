@@ -1,14 +1,19 @@
 package be.doebi.aerismill.io.step;
 
-import be.doebi.aerismill.model.StepModel;
+import be.doebi.aerismill.model.step.StepModel;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 
 public class StepReader {
-    public StepModel read(File file) {
-        System.out.println("Inside IO STEP StepReader");
-        System.out.println("Opening STEP file: " + file.getAbsolutePath());
 
-        return new StepModel(file.getName());
+
+    public String read(File file) {
+        try {
+            return Files.readString(file.toPath());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read STEP file: " + file.getAbsolutePath(), e);
+        }
     }
 }

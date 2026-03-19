@@ -54,7 +54,7 @@ public class MainController {
             if (parentDir != null && parentDir.exists()) {
                 prefs.put(PREF_LAST_STEP_DIR, parentDir.getAbsolutePath());
             }
-            stepImportService.open(selectedFile);
+            System.out.println(stepImportService.open(selectedFile));
         }
     }
 
