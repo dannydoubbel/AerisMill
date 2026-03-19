@@ -59,7 +59,7 @@
                         <!-- Default configuration for running with: mvn clean javafx:run -->
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>be.doebi.aerismill/be.doebi.aerismill.AerisMillApplication</mainClass>
+                            <mainClass>be.doebi.aerismill/be.doebi.aerismill.ui.AerisMillApplication</mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
                             <jlinkImageName>app</jlinkImageName>

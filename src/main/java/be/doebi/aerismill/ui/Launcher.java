@@ -1,4 +1,4 @@
-package be.doebi.aerismill;
+package be.doebi.aerismill.ui;
 
 import javafx.application.Application;
 

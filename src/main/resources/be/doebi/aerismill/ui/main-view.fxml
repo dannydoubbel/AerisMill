@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="be.doebi.aerismill.ui.MainController"
+            prefWidth="1000.0"
+            prefHeight="700.0">
+
+    <top>
+        <MenuBar>
+            <menus>
+                <Menu text="File">
+                    <items>
+                        <MenuItem text="Open STEP..." onAction="#onOpenStepFile"/>
+                        <MenuItem text="Close File" onAction="#onCloseFile"/>
+                        <SeparatorMenuItem />
+                        <MenuItem text="Exit" onAction="#onExitApplication"/>
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+
+    <center>
+        <Pane prefWidth="800.0" prefHeight="600.0"/>
+    </center>
+
+</BorderPane>
