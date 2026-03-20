@@ -10,7 +10,7 @@ Phase 1 - absolute skeleton
 [X] 4. VERTEX_POINT
 [X] 5. LINE
 [X] 6. CIRCLE
-[ ] 7. EDGE_CURVE
+[X] 7. EDGE_CURVE
 [ ] 8. ORIENTED_EDGE
 [ ] 9. EDGE_LOOP
 [ ] 10. FACE_BOUND
