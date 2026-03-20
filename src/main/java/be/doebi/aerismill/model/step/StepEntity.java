@@ -6,7 +6,7 @@ STEP roadmap
 Phase 1 - absolute skeleton
 [X] 1. CARTESIAN_POINT
 [X] 2. DIRECTION
-[ ] 3. AXIS2_PLACEMENT_3D
+[X] 3. AXIS2_PLACEMENT_3D
 [ ] 4. VERTEX_POINT
 [ ] 5. LINE
 [ ] 6. CIRCLE
