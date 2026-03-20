@@ -28,7 +28,7 @@ Phase 2 - wider real-world coverage
 [X] 20. TOROIDAL_SURFACE
 [X] 21. B_SPLINE_CURVE_WITH_KNOTS
 [X] 22. B_SPLINE_SURFACE_WITH_KNOTS
-[ ] 23. COMPLEX_ENTITY
+[X] 23. COMPLEX_ENTITY
 
 Phase 3 - product/shape root plumbing
 [ ] 24. SHAPE_REPRESENTATION

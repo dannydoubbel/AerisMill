@@ -64,6 +64,10 @@ public class StepParserUtils {
         return trimmed.substring(1, trimmed.length() - 1).trim();
     }
 
+    public static List<String> splitTopLevelParameters(String value) {
+        return splitTopLevelGroups(stripOuterParens(value));
+    }
+
     public static List<String> splitTopLevelGroups(String text) {
         List<String> groups = new ArrayList<>();
         StringBuilder current = new StringBuilder();

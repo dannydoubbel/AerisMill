@@ -7,7 +7,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-    public class StepParser {
+import static be.doebi.aerismill.parser.step.StepParserUtils.stripOuterParens;
+
+public class StepParser {
         public StepModel parse(File file, String rawContent) {
             System.out.println("Inside STEP PARSER");
             System.out.println("Parsing STEP file: " + file.getAbsolutePath());
@@ -93,4 +95,8 @@ import java.util.List;
 
             return new StepEntity(id, type, rawParameters);
         }
+
+
+
+
 }

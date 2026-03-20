@@ -42,6 +42,18 @@ class StepParserUtilsTest {
         assertNull(StepParserUtils.parseStepString("$"));
     }
 
+    @Test
+    void splitTopLevelParameters_shouldSplitOnlyTopLevelCommas() {
+        List<String> result = StepParserUtils.splitTopLevelParameters(
+                "( 2, ( #1, #2, #3 ), .UNSPECIFIED., .F., .F. )"
+        );
+
+        assertEquals(
+                List.of("2", "( #1, #2, #3 )", ".UNSPECIFIED.", ".F.", ".F."),
+                result
+        );
+    }
+
 
 
 
