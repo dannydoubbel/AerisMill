@@ -1,13 +1,12 @@
 package be.doebi.aerismill.ui;
 
-import be.doebi.aerismill.io.step.StepReader;
 import be.doebi.aerismill.service.StepImportService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -17,8 +16,24 @@ import java.util.Optional;
 import java.util.prefs.Preferences;
 
 public class MainController {
+    private File currentFile;
+    private Object currentStepFile; // temporary, until your real model type exists
+
+    @FXML
+    private javafx.scene.control.TextArea consoleOutput;
+
+    @FXML
+    private TextField infoField;
+
+
     @FXML
     private BorderPane rootPane;
+
+    @FXML
+    private void initialize() {
+        consoleOutput.setEditable(false);
+        infoField.setEditable(false);
+    }
 
     private static final String PREF_LAST_STEP_DIR = "lastStepDirectory";
     private final Preferences prefs = Preferences.userNodeForPackage(getClass());
@@ -29,6 +44,10 @@ public class MainController {
 
     @FXML
     private void onOpenStepFile(ActionEvent event) {
+        if (hasLoadedFile()) {
+            showWarning("File already loaded", "Please close the current file first.");
+            return;
+        }
         System.out.println("Open STEP clicked");
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open STEP File");
@@ -54,27 +73,52 @@ public class MainController {
             if (parentDir != null && parentDir.exists()) {
                 prefs.put(PREF_LAST_STEP_DIR, parentDir.getAbsolutePath());
             }
-            System.out.println(stepImportService.open(selectedFile));
+
+            try {
+                Object loadedModel = stepImportService.open(selectedFile);
+
+                currentFile = selectedFile;
+                currentStepFile = loadedModel;
+
+                stage.setTitle("AerisMill - " + selectedFile.getName());
+
+                setInfoPath(selectedFile.getAbsolutePath());
+                log(selectedFile.getName() + " loaded successfully.");
+
+                System.out.println(loadedModel);
+            } catch (Exception e) {
+                log("Failed to load " + selectedFile.getName());
+                showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
+                e.printStackTrace();
+            }
         }
     }
 
-    private void openStepFile(File file) {
-        System.out.println("Opening STEP file: " + file.getAbsolutePath());
 
-        Stage stage = (Stage) rootPane.getScene().getWindow();
-        stage.setTitle("AerisMill - " + file.getName());
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("STEP Open");
-        alert.setHeaderText("Selected STEP file");
-        alert.setContentText(file.getAbsolutePath());
-        alert.showAndWait();
-
-        // TODO: real STEP loading logic
-    }
 
     @FXML
-    private void onCloseFile(ActionEvent event) { }
+    private void onCloseFile(ActionEvent event) {
+        if (!hasLoadedFile()) {
+            showInfo("No file loaded", "There is no file to close.");
+            return;
+        }
+
+        boolean confirmed = showConfirm("Close file", "Are you sure you want to close the current file?");
+        if (!confirmed) {
+            return;
+        }
+
+        String closedPath = currentFile.getAbsolutePath();
+
+        currentFile = null;
+        currentStepFile = null;
+
+        clearInfoPath();
+        log("Closed file: " + closedPath);
+
+        Stage stage = (Stage) rootPane.getScene().getWindow();
+        stage.setTitle("AerisMill");
+    }
 
     @FXML
     private void onExitApplication(ActionEvent event) {
@@ -96,5 +140,64 @@ public class MainController {
         if (result.isPresent() && result.get() == yesButton) {
             Platform.exit();
         }
+    }
+
+
+    private boolean showConfirm(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        addAppCss(alert);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == ButtonType.OK;
+    }
+    private boolean hasLoadedFile() {
+        return currentFile != null;
+    }
+
+    private void log(String message) {
+        if (consoleOutput != null) {
+            consoleOutput.appendText(message + System.lineSeparator());
+        } else {
+            System.out.println(message);
+        }
+    }
+
+    private void setInfoPath(String path) {
+        if (infoField != null) {
+            infoField.setText(path);
+        }
+    }
+
+    private void clearInfoPath() {
+        if (infoField != null) {
+            infoField.setText("");
+        }
+    }
+
+    private void showWarning(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        addAppCss(alert);
+        alert.showAndWait();
+    }
+
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        addAppCss(alert);
+        alert.showAndWait();
+    }
+
+    private void addAppCss(Alert alert) {
+        alert.getDialogPane().getStylesheets().add(
+                getClass().getResource("/be/doebi/aerismill/ui/app.css").toExternalForm()
+        );
     }
 }

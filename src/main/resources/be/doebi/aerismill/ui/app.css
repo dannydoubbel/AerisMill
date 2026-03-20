@@ -2,3 +2,12 @@
     -fx-font-family: "Segoe UI";
     -fx-font-size: 20px;
 }
+
+.label {
+    -fx-padding: 4 8 4 8;
+}
+
+#infoLabel {
+    -fx-border-color: #666666;
+    -fx-border-width: 1 0 0 0;
+}
