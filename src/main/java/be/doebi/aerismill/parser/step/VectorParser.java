@@ -9,7 +9,7 @@ import java.util.Map;
 public class VectorParser implements EntityParser<Vector>  {
     @Override
     public Vector parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         Direction orientation = resolveDirection(params.get(1), parsedEntities);
         double magnitude = Double.parseDouble(params.get(2).trim());
 
@@ -22,9 +22,7 @@ public class VectorParser implements EntityParser<Vector>  {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private Direction resolveDirection(String token, Map<String, Object> parsedEntities) {
         if (token == null || token.equals("$")) {

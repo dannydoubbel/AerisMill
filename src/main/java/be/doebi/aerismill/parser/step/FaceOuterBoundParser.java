@@ -9,7 +9,7 @@ import java.util.Map;
 public class FaceOuterBoundParser implements EntityParser<FaceOuterBound>  {
     @Override
     public FaceOuterBound parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         EdgeLoop bound = resolveEdgeLoop(params.get(1), parsedEntities);
         boolean orientation = parseStepBoolean(params.get(2));
 
@@ -22,9 +22,7 @@ public class FaceOuterBoundParser implements EntityParser<FaceOuterBound>  {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private boolean parseStepBoolean(String token) {
         return ".T.".equalsIgnoreCase(token.trim());

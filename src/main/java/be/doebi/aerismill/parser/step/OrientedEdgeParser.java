@@ -11,7 +11,7 @@ import java.util.Map;
 public class OrientedEdgeParser implements EntityParser<OrientedEdge>  {
     @Override
     public OrientedEdge parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         VertexPoint edgeStart = resolveVertexPoint(params.get(1), parsedEntities);
         VertexPoint edgeEnd = resolveVertexPoint(params.get(2), parsedEntities);
         EdgeCurve edgeElement = resolveEdgeCurve(params.get(3), parsedEntities);
@@ -28,9 +28,7 @@ public class OrientedEdgeParser implements EntityParser<OrientedEdge>  {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private boolean parseStepBoolean(String token) {
         return ".T.".equalsIgnoreCase(token.trim());

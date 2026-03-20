@@ -11,7 +11,7 @@ import java.util.Map;
 
 public class EdgeLoopParser implements EntityParser<EdgeLoop>  {
     public EdgeLoop parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         List<OrientedEdge> edgeList = resolveOrientedEdgeList(params.get(1), parsedEntities);
 
         return new EdgeLoop(
@@ -22,9 +22,7 @@ public class EdgeLoopParser implements EntityParser<EdgeLoop>  {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private List<OrientedEdge> resolveOrientedEdgeList(String token, Map<String, Object> parsedEntities) {
         List<OrientedEdge> result = new ArrayList<>();

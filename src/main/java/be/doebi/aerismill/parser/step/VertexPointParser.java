@@ -9,7 +9,7 @@ import java.util.Map;
 public class VertexPointParser implements EntityParser<VertexPoint>  {
     @Override
     public VertexPoint parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         CartesianPoint vertexGeometry = resolveCartesianPoint(params.get(1), parsedEntities);
 
         return new VertexPoint(
@@ -20,9 +20,7 @@ public class VertexPointParser implements EntityParser<VertexPoint>  {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+    String name = StepParserUtils.parseStepString(params.get(0));
 
     private CartesianPoint resolveCartesianPoint(String token, Map<String, Object> parsedEntities) {
         if (token == null || token.equals("$")) {

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 public class AdvancedFaceParser implements EntityParser<AdvancedFace>   {
     public AdvancedFace parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         List<StepEntity> bounds = resolveStepEntityList(params.get(1), parsedEntities);
         StepEntity faceGeometry = resolveStepEntity(params.get(2), parsedEntities);
         boolean sameSense = parseStepBoolean(params.get(3));
@@ -23,9 +23,7 @@ public class AdvancedFaceParser implements EntityParser<AdvancedFace>   {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private boolean parseStepBoolean(String token) {
         return ".T.".equalsIgnoreCase(token.trim());

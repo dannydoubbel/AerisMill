@@ -10,7 +10,7 @@ import java.util.Map;
 public class EdgeCurveParser implements EntityParser<EdgeCurve>  {
     @Override
     public EdgeCurve parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         VertexPoint edgeStart = resolveVertexPoint(params.get(1), parsedEntities);
         VertexPoint edgeEnd = resolveVertexPoint(params.get(2), parsedEntities);
         StepEntity edgeGeometry = resolveStepEntity(params.get(3), parsedEntities);
@@ -27,9 +27,7 @@ public class EdgeCurveParser implements EntityParser<EdgeCurve>  {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private boolean parseStepBoolean(String token) {
         return ".T.".equalsIgnoreCase(token.trim());

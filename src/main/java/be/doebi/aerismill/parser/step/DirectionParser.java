@@ -14,7 +14,7 @@ public class DirectionParser implements EntityParser<Direction> {
             List<String> params,
             Map<String, Object> parsedEntities
     ) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
 
         String ratiosPart = params.get(1).trim();
         int start = ratiosPart.indexOf('(');
@@ -36,18 +36,7 @@ public class DirectionParser implements EntityParser<Direction> {
         );
     }
 
-    private String parseStepString(String value) {
-        if (value == null || value.equals("$")) {
-            return null;
-        }
 
-        String trimmed = value.trim();
-        if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
-            return trimmed.substring(1, trimmed.length() - 1);
-        }
-
-        return trimmed;
-    }
     public static Direction parse(String id, String rawParameters) {
         String trimmed = rawParameters.trim();
 
@@ -55,7 +44,7 @@ public class DirectionParser implements EntityParser<Direction> {
         String namePart = trimmed.substring(0, firstComma).trim();
         String ratiosPart = trimmed.substring(firstComma + 1).trim();
 
-        String name = unquote(namePart);
+        String name = StepParserUtils.parseStepString(namePart);
 
         int start = ratiosPart.indexOf('(');
         int end = ratiosPart.lastIndexOf(')');
@@ -71,11 +60,5 @@ public class DirectionParser implements EntityParser<Direction> {
         return new Direction(id, rawParameters, name, directionRatios);
     }
 
-    private static String unquote(String text) {
-        text = text.trim();
-        if (text.startsWith("'") && text.endsWith("'") && text.length() >= 2) {
-            return text.substring(1, text.length() - 1);
-        }
-        return text;
-    }
+
 }

@@ -9,7 +9,7 @@ import java.util.Map;
 public class ClosedShellParser implements EntityParser<ClosedShell> {
     @Override
     public ClosedShell parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         List<AdvancedFace> cfsFaces = resolveAdvancedFaceList(params.get(1), parsedEntities);
 
         return new ClosedShell(
@@ -20,9 +20,7 @@ public class ClosedShellParser implements EntityParser<ClosedShell> {
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private List<AdvancedFace> resolveAdvancedFaceList(String token, Map<String, Object> parsedEntities) {
         List<AdvancedFace> result = new ArrayList<>();

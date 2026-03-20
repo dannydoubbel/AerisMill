@@ -9,7 +9,7 @@ import java.util.Map;
 public class AdvancedBrepShapeRepresentationParser implements EntityParser<AdvancedBrepShapeRepresentation> {
     @Override
     public AdvancedBrepShapeRepresentation parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         List<StepEntity> items = resolveStepEntityList(params.get(1), parsedEntities);
         StepEntity contextOfItems = resolveStepEntity(params.get(2), parsedEntities);
 
@@ -22,9 +22,7 @@ public class AdvancedBrepShapeRepresentationParser implements EntityParser<Advan
         );
     }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private StepEntity resolveStepEntity(String token, Map<String, Object> parsedEntities) {
         if (token == null || token.equals("$") || token.equals("*")) {

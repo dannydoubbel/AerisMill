@@ -26,7 +26,7 @@ public class CartesianPointParser implements EntityParser<CartesianPoint>  {
         String namePart = trimmed.substring(0, firstComma).trim();
         String coordsPart = trimmed.substring(firstComma + 1).trim();
 
-        String name = unquote(namePart);
+        String name = StepParserUtils.parseStepString(namePart);
 
         int start = coordsPart.indexOf('(');
         int end = coordsPart.lastIndexOf(')');
@@ -42,11 +42,5 @@ public class CartesianPointParser implements EntityParser<CartesianPoint>  {
         return new CartesianPoint(id, rawParameters, name, coordinates);
     }
 
-    private static String unquote(String text) {
-        text = text.trim();
-        if (text.startsWith("'") && text.endsWith("'") && text.length() >= 2) {
-            return text.substring(1, text.length() - 1);
-        }
-        return text;
-    }
+
 }

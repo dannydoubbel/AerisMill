@@ -14,7 +14,7 @@ public class Axis2Placement3DParser implements EntityParser<Axis2Placement3D>  {
 
     @Override
     public Axis2Placement3D parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
-        String name = parseStepString(params.get(0));
+        String name = StepParserUtils.parseStepString(params.get(0));
         CartesianPoint location = resolveCartesianPoint(params.get(1), parsedEntities);
         Direction axis = params.size() > 2 ? resolveDirection(params.get(2), parsedEntities) : null;
         Direction refDirection = params.size() > 3 ? resolveDirection(params.get(3), parsedEntities) : null;
@@ -28,9 +28,7 @@ public class Axis2Placement3DParser implements EntityParser<Axis2Placement3D>  {
                 refDirection
         );    }
 
-    private String parseStepString(String token) {
-        return token.replace("'", "").trim();
-    }
+
 
     private CartesianPoint resolveCartesianPoint(String token, Map<String, Object> parsedEntities) {
         if (token == null || token.equals("$")) {
