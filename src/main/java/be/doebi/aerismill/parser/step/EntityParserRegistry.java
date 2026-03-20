@@ -1,27 +1,6 @@
 package be.doebi.aerismill.parser.step;
 
-import be.doebi.aerismill.parser.step.StepEntityType;
-import be.doebi.aerismill.parser.step.Axis2Placement3DParser;
-import be.doebi.aerismill.parser.step.CartesianPointParser;
-import be.doebi.aerismill.parser.step.CircleParser;
-import be.doebi.aerismill.parser.step.ConicalSurfaceParser;
-import be.doebi.aerismill.parser.step.CylindricalSurfaceParser;
-import be.doebi.aerismill.parser.step.DirectionParser;
-import be.doebi.aerismill.parser.step.LineParser;
-import be.doebi.aerismill.parser.step.PlaneParser;
-import be.doebi.aerismill.parser.step.VectorParser;
-//import be.doebi.aerismill.parser.AdvancedBrepShapeRepresentationParser;
-import be.doebi.aerismill.parser.step.ManifoldSolidBrepParser;
-//import be.doebi.aerismill.parser.step.ProductDefinitionShapeParser;
-//import be.doebi.aerismill.parser.step.ShapeDefinitionRepresentationParser;
-//import be.doebi.aerismill.parser.step.ShapeRepresentationParser;
-import be.doebi.aerismill.parser.step.AdvancedFaceParser;
-import be.doebi.aerismill.parser.step.ClosedShellParser;
-import be.doebi.aerismill.parser.step.EdgeCurveParser;
-import be.doebi.aerismill.parser.step.EdgeLoopParser;
-import be.doebi.aerismill.parser.step.FaceBoundParser;
-import be.doebi.aerismill.parser.step.FaceOuterBoundParser;
-import be.doebi.aerismill.parser.step.OrientedEdgeParser;
+
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -53,6 +32,10 @@ public class EntityParserRegistry {
 
         parsers.put(StepEntityType.MANIFOLD_SOLID_BREP, new ManifoldSolidBrepParser());
         parsers.put(StepEntityType.ADVANCED_BREP_SHAPE_REPRESENTATION, new AdvancedBrepShapeRepresentationParser());
+        parsers.put(StepEntityType.TOROIDAL_SURFACE, new ToroidalSurfaceParser());
+        parsers.put(StepEntityType.B_SPLINE_CURVE_WITH_KNOTS, new BSplineCurveWithKnotsParser());
+        parsers.put(StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, new BSplineSurfaceWithKnotsParser());
+        parsers.put(StepEntityType.COMPLEX_ENTITY, new ComplexEntityParser());
         //parsers.put(StepEntityType.SHAPE_REPRESENTATION, new SHAPEREPRESENTATIONParser());
         //parsers.put(StepEntityType.SHAPE_DEFINITION_REPRESENTATION, new   ShapeDefinitionRepresentationParser());
         //parsers.put(StepEntityType.PRODUCT_DEFINITION_SHAPE, new Product ProductDefinitionShapeParser());
