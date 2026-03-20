@@ -1,11 +1,24 @@
 package be.doebi.aerismill.parser.step;
 
+import be.doebi.aerismill.model.step.StepEntity;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
+import be.doebi.aerismill.model.step.representation.AdvancedBrepShapeRepresentation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public class CartesianPointParser {
+public class CartesianPointParser implements EntityParser<CartesianPoint>  {
+
+    @Override
+    public CartesianPoint parse(
+            StepEntity entity,
+            List<String> params,
+            Map<String, Object> parsedEntities
+    ) {
+        return CartesianPointParser.parse(entity.getId(), entity.getRawParameters());
+    }
+
     public static CartesianPoint parse(String id, String rawParameters) {
         String trimmed = rawParameters.trim();
 

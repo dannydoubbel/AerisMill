@@ -6,7 +6,8 @@ import be.doebi.aerismill.model.step.topology.ClosedShell;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-public class ClosedShellParser {
+public class ClosedShellParser implements EntityParser<ClosedShell> {
+    @Override
     public ClosedShell parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         List<AdvancedFace> cfsFaces = resolveAdvancedFaceList(params.get(1), parsedEntities);

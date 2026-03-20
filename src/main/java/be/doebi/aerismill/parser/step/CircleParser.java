@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 
-public class CircleParser {
+public class CircleParser implements EntityParser<Circle> {
+    @Override
     public Circle parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         Axis2Placement3D position = resolveAxis2Placement3D(params.get(1), parsedEntities);

@@ -7,7 +7,8 @@ import be.doebi.aerismill.model.step.geometry.ConicalSurface;
 import java.util.List;
 import java.util.Map;
 
-public class ConicalSurfaceParser {
+public class ConicalSurfaceParser implements EntityParser<ConicalSurface> {
+    @Override
     public ConicalSurface parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         Axis2Placement3D position = resolveAxis2Placement3D(params.get(1), parsedEntities);

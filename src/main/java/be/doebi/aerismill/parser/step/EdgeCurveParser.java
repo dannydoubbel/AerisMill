@@ -7,7 +7,8 @@ import be.doebi.aerismill.model.step.topology.VertexPoint;
 import java.util.List;
 import java.util.Map;
 
-public class EdgeCurveParser {
+public class EdgeCurveParser implements EntityParser<EdgeCurve>  {
+    @Override
     public EdgeCurve parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         VertexPoint edgeStart = resolveVertexPoint(params.get(1), parsedEntities);

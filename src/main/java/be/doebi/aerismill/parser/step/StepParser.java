@@ -15,14 +15,7 @@ import java.util.List;
             String dataSection = extractDataSection(rawContent);
             List<String> entityChunks = splitEntities(dataSection);
             List<StepEntity> entities = parseEntities(entityChunks);
-            /*
-            for (String chunk : entityChunks) {
-                System.out.println("ENTITY CHUNK: " + chunk);
-            }
-            for(StepEntity stepEntity: entities) {
-                System.out.println(stepEntity.toString());
-            }
-             */
+
             return new StepModel(file, file.getName(), rawContent, entities);
         }
 

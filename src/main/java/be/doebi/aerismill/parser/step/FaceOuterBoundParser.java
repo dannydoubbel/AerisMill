@@ -6,7 +6,8 @@ import be.doebi.aerismill.model.step.topology.FaceOuterBound;
 import java.util.List;
 import java.util.Map;
 
-public class FaceOuterBoundParser {
+public class FaceOuterBoundParser implements EntityParser<FaceOuterBound>  {
+    @Override
     public FaceOuterBound parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         EdgeLoop bound = resolveEdgeLoop(params.get(1), parsedEntities);

@@ -6,7 +6,8 @@ import be.doebi.aerismill.model.step.topology.VertexPoint;
 import java.util.List;
 import java.util.Map;
 
-public class VertexPointParser {
+public class VertexPointParser implements EntityParser<VertexPoint>  {
+    @Override
     public VertexPoint parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         CartesianPoint vertexGeometry = resolveCartesianPoint(params.get(1), parsedEntities);

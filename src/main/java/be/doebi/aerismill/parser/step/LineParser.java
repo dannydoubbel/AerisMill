@@ -9,7 +9,8 @@ import java.util.List;
 import java.util.Map;
 
 
-public class LineParser {
+public class LineParser implements EntityParser<Line>  {
+    @Override
     public Line parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         CartesianPoint point = resolveCartesianPoint(params.get(1), parsedEntities);

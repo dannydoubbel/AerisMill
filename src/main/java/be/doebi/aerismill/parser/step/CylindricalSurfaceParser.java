@@ -6,7 +6,8 @@ import be.doebi.aerismill.model.step.geometry.CylindricalSurface;
 import java.util.List;
 import java.util.Map;
 
-public class CylindricalSurfaceParser {
+public class CylindricalSurfaceParser implements EntityParser<CylindricalSurface> {
+    @Override
     public CylindricalSurface parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         Axis2Placement3D position = resolveAxis2Placement3D(params.get(1), parsedEntities);

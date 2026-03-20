@@ -6,7 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class AdvancedBrepShapeRepresentationParser {
+public class AdvancedBrepShapeRepresentationParser implements EntityParser<AdvancedBrepShapeRepresentation> {
+    @Override
     public AdvancedBrepShapeRepresentation parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         List<StepEntity> items = resolveStepEntityList(params.get(1), parsedEntities);

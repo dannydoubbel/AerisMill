@@ -7,7 +7,8 @@ import be.doebi.aerismill.model.step.topology.ManifoldSolidBrep;
 import java.util.List;
 import java.util.Map;
 
-public class ManifoldSolidBrepParser {
+public class ManifoldSolidBrepParser implements EntityParser<ManifoldSolidBrep>  {
+    @Override
     public ManifoldSolidBrep parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         ClosedShell outer = resolveClosedShell(params.get(1), parsedEntities);

@@ -3,6 +3,7 @@ package be.doebi.aerismill.parser.step;
 import be.doebi.aerismill.model.step.geometry.Direction;
 import org.junit.jupiter.api.Test;
 
+import static be.doebi.aerismill.parser.step.StepEntityType.DIRECTION;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DirectionParserTest {
@@ -15,7 +16,7 @@ class DirectionParserTest {
         Direction direction = DirectionParser.parse(id, rawParameters);
 
         assertEquals("#42", direction.getId());
-        assertEquals("DIRECTION", direction.getType());
+        assertEquals(DIRECTION.getName(), direction.getType());
         assertEquals("NONE", direction.getName());
 
         assertEquals(3, direction.getDirectionRatios().size());

@@ -1,11 +1,12 @@
 package be.doebi.aerismill.parser.step;
 import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.representation.AdvancedBrepShapeRepresentation;
 import be.doebi.aerismill.model.step.topology.AdvancedFace;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-public class AdvancedFaceParser {
+public class AdvancedFaceParser implements EntityParser<AdvancedFace>   {
     public AdvancedFace parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = parseStepString(params.get(0));
         List<StepEntity> bounds = resolveStepEntityList(params.get(1), parsedEntities);

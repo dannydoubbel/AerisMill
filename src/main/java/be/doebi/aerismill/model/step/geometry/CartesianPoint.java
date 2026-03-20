@@ -7,11 +7,15 @@ import java.util.List;
 public class CartesianPoint extends GeometricEntity {
     private final String name;
     private final List<Double> coordinates;
+    private final String id;
+    private final String rawParameters;
 
     public CartesianPoint(String id, String rawParameters, String name, List<Double> coordinates) {
         super(id, "CARTESIAN_POINT", rawParameters);
         this.name = name;
         this.coordinates = coordinates;
+        this.id = id;
+        this.rawParameters = rawParameters;
     }
 
     public String getName() {

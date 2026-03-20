@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class AdvancedBrepShapeRepresentationParserTest {
@@ -23,7 +24,7 @@ class AdvancedBrepShapeRepresentationParserTest {
 
         StepEntity context = new StepEntity(
                 "#20",
-                "GEOMETRIC_REPRESENTATION_CONTEXT",
+                 StepEntityType.GEOMETRIC_REPRESENTATION_CONTEXT.getName(),
                 "( 3 )"
         );
 
@@ -33,7 +34,7 @@ class AdvancedBrepShapeRepresentationParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "ADVANCED_BREP_SHAPE_REPRESENTATION",
+                 StepEntityType.ADVANCED_BREP_SHAPE_REPRESENTATION.getName(),
                 "( 'NONE', ( #10 ), #20 )"
         );
 
