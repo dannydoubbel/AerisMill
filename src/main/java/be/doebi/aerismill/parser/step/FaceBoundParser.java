@@ -23,7 +23,7 @@ public class FaceBoundParser implements EntityParser<FaceBound> {
         );
     }
 
-    String name = StepParserUtils.parseStepString(params.get(0));
+
 
     private boolean parseStepBoolean(String token) {
         return ".T.".equalsIgnoreCase(token.trim());

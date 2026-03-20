@@ -20,7 +20,7 @@ public class VertexPointParser implements EntityParser<VertexPoint>  {
         );
     }
 
-    String name = StepParserUtils.parseStepString(params.get(0));
+
 
     private CartesianPoint resolveCartesianPoint(String token, Map<String, Object> parsedEntities) {
         if (token == null || token.equals("$")) {
