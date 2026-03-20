@@ -24,7 +24,7 @@ Phase 1 - absolute skeleton
 
 Phase 2 - wider real-world coverage
 [X] 18. VECTOR
-[ ] 19. CONICAL_SURFACE
+[X] 19. CONICAL_SURFACE
 [ ] 20. TOROIDAL_SURFACE
 [ ] 21. B_SPLINE_CURVE_WITH_KNOTS
 [ ] 22. B_SPLINE_SURFACE_WITH_KNOTS
