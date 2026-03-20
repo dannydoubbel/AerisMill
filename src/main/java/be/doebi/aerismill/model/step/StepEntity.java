@@ -9,7 +9,7 @@ Phase 1 - absolute skeleton
 [X] 3. AXIS2_PLACEMENT_3D
 [X] 4. VERTEX_POINT
 [X] 5. LINE
-[ ] 6. CIRCLE
+[X] 6. CIRCLE
 [ ] 7. EDGE_CURVE
 [ ] 8. ORIENTED_EDGE
 [ ] 9. EDGE_LOOP
