@@ -8,7 +8,7 @@ Phase 1 - absolute skeleton
 [X] 2. DIRECTION
 [X] 3. AXIS2_PLACEMENT_3D
 [X] 4. VERTEX_POINT
-[ ] 5. LINE
+[X] 5. LINE
 [ ] 6. CIRCLE
 [ ] 7. EDGE_CURVE
 [ ] 8. ORIENTED_EDGE
@@ -23,7 +23,7 @@ Phase 1 - absolute skeleton
 [ ] 17. ADVANCED_BREP_SHAPE_REPRESENTATION
 
 Phase 2 - wider real-world coverage
-[ ] 18. VECTOR
+[X] 18. VECTOR
 [ ] 19. CONICAL_SURFACE
 [ ] 20. TOROIDAL_SURFACE
 [ ] 21. B_SPLINE_CURVE_WITH_KNOTS
