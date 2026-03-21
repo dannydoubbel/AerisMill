@@ -33,7 +33,6 @@ public class MainController {
     public void initialize() {
         AppConsole.setConsoleConsumer(message -> {
             consoleOutput.appendText(message + System.lineSeparator());
-            infoField.setText(message);
         });
     }
 

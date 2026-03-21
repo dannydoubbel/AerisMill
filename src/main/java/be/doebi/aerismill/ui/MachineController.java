@@ -112,6 +112,26 @@ public class MachineController {
         AppConsole.log("[Machine] Precise preset selected.");
     }
 
+    @FXML
+    public void onSpindleStart() {
+        AppConsole.log("[Machine] Spindle start clicked.");
+    }
+
+    @FXML
+    public void onSpindleStop() {
+        AppConsole.log("[Machine] Spindle stop clicked.");
+    }
+
+    @FXML
+    public void onSpindleSpeedDown() {
+        AppConsole.log("[Machine] Spindle speed down clicked.");
+    }
+
+    @FXML
+    public void onSpindleSpeedUp() {
+        AppConsole.log("[Machine] Spindle speed up clicked.");
+    }
+
     private void refreshAvailablePorts() {
         SerialPort[] ports = SerialPort.getCommPorts();
         List<String> portNames = new ArrayList<>();

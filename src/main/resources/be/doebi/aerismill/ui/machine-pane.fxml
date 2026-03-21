@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -264,6 +265,33 @@
                                     </children>
                                 </HBox>
 
+                                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                                    <children>
+                                        <Label text="Spindle" />
+
+                                        <Button text="Start"
+                                                onAction="#onSpindleStart" />
+
+                                        <Button text="Stop"
+                                                onAction="#onSpindleStop" />
+
+                                        <Region HBox.hgrow="ALWAYS" />
+
+                                        <Label text="RPM" />
+
+                                        <Button text="−"
+                                                onAction="#onSpindleSpeedDown" />
+
+                                        <TextField fx:id="spindleSpeedField"
+                                                   text="12000"
+                                                   prefWidth="80.0" />
+
+                                        <Button text="+"
+                                                onAction="#onSpindleSpeedUp" />
+                                    </children>
+                                </HBox>
+
+
                                 <Separator />
 
                                 <!-- Bottom settings row -->
@@ -281,7 +309,10 @@
                                             <HBox spacing="4.0">
                                                 <children>
                                                     <Button text="−" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
-                                                    <Button text="5" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <TextField fx:id="xyMoveField"
+                                                               text="5"
+                                                               alignment="CENTER"
+                                                               prefWidth="70.0" />
                                                     <Button text="+" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                 </children>
                                             </HBox>
@@ -295,7 +326,12 @@
                                             <HBox spacing="4.0">
                                                 <children>
                                                     <Button text="−" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
-                                                    <Button text="2" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+
+                                                    <TextField fx:id="zMoveField"
+                                                               text="2"
+                                                               alignment="CENTER"
+                                                               prefWidth="70.0" />
+
                                                     <Button text="+" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                 </children>
                                             </HBox>
@@ -309,7 +345,10 @@
                                             <HBox spacing="4.0">
                                                 <children>
                                                     <Button text="−" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
-                                                    <Button text="3000" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <TextField fx:id="feedRateField"
+                                                               text="3000"
+                                                               alignment="CENTER"
+                                                               prefWidth="70" />
                                                     <Button text="+" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                 </children>
                                             </HBox>
