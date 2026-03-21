@@ -3,15 +3,17 @@
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.control.SeparatorMenuItem?>
-
-<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+
 <BorderPane fx:id="rootPane"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="be.doebi.aerismill.ui.MainController"
@@ -36,7 +38,45 @@
     <center>
         <SplitPane orientation="VERTICAL" dividerPositions="0.75">
             <items>
-                <Pane fx:id="mainWorkArea" />
+
+                <SplitPane orientation="HORIZONTAL" dividerPositions="0.30">
+                    <items>
+
+                        <TabPane fx:id="leftTabPane"
+                                 tabClosingPolicy="UNAVAILABLE"
+                                 minWidth="260.0"
+                                 prefWidth="320.0">
+
+                            <tabs>
+                                <Tab text="Machine">
+                                    <content>
+                                        <fx:include source="machine-pane.fxml"/>
+                                    </content>
+                                </Tab>
+
+                                <Tab text="Tool">
+                                    <content>
+                                        <AnchorPane>
+                                            <!-- Placeholder for future tool controls -->
+                                        </AnchorPane>
+                                    </content>
+                                </Tab>
+
+                                <Tab text="Setup">
+                                    <content>
+                                        <AnchorPane>
+                                            <!-- Placeholder for future setup/job controls -->
+                                        </AnchorPane>
+                                    </content>
+                                </Tab>
+                            </tabs>
+
+                        </TabPane>
+
+                        <Pane fx:id="mainWorkArea" />
+
+                    </items>
+                </SplitPane>
 
                 <VBox spacing="2">
                     <TextArea fx:id="consoleOutput"
@@ -50,6 +90,7 @@
                                prefHeight="26.0"
                                maxHeight="26.0" />
                 </VBox>
+
             </items>
         </SplitPane>
     </center>
