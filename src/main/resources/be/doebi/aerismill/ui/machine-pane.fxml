@@ -129,6 +129,7 @@
 
                                     <!-- Z -->
                                     <Button text="Go To"
+                                            onAction="#onGoToPosition"
                                             GridPane.rowIndex="2"
                                             GridPane.columnIndex="0"
                                             maxWidth="1.7976931348623157E308"/>
@@ -154,8 +155,10 @@
                                           GridPane.rowSpan="3">
                                         <children>
                                             <Button text="Zero All"
+                                                    onAction="#onZeroAll"
                                                     maxWidth="1.7976931348623157E308"/>
                                             <Button text="Go XY0"
+                                                    onAction="#onGoXY0"
                                                     maxWidth="1.7976931348623157E308"/>
                                             <Button text="Go To..."
                                                     maxWidth="1.7976931348623157E308"/>
@@ -198,37 +201,44 @@
                                             </rowConstraints>
 
                                             <Button text="Y+"
+                                                    onAction="#onJogYPlus"
                                                     GridPane.rowIndex="0"
                                                     GridPane.columnIndex="1"
                                                     maxWidth="1.7976931348623157E308"
                                                     maxHeight="1.7976931348623157E308"/>
                                             <Button text="X-"
+                                                    onAction="#onJogXMinus"
                                                     GridPane.rowIndex="1"
                                                     GridPane.columnIndex="0"
                                                     maxWidth="1.7976931348623157E308"
                                                     maxHeight="1.7976931348623157E308"/>
                                             <Button text="Stop"
+                                                    onAction="#onStopJog"
                                                     GridPane.rowIndex="1"
                                                     GridPane.columnIndex="1"
                                                     maxWidth="1.7976931348623157E308"
                                                     maxHeight="1.7976931348623157E308"/>
                                             <Button text="X+"
+                                                    onAction="#onJogXPlus"
                                                     GridPane.rowIndex="1"
                                                     GridPane.columnIndex="2"
                                                     maxWidth="1.7976931348623157E308"
                                                     maxHeight="1.7976931348623157E308"/>
                                             <Button text="Y-"
+                                                    onAction="#onJogYMinus"
                                                     GridPane.rowIndex="2"
                                                     GridPane.columnIndex="1"
                                                     maxWidth="1.7976931348623157E308"
                                                     maxHeight="1.7976931348623157E308"/>
 
                                             <Button text="Z+"
+                                                    onAction="#onJogZPlus"
                                                     GridPane.rowIndex="0"
                                                     GridPane.columnIndex="2"
                                                     maxWidth="1.7976931348623157E308"
                                                     maxHeight="1.7976931348623157E308"/>
                                             <Button text="Z-"
+                                                    onAction="#onJogZMinus"
                                                     GridPane.rowIndex="2"
                                                     GridPane.columnIndex="2"
                                                     maxWidth="1.7976931348623157E308"
@@ -239,10 +249,13 @@
                                         <VBox spacing="10.0" prefWidth="110.0">
                                             <children>
                                                 <Button text="Rapid"
+                                                        onAction="#onPresetRapid"
                                                         maxWidth="1.7976931348623157E308"/>
                                                 <Button text="Normal"
+                                                        onAction="#onPresetNormal"
                                                         maxWidth="1.7976931348623157E308"/>
                                                 <Button text="Precise"
+                                                        onAction="#onPresetPrecise"
                                                         maxWidth="1.7976931348623157E308"/>
                                                 <Region VBox.vgrow="ALWAYS"/>
                                             </children>

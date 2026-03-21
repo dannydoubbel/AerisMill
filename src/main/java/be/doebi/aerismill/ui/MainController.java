@@ -30,9 +30,11 @@ public class MainController {
     private BorderPane rootPane;
 
     @FXML
-    private void initialize() {
-        consoleOutput.setEditable(false);
-        infoField.setEditable(false);
+    public void initialize() {
+        AppConsole.setConsoleConsumer(message -> {
+            consoleOutput.appendText(message + System.lineSeparator());
+            infoField.setText(message);
+        });
     }
 
     private static final String PREF_LAST_STEP_DIR = "lastStepDirectory";
