@@ -16,13 +16,15 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns:fx="http://javafx.com/fxml"
+<BorderPane fx:id="machineRootPane"
+            id="machineRootPane"
+            xmlns:fx="http://javafx.com/fxml"
             fx:controller="be.doebi.aerismill.ui.MachineController"
             prefWidth="320.0"
             prefHeight="500.0">
 
     <center>
-        <VBox spacing="8.0">
+        <VBox  spacing="8.0">
             <padding>
                 <Insets top="8.0" right="8.0" bottom="8.0" left="8.0"/>
             </padding>
@@ -49,6 +51,11 @@
                         <Button fx:id="disconnectButton"
                                 text="Disconnect"
                                 onAction="#onDisconnectMachine" />
+                        <Label text="baud" />
+
+                        <ComboBox fx:id="baudRateComboBox"
+                                  prefWidth="140.0"
+                                  HBox.hgrow="NEVER" />
 
                         <Region HBox.hgrow="ALWAYS" />
 
@@ -59,7 +66,8 @@
                 </HBox>
 
                 <!-- Resizable main machine sections -->
-                <SplitPane orientation="VERTICAL"
+                <SplitPane fx:id="machineVerticalSplitPane"
+                           orientation="VERTICAL"
                            dividerPositions="0.38"
                            VBox.vgrow="ALWAYS">
                     <items>

@@ -36,10 +36,10 @@
     </top>
 
     <center>
-        <SplitPane orientation="VERTICAL" dividerPositions="0.75">
+        <SplitPane fx:id="mainVerticalSplitPane" orientation="VERTICAL" dividerPositions="0.75">
             <items>
 
-                <SplitPane orientation="HORIZONTAL" dividerPositions="0.30">
+                <SplitPane fx:id="mainHorizontalSplitPane" orientation="HORIZONTAL" dividerPositions="0.30">
                     <items>
 
                         <TabPane fx:id="leftTabPane"
@@ -48,9 +48,9 @@
                                  prefWidth="320.0">
 
                             <tabs>
-                                <Tab text="Machine">
+                                <Tab fx:id="machineTab" text="Machine">
                                     <content>
-                                        <fx:include source="machine-pane.fxml"/>
+                                        <fx:include fx:id="machinePane"  source="machine-pane.fxml"/>
                                     </content>
                                 </Tab>
 

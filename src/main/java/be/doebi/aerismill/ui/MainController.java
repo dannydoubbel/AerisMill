@@ -1,6 +1,7 @@
 package be.doebi.aerismill.ui;
 
 import be.doebi.aerismill.service.StepImportService;
+import be.doebi.aerismill.service.UIStateService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -20,6 +21,11 @@ public class MainController {
     private Object currentStepFile; // temporary, until your real model type exists
 
     @FXML
+    private MachineController machinePaneController;
+
+
+
+    @FXML
     private javafx.scene.control.TextArea consoleOutput;
 
     @FXML
@@ -31,8 +37,13 @@ public class MainController {
 
     @FXML
     public void initialize() {
+
         AppConsole.setConsoleConsumer(message -> {
             consoleOutput.appendText(message + System.lineSeparator());
+        });
+        Platform.runLater(() -> {
+            // uiStateService.restore...
+            UIStateService.getInstance().restoreLayoutState(rootPane);
         });
     }
 
@@ -123,6 +134,14 @@ public class MainController {
 
     @FXML
     private void onExitApplication(ActionEvent event) {
+        System.out.println("Saving rootPane");
+        UIStateService.getInstance().saveLayoutState(rootPane);
+        System.out.println("Rootpane saved");
+        System.out.println("Machinecontroller is null : " + (machinePaneController == null));
+        System.out.println("Saving machinePane");
+        machinePaneController.saveUiState();
+        System.out.println("Saving done");
+
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirm Exit");
         alert.setHeaderText("Really wanna quit?");

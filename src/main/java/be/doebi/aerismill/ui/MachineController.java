@@ -1,18 +1,28 @@
 package be.doebi.aerismill.ui;
 
+import be.doebi.aerismill.service.UIStateService;
 import com.fazecast.jSerialComm.SerialPort;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MachineController {
+    @FXML
+    private BorderPane machineRootPane;
 
     @FXML
     private ComboBox<String> portComboBox;
+
+    @FXML
+    private ComboBox<String> baudRateComboBox;
 
     @FXML
     private Label machineStatusLabel;
@@ -20,7 +30,15 @@ public class MachineController {
     @FXML
     public void initialize() {
         refreshAvailablePorts();
+        addBaudRates();
+        Platform.runLater(() -> {
+            // uiStateService.restore...
+            restoreUiState();
+        });
+
     }
+
+
 
     @FXML
     public void onRefreshPorts() {
@@ -132,6 +150,8 @@ public class MachineController {
         AppConsole.log("[Machine] Spindle speed up clicked.");
     }
 
+
+
     private void refreshAvailablePorts() {
         SerialPort[] ports = SerialPort.getCommPorts();
         List<String> portNames = new ArrayList<>();
@@ -156,4 +176,24 @@ public class MachineController {
             AppConsole.log("[Machine] No serial ports found.");
         }
     }
+    private void addBaudRates() {
+        List<String> baudRates = Arrays.asList(
+                "9600",
+                "19200",
+                "38400",
+                "57600",
+                "115200",
+                "230400");
+        baudRateComboBox.setItems(FXCollections.observableArrayList(baudRates));
+        baudRateComboBox.setValue("115200");
+    }
+
+    public void saveUiState() {
+        UIStateService.getInstance().saveLayoutState(machineRootPane);
+    }
+
+    public void restoreUiState() {
+        UIStateService.getInstance().restoreLayoutState(machineRootPane);
+    }
+
 }
