@@ -137,9 +137,14 @@ public class MainController {
         System.out.println("Saving rootPane");
         UIStateService.getInstance().saveLayoutState(rootPane);
         System.out.println("Rootpane saved");
+
         System.out.println("Machinecontroller is null : " + (machinePaneController == null));
         System.out.println("Saving machinePane");
-        machinePaneController.saveUiState();
+
+        if (machinePaneController != null) {
+            machinePaneController.saveUiState();
+        }
+
         System.out.println("Saving done");
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -158,6 +163,10 @@ public class MainController {
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == yesButton) {
+            if (machinePaneController != null) {
+                machinePaneController.shutdownMachineConnection();
+            }
+
             Platform.exit();
         }
     }
@@ -173,6 +182,10 @@ public class MainController {
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }
+
+
+
+
     private boolean hasLoadedFile() {
         return currentFile != null;
     }

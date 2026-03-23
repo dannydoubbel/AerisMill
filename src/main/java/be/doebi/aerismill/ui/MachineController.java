@@ -122,7 +122,18 @@ public class MachineController {
         AppConsole.log("[Machine] Disconnect clicked.");
     }
 
-
+    public void shutdownMachineConnection() {
+        try {
+            if (machineControlService != null && machineControlService.isConnected()) {
+                AppConsole.log("[Machine] Closing serial connection before exit...");
+                machineControlService.disconnect();
+                machineStatusLabel.setText("Disconnected");
+            }
+        } catch (Exception e) {
+            AppConsole.log("[Machine] Error while closing serial connection on exit: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
 
 
