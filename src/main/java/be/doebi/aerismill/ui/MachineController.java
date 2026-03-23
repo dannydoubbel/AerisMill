@@ -50,6 +50,9 @@ public class MachineController {
     private Button buttonManualSerialSend;
 
     @FXML
+    private Button homeMachineButton;
+
+    @FXML
     public void onManualSerialSend() {
         machineControlService.sendCommand("onManualSerialSend",textManualSerialSend.getText());
         textManualSerialSend.setText("");
@@ -61,6 +64,7 @@ public class MachineController {
         addBaudRates();
         setupSpindleSpeedField();
         buttonManualSerialSend.setDisable(true);
+        homeMachineButton.setDisable(true);
         Platform.runLater(() -> {
             // uiStateService.restore...
             restoreUiState();
@@ -98,15 +102,18 @@ public class MachineController {
 
             if (connected) {
                 buttonManualSerialSend.setDisable(false);
+                homeMachineButton.setDisable(false);
                 machineStatusLabel.setText("Connected: " + selectedPort);
                 AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate);
             } else {
                 buttonManualSerialSend.setDisable(true);
+                homeMachineButton.setDisable(true);
                 machineStatusLabel.setText("Connection failed");
                 AppConsole.log("[Machine] Failed to connect to " + selectedPort);
             }
         } catch (Exception e) {
             buttonManualSerialSend.setDisable(true);
+            homeMachineButton.setDisable(true);
             machineStatusLabel.setText("Connect error");
             AppConsole.log("[Machine] Connect error: " + e.getMessage());
             e.printStackTrace();
@@ -118,6 +125,7 @@ public class MachineController {
         machineControlService.disconnect();
         spindleRunning = false;
         buttonManualSerialSend.setDisable(true);
+        homeMachineButton.setDisable(true);
         machineStatusLabel.setText("Disconnected");
         AppConsole.log("[Machine] Disconnect clicked.");
     }
@@ -135,6 +143,20 @@ public class MachineController {
         }
     }
 
+
+
+    @FXML
+    public void onHomeMachine() {
+        try {
+            machineControlService.sendCommand("onHomeMachine","$H");
+            machineStatusLabel.setText("Homing...");
+            AppConsole.log("[Machine] Home machine clicked.");
+        } catch (Exception e) {
+            machineStatusLabel.setText("Home failed");
+            AppConsole.log("[Machine] Home machine error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
 
 
 

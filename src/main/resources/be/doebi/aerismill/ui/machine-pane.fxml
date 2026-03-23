@@ -171,6 +171,11 @@
                                                     maxWidth="1.7976931348623157E308"/>
                                             <Button text="Go To..."
                                                     maxWidth="1.7976931348623157E308"/>
+                                            <Region prefHeight="10.0" />
+                                            <Button fx:id="homeMachineButton"
+                                                    text="Home Machine"
+                                                    onAction="#onHomeMachine"
+                                                    maxWidth="1.7976931348623157E308"/>
                                             <Region VBox.vgrow="ALWAYS"/>
                                         </children>
                                     </VBox>
