@@ -6,6 +6,7 @@ import com.fazecast.jSerialComm.SerialPort;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
@@ -23,6 +24,10 @@ public class MachineController {
 
     private boolean spindleRunning = false;
 
+    private boolean spindleSpeedDirty = false;
+
+    private boolean updatingSpindleFieldProgrammatically = false;
+
     @FXML
     private BorderPane machineRootPane;
 
@@ -39,10 +44,23 @@ public class MachineController {
     private TextField spindleSpeedField;
 
     @FXML
+    private TextField textManualSerialSend;
+
+    @FXML
+    private Button buttonManualSerialSend;
+
+    @FXML
+    public void onManualSerialSend() {
+        machineControlService.sendCommand("onManualSerialSend",textManualSerialSend.getText());
+        textManualSerialSend.setText("");
+    }
+
+    @FXML
     public void initialize() {
         refreshAvailablePorts();
         addBaudRates();
         setupSpindleSpeedField();
+        buttonManualSerialSend.setDisable(true);
         Platform.runLater(() -> {
             // uiStateService.restore...
             restoreUiState();
@@ -79,13 +97,16 @@ public class MachineController {
             boolean connected = machineControlService.connect(selectedPort, baudRate);
 
             if (connected) {
+                buttonManualSerialSend.setDisable(false);
                 machineStatusLabel.setText("Connected: " + selectedPort);
                 AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate);
             } else {
+                buttonManualSerialSend.setDisable(true);
                 machineStatusLabel.setText("Connection failed");
                 AppConsole.log("[Machine] Failed to connect to " + selectedPort);
             }
         } catch (Exception e) {
+            buttonManualSerialSend.setDisable(true);
             machineStatusLabel.setText("Connect error");
             AppConsole.log("[Machine] Connect error: " + e.getMessage());
             e.printStackTrace();
@@ -96,20 +117,12 @@ public class MachineController {
     public void onDisconnectMachine() {
         machineControlService.disconnect();
         spindleRunning = false;
+        buttonManualSerialSend.setDisable(true);
         machineStatusLabel.setText("Disconnected");
         AppConsole.log("[Machine] Disconnect clicked.");
     }
 
-    @FXML
-    public void onTestS500() {
-        try {
-            machineControlService.sendCommand("S500");
-            AppConsole.log("[Machine] Test S500 sent.");
-        } catch (Exception e) {
-            AppConsole.log("[Machine] Test S500 failed: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
+
 
 
 
@@ -219,13 +232,27 @@ public class MachineController {
     @FXML
     public void onSpindleSpeedDown() {
         updateSpindleSpeed(-RPM_STEP);
-        AppConsole.log("[Machine] Spindle speed down clicked.");
+        spindleSpeedDirty = false;
+        spindleSpeedField.setStyle("-fx-font-style: normal;");
     }
 
     @FXML
     public void onSpindleSpeedUp() {
         updateSpindleSpeed(RPM_STEP);
-        AppConsole.log("[Machine] Spindle speed up clicked.");
+        spindleSpeedDirty = false;
+        spindleSpeedField.setStyle("-fx-font-style: normal;");
+    }
+
+    @FXML
+    public void onSpindleSpeedFieldChange() {
+        try {
+            updateSpindleSpeed(0);   // uses current field value
+            spindleSpeedDirty = false;
+            spindleSpeedField.setStyle("-fx-font-style: normal;");
+            AppConsole.log("[Machine] Spindle speed applied from text field.");
+        } catch (Exception e) {
+            AppConsole.log("[Machine] Failed to apply spindle speed from text field: " + e.getMessage());
+        }
     }
 
     private final MachineControlService machineControlService = new MachineControlService();
@@ -269,44 +296,16 @@ public class MachineController {
     }
 
     private void setupSpindleSpeedField() {
-        spindleSpeedField.textProperty().addListener((observable, oldValue, newValue) -> {
-            if (newValue == null || newValue.isBlank()) {
+        spindleSpeedField.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (updatingSpindleFieldProgrammatically) {
                 return;
             }
 
-            String digitsOnly = newValue.replaceAll("[^\\d]", "");
-            if (!digitsOnly.equals(newValue)) {
-                spindleSpeedField.setText(digitsOnly);
-                return;
-            }
-
-            try {
-                int rpm = Integer.parseInt(digitsOnly);
-                int clamped = clampRpm(rpm);
-
-                if (rpm != clamped) {
-                    spindleSpeedField.setText(String.valueOf(clamped));
-                    return;
-                }
-
-                if (spindleRunning && machineControlService.isConnected()) {
-                    machineControlService.setSpindleSpeed(clamped);
-                    machineStatusLabel.setText("Spindle ON (" + clamped + " RPM)");
-                    AppConsole.log("[Machine] RPM changed live to " + clamped);
-                }
-
-            } catch (NumberFormatException ignored) {
-                // user is still typing, let them breathe
-            }
+            spindleSpeedDirty = true;
+            spindleSpeedField.setStyle("-fx-font-style: italic;");
         });
 
-        spindleSpeedField.focusedProperty().addListener((obs, oldFocused, newFocused) -> {
-            if (!newFocused) {
-                normalizeSpindleSpeedField();
-            }
-        });
-
-        spindleSpeedField.setOnAction(event -> normalizeSpindleSpeedField());
+        spindleSpeedField.setOnAction(event -> onSpindleSpeedFieldChange());
     }
 
     private void normalizeSpindleSpeedField() {
@@ -346,8 +345,9 @@ public class MachineController {
 
         spindleSpeedField.setText(String.valueOf(updated));
 
-        if (spindleRunning && machineControlService.isConnected()) {
-            machineStatusLabel.setText("Spindle ON (" + updated + " RPM)");
+        if (machineControlService.isConnected()) {
+            machineStatusLabel.setText("Spindle RPM (" + updated + " RPM)");
+            machineControlService.sendCommand("updateSpindleSpeed","s"+updated);
             AppConsole.log("[Machine] RPM updated to " + updated);
         } else {
             machineStatusLabel.setText("RPM set to " + updated);

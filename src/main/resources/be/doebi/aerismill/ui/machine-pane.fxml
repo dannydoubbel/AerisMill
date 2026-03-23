@@ -291,6 +291,7 @@
                                                 onAction="#onSpindleSpeedDown" />
 
                                         <TextField fx:id="spindleSpeedField"
+                                                   onAction="#onSpindleSpeedFieldChange"
                                                    text="12000"
                                                    prefWidth="80.0" />
 
@@ -370,6 +371,29 @@
 
                     </items>
                 </SplitPane>
+
+                <SplitPane>
+                    <items>
+                        <VBox>
+                            <children>
+                                <HBox>
+                                    <Label>Serial send: </Label>
+                                    <TextField fx:id="textManualSerialSend"
+                                            text=""
+                                            prefWidth="70.0"
+                                            HBox.hgrow="ALWAYS"/>
+                                    <Button fx:id="buttonManualSerialSend"
+                                            text="Send"
+                                            maxWidth="1.7976931348623157E308"
+                                            HBox.hgrow="NEVER"
+                                            onAction="#onManualSerialSend"/>
+                                </HBox>
+                            </children>
+                        </VBox>
+                    </items>
+                </SplitPane>
+
+
 
             </children>
         </VBox>

@@ -61,29 +61,29 @@ public class MachineControlService {
 
     public void spindleStart(int rpm) {
         ensureConnected();
-        sendCommand("M3");
+        sendCommand("spindleStart","M3");
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        sendCommand("S" + rpm);
+        sendCommand("spindleStart" , "S" + rpm);
     }
 
     public void spindleStop() {
         ensureConnected();
-        sendCommand("M5");
+        sendCommand("spindleStop","M5");
     }
 
     public void setSpindleSpeed(int rpm) {
         ensureConnected();
-        sendCommand("S" + rpm);
+        sendCommand("setSpindleSpeed","s" + rpm);
         System.out.println("s" + rpm);
     }
 
-    public void sendCommand(String command) {
+    public void sendCommand(String demander,String command) {
         ensureConnected();
-        AppConsole.log("[MachineService] TX >>> " + command);
+        AppConsole.log("[MachineService] " + demander + " TX >>> " + command);
         sendRaw(command + "\r\n");
     }
 
@@ -92,7 +92,9 @@ public class MachineControlService {
             OutputStream outputStream = activePort.getOutputStream();
             outputStream.write(raw.getBytes(StandardCharsets.UTF_8));
             outputStream.flush();
+            AppConsole.log("RAW  "+raw);
         } catch (IOException e) {
+            AppConsole.log("Failed to write to serial port" + e);
             throw new RuntimeException("Failed to write to serial port", e);
         }
     }
