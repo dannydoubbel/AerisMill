@@ -2,6 +2,7 @@ package be.doebi.aerismill.service;
 
 import be.doebi.aerismill.machine.GrblStatusParser;
 import be.doebi.aerismill.machine.MachineStatus;
+import be.doebi.aerismill.machine.connection.BaudRate;
 import be.doebi.aerismill.ui.AppConsole;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
@@ -122,10 +123,14 @@ public class MachineControlService {
         return true;
     }
     */
-public boolean connect(String portName, int baudRate) {
+    private int parseBaudRate(BaudRate selectedBaud) {
+        return selectedBaud.getValue();
+    }
+
+    public boolean connect(String portName, BaudRate baudRate) {
     disconnect();
 
-    activePort = createConfiguredPort(portName, baudRate);
+    activePort = createConfiguredPort(portName, parseBaudRate(baudRate));
 
     if (!openActivePort(portName, baudRate)) {
         return false;
@@ -146,7 +151,7 @@ public boolean connect(String portName, int baudRate) {
         return port;
     }
 
-    private boolean openActivePort(String portName, int baudRate) {
+    private boolean openActivePort(String portName, BaudRate baudRate) {
         boolean opened = activePort.openPort();
 
         if (!opened) {
@@ -155,7 +160,7 @@ public boolean connect(String portName, int baudRate) {
             return false;
         }
 
-        AppConsole.log("[MachineService] Port opened: " + portName + " @ " + baudRate);
+        AppConsole.log("[MachineService] Port opened: " + portName + " @ " + baudRate.getValue());
         return true;
     }
 

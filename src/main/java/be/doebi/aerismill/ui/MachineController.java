@@ -132,11 +132,10 @@ public class MachineController {
         }
 
         try {
-            int baudRate = parseBaudRate(selectedBaud);
-            boolean connected = machineControlService.connect(selectedPort, baudRate);
+            boolean connected = machineControlService.connect(selectedPort,selectedBaud);
 
             if (connected) {
-                handleSuccessfulConnection(selectedPort, baudRate);
+                handleSuccessfulConnection(selectedPort, selectedBaud);
             } else {
                 handleFailedConnection(selectedPort);
             }
@@ -159,15 +158,13 @@ public class MachineController {
         return true;
     }
 
-    private int parseBaudRate(BaudRate selectedBaud) {
-        return selectedBaud.getValue();
-    }
 
-    private void handleSuccessfulConnection(String selectedPort, int baudRate) {
+
+    private void handleSuccessfulConnection(String selectedPort, BaudRate baudRate) {
         homeMachineButton.setDisable(false);
         machineStatusLabel.setText("Connected: " + selectedPort);
         droPollingService.startDroPolling();
-        AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate);
+        AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate.getValue());
     }
 
     private void handleFailedConnection(String selectedPort) {
