@@ -1,6 +1,7 @@
 package be.doebi.aerismill.ui;
 
 import be.doebi.aerismill.machine.MachineStatus;
+import be.doebi.aerismill.machine.connection.BaudRate;
 import be.doebi.aerismill.service.DroPollingService;
 import be.doebi.aerismill.service.UIStateService;
 import be.doebi.aerismill.service.MachineControlService;
@@ -15,7 +16,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.control.TextField;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -39,7 +39,7 @@ public class MachineController {
     private ComboBox<String> portComboBox;
 
     @FXML
-    private ComboBox<String> baudRateComboBox;
+    private ComboBox<BaudRate> baudRateComboBox;
 
     @FXML private Label xMachineLabel;
     @FXML private Label xWorkLabel;
@@ -116,46 +116,71 @@ public class MachineController {
     @FXML
     public void onConnectMachine() {
         String selectedPort = portComboBox.getValue();
-        String selectedBaud = baudRateComboBox.getValue();
+        BaudRate selectedBaud = baudRateComboBox.getValue();
 
-        if (selectedPort == null || selectedPort.isBlank()) {
-            machineStatusLabel.setText("No port selected");
-            AppConsole.log("[Machine] Connect clicked, but no port selected.");
-            droPollingService.stopDroPolling();
-            return;
-        }
-
-        if (selectedBaud == null || selectedBaud.isBlank()) {
-            machineStatusLabel.setText("No baud rate selected");
-            AppConsole.log("[Machine] Connect clicked, but no baud rate selected.");
-            droPollingService.stopDroPolling();
+        if (!validateConnectionInput(selectedPort, selectedBaud)) {
             return;
         }
 
         try {
-            int baudRate = Integer.parseInt(selectedBaud);
+            int baudRate = parseBaudRate(selectedBaud);
             boolean connected = machineControlService.connect(selectedPort, baudRate);
 
             if (connected) {
-                homeMachineButton.setDisable(false);
-                machineStatusLabel.setText("Connected: " + selectedPort);
-                droPollingService.startDroPolling();
-                AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate);
+                handleSuccessfulConnection(selectedPort, baudRate);
             } else {
-
-                homeMachineButton.setDisable(true);
-                machineStatusLabel.setText("Connection failed");
-                droPollingService.stopDroPolling();
-                AppConsole.log("[Machine] Failed to connect to " + selectedPort);
+                handleFailedConnection(selectedPort);
             }
         } catch (Exception e) {
-
-            homeMachineButton.setDisable(true);
-            machineStatusLabel.setText("Connect error");
-            droPollingService.stopDroPolling();
-            AppConsole.log("[Machine] Connect error: " + e.getMessage());
-            e.printStackTrace();
+            handleConnectionError(e);
         }
+    }
+
+    private boolean validateConnectionInput(String selectedPort, BaudRate selectedBaud) {
+        if (selectedPort == null || selectedPort.isBlank()) {
+            showConnectionProblem("No port selected", "[Machine] Connect clicked, but no port selected.");
+            return false;
+        }
+
+        if (selectedBaud == null) {
+            showConnectionProblem("No baud rate selected", "[Machine] Connect clicked, but no baud rate selected.");
+            return false;
+        }
+
+        return true;
+    }
+
+    private int parseBaudRate(BaudRate selectedBaud) {
+        return selectedBaud.getValue();
+    }
+
+    private void handleSuccessfulConnection(String selectedPort, int baudRate) {
+        homeMachineButton.setDisable(false);
+        machineStatusLabel.setText("Connected: " + selectedPort);
+        droPollingService.startDroPolling();
+        AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate);
+    }
+
+    private void handleFailedConnection(String selectedPort) {
+        setDisconnectedUiState("Connection failed");
+        AppConsole.log("[Machine] Failed to connect to " + selectedPort);
+    }
+
+    private void handleConnectionError(Exception e) {
+        setDisconnectedUiState("Connect error");
+        AppConsole.log("[Machine] Connect error: " + e.getMessage());
+        e.printStackTrace();
+    }
+
+    private void showConnectionProblem(String statusText, String logMessage) {
+        setDisconnectedUiState(statusText);
+        AppConsole.log(logMessage);
+    }
+
+    private void setDisconnectedUiState(String statusText) {
+        homeMachineButton.setDisable(true);
+        machineStatusLabel.setText(statusText);
+        droPollingService.stopDroPolling();
     }
 
     @FXML
@@ -302,10 +327,16 @@ public class MachineController {
     }
 
     private void refreshAvailablePorts() {
+        AppConsole.log("[Machine] Refreshing serial ports...");
+
+        List<String> portNames = loadAvailablePortNames();
+        updatePortComboBox(portNames);
+        updatePortRefreshStatus(portNames);
+    }
+
+    private List<String> loadAvailablePortNames() {
         SerialPort[] ports = SerialPort.getCommPorts();
         List<String> portNames = new ArrayList<>();
-
-        AppConsole.log("[Machine] Refreshing serial ports...");
 
         for (SerialPort port : ports) {
             String portName = port.getSystemPortName();
@@ -313,30 +344,29 @@ public class MachineController {
             AppConsole.log("[Machine] Found port: " + portName);
         }
 
-        portComboBox.setItems(FXCollections.observableArrayList(portNames));
+        return portNames;
+    }
 
-        if (!portNames.isEmpty()) {
-            portComboBox.getSelectionModel().selectFirst();
-            machineStatusLabel.setText("Ports loaded");
-            AppConsole.log("[Machine] Serial ports loaded: " + portNames);
-        } else {
+    private void updatePortComboBox(List<String> portNames) {
+        portComboBox.setItems(FXCollections.observableArrayList(portNames));
+    }
+
+    private void updatePortRefreshStatus(List<String> portNames) {
+        if (portNames.isEmpty()) {
             portComboBox.getSelectionModel().clearSelection();
             machineStatusLabel.setText("No ports found");
             AppConsole.log("[Machine] No serial ports found.");
+            return;
         }
+
+        portComboBox.getSelectionModel().selectFirst();
+        machineStatusLabel.setText("Ports loaded");
+        AppConsole.log("[Machine] Serial ports loaded: " + portNames);
     }
 
     private void addBaudRates() {
-        List<String> baudRates = Arrays.asList(
-                "9600",
-                "19200",
-                "38400",
-                "57600",
-                "115200",
-                "230400"
-        );
-        baudRateComboBox.setItems(FXCollections.observableArrayList(baudRates));
-        baudRateComboBox.setValue("115200");
+        baudRateComboBox.setItems(FXCollections.observableArrayList(BaudRate.values()));
+        baudRateComboBox.setValue(BaudRate.B115200);
     }
 
     private void setupSpindleSpeedField() {

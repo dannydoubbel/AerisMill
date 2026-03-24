@@ -82,56 +82,89 @@ public class MainController {
 
     @FXML
     private void onOpenStepFile(ActionEvent event) {
-        if (hasLoadedFile()) {
-            showWarning("File already loaded", "Please close the current file first.");
+        if (!canOpenStepFile()) {
             return;
         }
 
-        System.out.println("Open STEP clicked");
+        File selectedFile = chooseStepFile();
+        if (selectedFile == null) {
+            return;
+        }
 
+        rememberLastDirectory(selectedFile);
+
+        try {
+            Object loadedModel = stepImportService.open(selectedFile);
+            applyLoadedStepFile(selectedFile, loadedModel);
+        } catch (Exception e) {
+            handleOpenStepFileFailure(selectedFile, e);
+        }
+    }
+
+    private boolean canOpenStepFile() {
+        if (hasLoadedFile()) {
+            showWarning("File already loaded", "Please close the current file first.");
+            return false;
+        }
+        return true;
+    }
+
+    private File chooseStepFile() {
+        FileChooser fileChooser = createStepFileChooser();
+        Stage stage = getStage();
+        return fileChooser.showOpenDialog(stage);
+    }
+
+    private FileChooser createStepFileChooser() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open STEP File");
-
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("STEP Files", "*.step", "*.stp"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
         );
 
+        applyLastUsedDirectory(fileChooser);
+        return fileChooser;
+    }
+
+    private void applyLastUsedDirectory(FileChooser fileChooser) {
         String lastDirPath = prefs.get(PREF_LAST_STEP_DIR, null);
-        if (lastDirPath != null) {
-            File lastDir = new File(lastDirPath);
-            if (lastDir.exists() && lastDir.isDirectory()) {
-                fileChooser.setInitialDirectory(lastDir);
-            }
+        if (lastDirPath == null) {
+            return;
         }
 
-        Stage stage = (Stage) rootPane.getScene().getWindow();
-        File selectedFile = fileChooser.showOpenDialog(stage);
-
-        if (selectedFile != null) {
-            File parentDir = selectedFile.getParentFile();
-            if (parentDir != null && parentDir.exists()) {
-                prefs.put(PREF_LAST_STEP_DIR, parentDir.getAbsolutePath());
-            }
-
-            try {
-                Object loadedModel = stepImportService.open(selectedFile);
-
-                currentFile = selectedFile;
-                currentStepFile = loadedModel;
-
-                stage.setTitle("AerisMill - " + selectedFile.getName());
-
-                setInfoPath(selectedFile.getAbsolutePath());
-                log(selectedFile.getName() + " loaded successfully.");
-
-                System.out.println(loadedModel);
-            } catch (Exception e) {
-                log("Failed to load " + selectedFile.getName());
-                showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
-                e.printStackTrace();
-            }
+        File lastDir = new File(lastDirPath);
+        if (lastDir.exists() && lastDir.isDirectory()) {
+            fileChooser.setInitialDirectory(lastDir);
         }
+    }
+
+    private void rememberLastDirectory(File selectedFile) {
+        File parentDir = selectedFile.getParentFile();
+        if (parentDir != null && parentDir.exists()) {
+            prefs.put(PREF_LAST_STEP_DIR, parentDir.getAbsolutePath());
+        }
+    }
+
+    private void applyLoadedStepFile(File selectedFile, Object loadedModel) {
+        currentFile = selectedFile;
+        currentStepFile = loadedModel;
+
+        getStage().setTitle("AerisMill - " + selectedFile.getName());
+        setInfoPath(selectedFile.getAbsolutePath());
+        log(selectedFile.getName() + " loaded successfully.");
+
+        System.out.println(loadedModel);
+    }
+
+    private void handleOpenStepFileFailure(File selectedFile, Exception e) {
+        log("Failed to load " + selectedFile.getName());
+        showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
+        e.printStackTrace();
+    }
+
+    private Stage getStage() {
+        return (Stage) rootPane.getScene().getWindow();
     }
 
     @FXML
@@ -157,49 +190,56 @@ public class MainController {
         Stage stage = (Stage) rootPane.getScene().getWindow();
         stage.setTitle("AerisMill");
     }
-
     @FXML
     private void onExitApplication(ActionEvent event) {
-        System.out.println("Saving rootPane");
-        UIStateService.getInstance().saveLayoutState(rootPane);
-        System.out.println("Rootpane saved");
+        saveApplicationState();
 
-        System.out.println("Machinecontroller is null : " + (machinePaneController == null));
-        System.out.println("Saving machinePane");
+        if (!confirmExit()) {
+            return;
+        }
+
+        shutdownMachineServices();
+        Platform.exit();
+    }
+
+    private void saveApplicationState() {
+        UIStateService.getInstance().saveLayoutState(rootPane);
 
         if (machinePaneController != null) {
             machinePaneController.saveUiState();
-
         }
+    }
 
-        System.out.println("Saving done");
+    private boolean confirmExit() {
+        Alert alert = createExitConfirmationAlert();
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == ButtonType.YES;
+    }
 
+    private Alert createExitConfirmationAlert() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirm Exit");
         alert.setHeaderText("Really wanna quit?");
         alert.setContentText("Unsaved work may be lost.");
 
-        ButtonType yesButton = new ButtonType("Yes");
-        ButtonType noButton = new ButtonType("No");
-
-        alert.getButtonTypes().setAll(yesButton, noButton);
-
+        alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
         alert.getDialogPane().getStylesheets().add(
                 getClass().getResource("/be/doebi/aerismill/ui/app.css").toExternalForm()
         );
 
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == yesButton) {
-            if (machinePaneController != null) {
-                machinePaneController.shutdownMachineConnection();
-            }
-            try {
-                machinePaneController.getDroPollingService().stopDroPolling();
-            } catch (Exception e) {
+        return alert;
+    }
 
-            }
+    private void shutdownMachineServices() {
+        if (machinePaneController == null) {
+            return;
+        }
 
-            Platform.exit();
+        machinePaneController.shutdownMachineConnection();
+
+        try {
+            machinePaneController.getDroPollingService().stopDroPolling();
+        } catch (Exception ignored) {
         }
     }
 

@@ -25,7 +25,7 @@ public class MachineControlService {
     public void setStatusListener(Consumer<MachineStatus> statusListener) {
         this.statusListener = statusListener;
     }
-
+/*
     public boolean connect(String portName, int baudRate) {
         disconnect();
 
@@ -121,6 +121,152 @@ public class MachineControlService {
 
         return true;
     }
+    */
+public boolean connect(String portName, int baudRate) {
+    disconnect();
+
+    activePort = createConfiguredPort(portName, baudRate);
+
+    if (!openActivePort(portName, baudRate)) {
+        return false;
+    }
+
+    performStartupHandshake();
+    registerDataListener();
+    return true;
+}
+
+    private SerialPort createConfiguredPort(String portName, int baudRate) {
+        SerialPort port = SerialPort.getCommPort(portName);
+        port.setBaudRate(baudRate);
+        port.setNumDataBits(8);
+        port.setNumStopBits(SerialPort.ONE_STOP_BIT);
+        port.setParity(SerialPort.NO_PARITY);
+        port.setComPortTimeouts(SerialPort.TIMEOUT_WRITE_BLOCKING, 0, 0);
+        return port;
+    }
+
+    private boolean openActivePort(String portName, int baudRate) {
+        boolean opened = activePort.openPort();
+
+        if (!opened) {
+            AppConsole.log("[MachineService] Failed to open port: " + portName);
+            activePort = null;
+            return false;
+        }
+
+        AppConsole.log("[MachineService] Port opened: " + portName + " @ " + baudRate);
+        return true;
+    }
+
+    private void performStartupHandshake() {
+        try {
+            Thread.sleep(2000); // GRBL often resets on open
+            sendRaw("\r\n");
+            Thread.sleep(300);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            AppConsole.log("[MachineService] Connect delay interrupted.");
+        }
+    }
+
+    private void registerDataListener() {
+        try {
+            activePort.addDataListener(new SerialPortDataListener() {
+                @Override
+                public int getListeningEvents() {
+                    return SerialPort.LISTENING_EVENT_DATA_AVAILABLE;
+                }
+
+                @Override
+                public void serialEvent(SerialPortEvent event) {
+                    handleSerialPortEvent(event);
+                }
+            });
+        } catch (Exception e) {
+            AppConsole.log("[MachineService] DataListener not added to the com port " + e);
+        }
+    }
+
+    private void handleSerialPortEvent(SerialPortEvent event) {
+        if (event.getEventType() != SerialPort.LISTENING_EVENT_DATA_AVAILABLE) {
+            return;
+        }
+
+        int available = activePort.bytesAvailable();
+        if (available <= 0) {
+            return;
+        }
+
+        byte[] buffer = new byte[available];
+        int numRead = activePort.readBytes(buffer, buffer.length);
+
+        if (numRead <= 0) {
+            return;
+        }
+
+        String chunk = new String(buffer, 0, numRead, StandardCharsets.UTF_8);
+        processIncomingChunk(chunk);
+    }
+
+    private void processIncomingChunk(String chunk) {
+        rxBuffer.append(chunk);
+
+        int newlineIndex;
+        while ((newlineIndex = rxBuffer.indexOf("\n")) >= 0) {
+            String line = rxBuffer.substring(0, newlineIndex).trim();
+            rxBuffer.delete(0, newlineIndex + 1);
+
+            if (line.isEmpty()) {
+                continue;
+            }
+
+            processReceivedLine(line);
+        }
+    }
+
+    private void processReceivedLine(String line) {
+        onSerialDataReceived(line);
+
+        if (isStatusLine(line)) {
+            handleStatusLine(line);
+        }
+    }
+
+
+    private boolean isStatusLine(String line) {
+        return line.startsWith("<") && line.endsWith(">");
+    }
+
+    private void handleStatusLine(String line) {
+        MachineStatus status = grblStatusParser.parse(line);
+
+        if (status == null) {
+            return;
+        }
+
+        logParsedStatus(status);
+        notifyStatusListener(status);
+    }
+
+    private void logParsedStatus(MachineStatus status) {
+        AppConsole.log("[STATUS] "
+                + status.getState()
+                + " X=" + status.getMachineX()
+                + " Y=" + status.getMachineY()
+                + " Z=" + status.getMachineZ()
+                + " A=" + status.getMachineA());
+    }
+
+    private void notifyStatusListener(MachineStatus status) {
+        if (statusListener != null) {
+            Platform.runLater(() -> statusListener.accept(status));
+        }
+    }
+
+
+
+
 
     public void disconnect() {
 
