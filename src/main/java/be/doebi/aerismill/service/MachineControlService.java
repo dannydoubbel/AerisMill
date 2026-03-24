@@ -150,6 +150,10 @@ public class MachineControlService {
     }
 
     public void sendRaw(String raw) {
+        if (activePort==null) {
+            AppConsole.log("Failed to write to serial port because the com port is null");
+            return;
+        }
         try {
             OutputStream outputStream = activePort.getOutputStream();
             outputStream.write(raw.getBytes(StandardCharsets.UTF_8));
