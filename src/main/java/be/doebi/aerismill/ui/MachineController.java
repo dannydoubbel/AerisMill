@@ -55,6 +55,15 @@ public class MachineController {
     private TextField spindleSpeedField;
 
     @FXML
+    private TextField feedRateField;
+
+    @FXML
+    private TextField xyMoveField;
+
+    @FXML
+    private TextField zMoveField;
+
+    @FXML
     private Button homeMachineButton;
 
     @FXML
@@ -222,51 +231,127 @@ public class MachineController {
 
     @FXML
     public void onJogXMinus() {
-        AppConsole.log("[Machine] X- clicked.");
+        jog("X", -readDoubleField(xyMoveField, 5.0));
     }
 
     @FXML
     public void onJogXPlus() {
-        AppConsole.log("[Machine] X+ clicked.");
+        jog("X", readDoubleField(xyMoveField, 5.0));
     }
 
     @FXML
     public void onJogYPlus() {
-        AppConsole.log("[Machine] Y+ clicked.");
+        jog("Y", readDoubleField(xyMoveField, 5.0));
     }
 
     @FXML
     public void onJogYMinus() {
-        AppConsole.log("[Machine] Y- clicked.");
+        jog("Y", -readDoubleField(xyMoveField, 5.0));
     }
 
     @FXML
     public void onJogZPlus() {
-        AppConsole.log("[Machine] Z+ clicked.");
+        jog("Z", readDoubleField(zMoveField, 2.0));
     }
 
     @FXML
     public void onJogZMinus() {
-        AppConsole.log("[Machine] Z- clicked.");
+        jog("Z", -readDoubleField(zMoveField, 2.0));
     }
 
     @FXML
     public void onStopJog() {
         AppConsole.log("[Machine] Stop clicked.");
+        machineControlService.stopJog();
+    }
+
+    private void jog(String axis, double distance) {
+        int feedRate = readIntField(feedRateField, 3000);
+
+        if (feedRate <= 0) {
+            AppConsole.log("[Machine] Feed rate must be > 0");
+            return;
+        }
+
+        String distanceText = formatDecimal(distance);
+        String command = "$J=G91 " + axis + distanceText + " F" + feedRate;
+
+        AppConsole.log("[Machine] Jog command: " + command);
+        machineControlService.sendLine(command);
+    }
+
+    @FXML
+    public void onDecreaseXyMove() {
+        adjustDoubleField(xyMoveField, -1.0, 0.1, 1);
+    }
+
+    @FXML
+    public void onIncreaseXyMove() {
+        adjustDoubleField(xyMoveField, 1.0, 0.1, 1);
+    }
+
+    @FXML
+    public void onDecreaseZMove() {
+        adjustDoubleField(zMoveField, -0.5, 0.1, 1);
+    }
+
+    @FXML
+    public void onIncreaseZMove() {
+        adjustDoubleField(zMoveField, 0.5, 0.1, 1);
+    }
+
+    @FXML
+    public void onDecreaseFeedRate() {
+        adjustIntField(feedRateField, -500, 100);
+    }
+
+    @FXML
+    public void onIncreaseFeedRate() {
+        adjustIntField(feedRateField, 500, 100);
+    }
+
+    private void adjustDoubleField(TextField field, double delta, double minValue, int decimals) {
+        try {
+            String text = field.getText().trim().replace(',', '.');
+            double current = Double.parseDouble(text);
+            double updated = Math.max(minValue, current + delta);
+            field.setText(formatDecimal(updated));
+        } catch (NumberFormatException e) {
+            AppConsole.log("[Machine] Invalid number in field: " + field.getText());
+        }
+    }
+
+    private void adjustIntField(TextField field, int delta, int minValue) {
+        try {
+            int current = Integer.parseInt(field.getText().trim());
+            int updated = Math.max(minValue, current + delta);
+            field.setText(String.valueOf(updated));
+        } catch (NumberFormatException e) {
+            AppConsole.log("[Machine] Invalid integer in field: " + field.getText());
+        }
     }
 
     @FXML
     public void onPresetRapid() {
+        xyMoveField.setText("20.0");
+        zMoveField.setText("5.0");
+        feedRateField.setText("6000");
         AppConsole.log("[Machine] Rapid preset selected.");
     }
 
     @FXML
     public void onPresetNormal() {
+        xyMoveField.setText("5.0");
+        zMoveField.setText("2.0");
+        feedRateField.setText("3000");
         AppConsole.log("[Machine] Normal preset selected.");
     }
 
     @FXML
     public void onPresetPrecise() {
+        xyMoveField.setText("0.5");
+        zMoveField.setText("0.5");
+        feedRateField.setText("800");
         AppConsole.log("[Machine] Precise preset selected.");
     }
 
@@ -426,5 +511,37 @@ public class MachineController {
 
     private String formatAxis(double value) {
         return String.format("%.3f", value);
+    }
+
+    private double readDoubleField(TextField field, double fallback) {
+        try {
+            String text = field.getText().trim().replace(',', '.');
+            double value = Double.parseDouble(text);
+            field.setText(formatDecimal(value));
+            return value;
+        } catch (NumberFormatException e) {
+            AppConsole.log("[Machine] Invalid number in field: " + field.getText());
+            field.setText(formatDecimal(fallback));
+            return fallback;
+        }
+    }
+
+    private int readIntField(TextField field, int fallback) {
+        try {
+            return Integer.parseInt(field.getText().trim());
+        } catch (NumberFormatException e) {
+            AppConsole.log("[Machine] Invalid integer in field: " + field.getText());
+            field.setText(String.valueOf(fallback));
+            return fallback;
+        }
+    }
+
+    private String formatDecimal(double value) {
+        if (value == (long) value) {
+            return String.format("%d", (long) value);
+        }
+        return String.format(java.util.Locale.US, "%.3f", value)
+                .replaceAll("0+$", "")
+                .replaceAll("\\.$", "");
     }
 }

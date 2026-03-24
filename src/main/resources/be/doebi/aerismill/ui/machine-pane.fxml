@@ -328,12 +328,12 @@
                                             <Label text="XY move (mm)" />
                                             <HBox spacing="4.0">
                                                 <children>
-                                                    <Button text="−" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <Button text="−" onAction="#onDecreaseXyMove" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                     <TextField fx:id="xyMoveField"
                                                                text="5"
                                                                alignment="CENTER"
                                                                prefWidth="70.0" />
-                                                    <Button text="+" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <Button text="+" onAction="#onIncreaseXyMove"  maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                 </children>
                                             </HBox>
                                         </children>
@@ -345,14 +345,14 @@
                                             <Label text="Z move (mm)" />
                                             <HBox spacing="4.0">
                                                 <children>
-                                                    <Button text="−" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <Button text="−" onAction="#onDecreaseZMove" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
 
                                                     <TextField fx:id="zMoveField"
                                                                text="2"
                                                                alignment="CENTER"
                                                                prefWidth="70.0" />
 
-                                                    <Button text="+" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <Button text="+" onAction="#onIncreaseZMove" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                 </children>
                                             </HBox>
                                         </children>
@@ -364,12 +364,12 @@
                                             <Label text="Speed (mm/min)" />
                                             <HBox spacing="4.0">
                                                 <children>
-                                                    <Button text="−" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <Button text="−" onAction="#onDecreaseFeedRate" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                     <TextField fx:id="feedRateField"
                                                                text="3000"
                                                                alignment="CENTER"
                                                                prefWidth="70" />
-                                                    <Button text="+" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
+                                                    <Button text="+" onAction="#onIncreaseFeedRate" maxWidth="1.7976931348623157E308" HBox.hgrow="ALWAYS"/>
                                                 </children>
                                             </HBox>
                                         </children>

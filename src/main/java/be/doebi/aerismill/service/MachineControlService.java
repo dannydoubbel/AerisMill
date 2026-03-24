@@ -162,7 +162,7 @@ public boolean connect(String portName, int baudRate) {
     private void performStartupHandshake() {
         try {
             Thread.sleep(2000); // GRBL often resets on open
-            sendRaw("\r\n");
+            sendLine("\r\n");
             Thread.sleep(300);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -340,28 +340,60 @@ public boolean connect(String portName, int baudRate) {
     public void sendCommand(String demander, String command) {
         ensureConnected();
         AppConsole.log("[MachineService] " + demander + " TX >>> " + command);
-        sendRaw(command + "\r\n");
+        sendLine(command + "\r\n");
     }
 
-    public void sendRaw(String raw) {
-        if (activePort==null) {
-            //AppConsole.log("Failed to write to serial port because the com port is null");
+    public void sendRealtimeCommand(String command) {
+        if (activePort == null || !activePort.isOpen()) {
+            AppConsole.log("[MachineService] Cannot send realtime command: no active connection.");
             return;
         }
+
         try {
-            OutputStream outputStream = activePort.getOutputStream();
-            outputStream.write(raw.getBytes(StandardCharsets.UTF_8));
-            outputStream.flush();
-            AppConsole.log("RAW  " + raw);
+            OutputStream out = activePort.getOutputStream();
+            out.write(command.getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            AppConsole.log("RAW  " + command);
         } catch (IOException e) {
-            AppConsole.log("Failed to write to serial port" + e);
-            throw new RuntimeException("Failed to write to serial port", e);
+            AppConsole.log("[MachineService] Failed to send realtime command: " + e.getMessage());
+        }
+    }
+
+    public void sendLine(String command) {
+        if (activePort == null || !activePort.isOpen()) {
+            AppConsole.log("[MachineService] Cannot send command: no active connection.");
+            return;
+        }
+
+        try {
+            OutputStream out = activePort.getOutputStream();
+            out.write((command + "\n").getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            AppConsole.log("RAW  " + command);
+        } catch (IOException e) {
+            AppConsole.log("[MachineService] Failed to send command: " + e.getMessage());
         }
     }
 
     private void ensureConnected() {
         if (!isConnected()) {
             throw new IllegalStateException("Machine is not connected.");
+        }
+    }
+
+    public void stopJog() {
+        if (activePort == null || !activePort.isOpen()) {
+            AppConsole.log("[MachineService] Cannot stop jog: no active connection.");
+            return;
+        }
+
+        try {
+            OutputStream out = activePort.getOutputStream();
+            out.write(0x85); // GRBL jog cancel
+            out.flush();
+            AppConsole.log("[MachineService] Jog cancelled.");
+        } catch (IOException e) {
+            AppConsole.log("[MachineService] Failed to cancel jog: " + e.getMessage());
         }
     }
 }

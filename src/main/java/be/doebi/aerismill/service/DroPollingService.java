@@ -29,7 +29,7 @@ public class DroPollingService {
             }
 
             try {
-                machineControlService.sendRaw("?");
+                machineControlService.sendRealtimeCommand("?");
             } catch (Exception e) {
                 e.printStackTrace();
             }
