@@ -109,9 +109,11 @@
                                           GridPane.rowIndex="0"
                                           GridPane.columnIndex="2">
                                         <children>
-                                            <Label text="0.00"
+                                            <Label fx:id="xMachineLabel"
+                                                   text="0.00"
                                                    style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-                                            <Label text="0.00"
+                                            <Label fx:id="xWorkLabel"
+                                                   text="0.00"
                                                    style="-fx-font-size: 12px;"/>
                                         </children>
                                     </VBox>
@@ -129,9 +131,11 @@
                                           GridPane.rowIndex="1"
                                           GridPane.columnIndex="2">
                                         <children>
-                                            <Label text="0.00"
+                                            <Label fx:id="yMachineLabel"
+                                                   text="0.00"
                                                    style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-                                            <Label text="0.00"
+                                            <Label fx:id="yWorkLabel"
+                                                   text="0.00"
                                                    style="-fx-font-size: 12px;"/>
                                         </children>
                                     </VBox>
@@ -150,9 +154,11 @@
                                           GridPane.rowIndex="2"
                                           GridPane.columnIndex="2">
                                         <children>
-                                            <Label text="0.00"
+                                            <Label fx:id="zMachineLabel"
+                                                   text="0.00"
                                                    style="-fx-font-size: 24px; -fx-font-weight: bold;"/>
-                                            <Label text="0.00"
+                                            <Label fx:id="zWorkLabel"
+                                                   text="0.00"
                                                    style="-fx-font-size: 12px;"/>
                                         </children>
                                     </VBox>

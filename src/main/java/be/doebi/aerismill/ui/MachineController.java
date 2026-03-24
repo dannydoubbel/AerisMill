@@ -1,5 +1,6 @@
 package be.doebi.aerismill.ui;
 
+import be.doebi.aerismill.machine.MachineStatus;
 import be.doebi.aerismill.service.DroPollingService;
 import be.doebi.aerismill.service.UIStateService;
 import be.doebi.aerismill.service.MachineControlService;
@@ -16,6 +17,7 @@ import javafx.scene.control.TextField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class MachineController {
 
@@ -28,7 +30,7 @@ public class MachineController {
 
     private final MachineControlService machineControlService = new MachineControlService();
     private final DroPollingService droPollingService = new DroPollingService(machineControlService);
-
+    private Consumer<MachineStatus> statusListener;
 
     @FXML
     private BorderPane machineRootPane;
@@ -38,6 +40,13 @@ public class MachineController {
 
     @FXML
     private ComboBox<String> baudRateComboBox;
+
+    @FXML private Label xMachineLabel;
+    @FXML private Label xWorkLabel;
+    @FXML private Label yMachineLabel;
+    @FXML private Label yWorkLabel;
+    @FXML private Label zMachineLabel;
+    @FXML private Label zWorkLabel;
 
     @FXML
     private Label machineStatusLabel;
@@ -55,20 +64,33 @@ public class MachineController {
         setupSpindleSpeedField();
 
         homeMachineButton.setDisable(true);
+        setStatusListener(statusListener);
+        machineControlService.setStatusListener(this::updateDro);
 
         Platform.runLater(() -> {
             restoreUiState();
         });
     }
 
+    public void setStatusListener(Consumer<MachineStatus> statusListener) {
+        this.statusListener = statusListener;
+    };
+
+
+
     public MachineControlService getMachineControlService() {
         return machineControlService;
+    }
+
+    public DroPollingService getDroPollingService() {
+        return droPollingService;
     }
 
     public void shutdownMachineConnection() {
         try {
             if (machineControlService != null && machineControlService.isConnected()) {
                 AppConsole.log("[Machine] Closing serial connection before exit...");
+                droPollingService.stopDroPolling();
                 machineControlService.disconnect();
                 machineStatusLabel.setText("Disconnected");
             }
@@ -358,5 +380,21 @@ public class MachineController {
             machineStatusLabel.setText("RPM set to " + updated);
             AppConsole.log("[Machine] RPM set to " + updated);
         }
+    }
+
+    private void updateDro(MachineStatus status) {
+        System.out.println("inside");
+        xMachineLabel.setText(formatAxis(status.getMachineX()));
+        yMachineLabel.setText(formatAxis(status.getMachineY()));
+        zMachineLabel.setText(formatAxis(status.getMachineZ()));
+
+        // temporary: until WPos parsing exists
+        xWorkLabel.setText(formatAxis(status.getMachineX()));
+        yWorkLabel.setText(formatAxis(status.getMachineY()));
+        zWorkLabel.setText(formatAxis(status.getMachineZ()));
+    }
+
+    private String formatAxis(double value) {
+        return String.format("%.3f", value);
     }
 }

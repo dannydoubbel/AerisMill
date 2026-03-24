@@ -1,18 +1,30 @@
 package be.doebi.aerismill.service;
 
+import be.doebi.aerismill.machine.GrblStatusParser;
+import be.doebi.aerismill.machine.MachineStatus;
 import be.doebi.aerismill.ui.AppConsole;
 import com.fazecast.jSerialComm.SerialPort;
 import com.fazecast.jSerialComm.SerialPortDataListener;
 import com.fazecast.jSerialComm.SerialPortEvent;
+import javafx.application.Platform;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.function.Consumer;
 
 public class MachineControlService {
 
     private SerialPort activePort;
     private final StringBuilder serialReceiveBuffer = new StringBuilder();
+    private final GrblStatusParser grblStatusParser = new GrblStatusParser();
+    private final StringBuilder rxBuffer = new StringBuilder();
+
+    private Consumer<MachineStatus> statusListener;
+
+    public void setStatusListener(Consumer<MachineStatus> statusListener) {
+        this.statusListener = statusListener;
+    }
 
     public boolean connect(String portName, int baudRate) {
         disconnect();
@@ -64,9 +76,40 @@ public class MachineControlService {
                     byte[] buffer = new byte[available];
                     int numRead = activePort.readBytes(buffer, buffer.length);
 
-                    if (numRead > 0) {
-                        String received = new String(buffer, 0, numRead, StandardCharsets.UTF_8);
-                        onSerialDataReceived(received);
+                    if (numRead <= 0) {
+                        return;
+                    }
+
+                    String chunk = new String(buffer, 0, numRead, StandardCharsets.UTF_8);
+                    rxBuffer.append(chunk);
+
+                    int newlineIndex;
+                    while ((newlineIndex = rxBuffer.indexOf("\n")) >= 0) {
+                        String line = rxBuffer.substring(0, newlineIndex).trim();
+                        rxBuffer.delete(0, newlineIndex + 1);
+
+                        if (line.isEmpty()) {
+                            continue;
+                        }
+
+                        onSerialDataReceived(line);
+
+                        if (line.startsWith("<") && line.endsWith(">")) {
+                            MachineStatus status = grblStatusParser.parse(line);
+
+                            if (status != null) {
+                                AppConsole.log("[STATUS] "
+                                        + status.getState()
+                                        + " X=" + status.getMachineX()
+                                        + " Y=" + status.getMachineY()
+                                        + " Z=" + status.getMachineZ()
+                                        + " A=" + status.getMachineA());
+
+                                if (statusListener != null) {
+                                    Platform.runLater(() -> statusListener.accept(status));
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -80,14 +123,19 @@ public class MachineControlService {
     }
 
     public void disconnect() {
+
         if (activePort != null) {
-            String portName = activePort.getSystemPortName();
+            try {
+                activePort.removeDataListener();
+            } catch (Exception e) {
+                AppConsole.log("[MachineService] Failed to remove data listener: " + e.getMessage());
+            }
 
             if (activePort.isOpen()) {
                 activePort.closePort();
-                AppConsole.log("[MachineService] Port closed: " + portName);
             }
 
+            AppConsole.log("[MachineService] Port disconnected.");
             activePort = null;
         }
     }
@@ -151,7 +199,7 @@ public class MachineControlService {
 
     public void sendRaw(String raw) {
         if (activePort==null) {
-            AppConsole.log("Failed to write to serial port because the com port is null");
+            //AppConsole.log("Failed to write to serial port because the com port is null");
             return;
         }
         try {

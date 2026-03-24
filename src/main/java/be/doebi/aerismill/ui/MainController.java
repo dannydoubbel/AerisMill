@@ -169,6 +169,7 @@ public class MainController {
 
         if (machinePaneController != null) {
             machinePaneController.saveUiState();
+
         }
 
         System.out.println("Saving done");
@@ -191,6 +192,11 @@ public class MainController {
         if (result.isPresent() && result.get() == yesButton) {
             if (machinePaneController != null) {
                 machinePaneController.shutdownMachineConnection();
+            }
+            try {
+                machinePaneController.getDroPollingService().stopDroPolling();
+            } catch (Exception e) {
+
             }
 
             Platform.exit();
