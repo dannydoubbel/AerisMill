@@ -5,9 +5,7 @@ import be.doebi.aerismill.service.UIStateService;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -17,42 +15,70 @@ import java.util.Optional;
 import java.util.prefs.Preferences;
 
 public class MainController {
+
+    private static final String PREF_LAST_STEP_DIR = "lastStepDirectory";
+
+    private final Preferences prefs = Preferences.userNodeForPackage(getClass());
+    private final StepImportService stepImportService = new StepImportService();
+
     private File currentFile;
     private Object currentStepFile; // temporary, until your real model type exists
+    private boolean manualSerialSendDirty = false;
 
     @FXML
     private MachineController machinePaneController;
-
-
-
-    @FXML
-    private javafx.scene.control.TextArea consoleOutput;
-
-    @FXML
-    private TextField infoField;
-
 
     @FXML
     private BorderPane rootPane;
 
     @FXML
-    public void initialize() {
+    private TextArea consoleOutput;
 
+    @FXML
+    private TextArea comConsoleOutput;
+
+    @FXML
+    private TextField infoField;
+
+    @FXML
+    private TextField textManualSerialSend;
+
+
+    @FXML
+    public void initialize() {
         AppConsole.setConsoleConsumer(message -> {
             consoleOutput.appendText(message + System.lineSeparator());
         });
+
+        setupManualSerialSendField();
+
         Platform.runLater(() -> {
-            // uiStateService.restore...
             UIStateService.getInstance().restoreLayoutState(rootPane);
         });
     }
 
-    private static final String PREF_LAST_STEP_DIR = "lastStepDirectory";
-    private final Preferences prefs = Preferences.userNodeForPackage(getClass());
-    private final StepImportService stepImportService = new StepImportService();
+    public void appendComConsoleLine(String line) {
+        comConsoleOutput.appendText(line + System.lineSeparator());
+    }
 
+    @FXML
+    public void onManualSerialSend() {
+        String command = textManualSerialSend.getText();
 
+        if (command == null || command.isBlank()) {
+            return;
+        }
 
+        appendComConsoleLine("TX >>> " + command);
+
+        machinePaneController
+                .getMachineControlService()
+                .sendCommand("onManualSerialSend", command);
+
+        manualSerialSendDirty = false;
+        textManualSerialSend.setStyle("-fx-font-style: normal;");
+        textManualSerialSend.setText("");
+    }
 
     @FXML
     private void onOpenStepFile(ActionEvent event) {
@@ -60,7 +86,9 @@ public class MainController {
             showWarning("File already loaded", "Please close the current file first.");
             return;
         }
+
         System.out.println("Open STEP clicked");
+
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open STEP File");
 
@@ -105,8 +133,6 @@ public class MainController {
             }
         }
     }
-
-
 
     @FXML
     private void onCloseFile(ActionEvent event) {
@@ -171,6 +197,19 @@ public class MainController {
         }
     }
 
+    private void setupManualSerialSendField() {
+        textManualSerialSend.textProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null || newValue.isBlank()) {
+                manualSerialSendDirty = false;
+                textManualSerialSend.setStyle("-fx-font-style: normal;");
+            } else {
+                manualSerialSendDirty = true;
+                textManualSerialSend.setStyle("-fx-font-style: italic;");
+            }
+        });
+
+        textManualSerialSend.setOnAction(event -> onManualSerialSend());
+    }
 
     private boolean showConfirm(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
@@ -182,9 +221,6 @@ public class MainController {
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }
-
-
-
 
     private boolean hasLoadedFile() {
         return currentFile != null;

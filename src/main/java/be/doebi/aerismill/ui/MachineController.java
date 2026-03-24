@@ -1,5 +1,6 @@
 package be.doebi.aerismill.ui;
 
+import be.doebi.aerismill.service.DroPollingService;
 import be.doebi.aerismill.service.UIStateService;
 import be.doebi.aerismill.service.MachineControlService;
 import com.fazecast.jSerialComm.SerialPort;
@@ -23,10 +24,11 @@ public class MachineController {
     private static final int RPM_STEP = 50;
 
     private boolean spindleRunning = false;
-
     private boolean spindleSpeedDirty = false;
 
-    private boolean updatingSpindleFieldProgrammatically = false;
+    private final MachineControlService machineControlService = new MachineControlService();
+    private final DroPollingService droPollingService = new DroPollingService(machineControlService);
+
 
     @FXML
     private BorderPane machineRootPane;
@@ -44,90 +46,23 @@ public class MachineController {
     private TextField spindleSpeedField;
 
     @FXML
-    private TextField textManualSerialSend;
-
-    @FXML
-    private Button buttonManualSerialSend;
-
-    @FXML
     private Button homeMachineButton;
-
-    @FXML
-    public void onManualSerialSend() {
-        machineControlService.sendCommand("onManualSerialSend",textManualSerialSend.getText());
-        textManualSerialSend.setText("");
-    }
 
     @FXML
     public void initialize() {
         refreshAvailablePorts();
         addBaudRates();
         setupSpindleSpeedField();
-        buttonManualSerialSend.setDisable(true);
+
         homeMachineButton.setDisable(true);
+
         Platform.runLater(() -> {
-            // uiStateService.restore...
             restoreUiState();
         });
-
     }
 
-    @FXML
-    public void onRefreshPorts() {
-        refreshAvailablePorts();
-    }
-
-
-
-    @FXML
-    public void onConnectMachine() {
-        String selectedPort = portComboBox.getValue();
-        String selectedBaud = baudRateComboBox.getValue();
-
-        if (selectedPort == null || selectedPort.isBlank()) {
-            machineStatusLabel.setText("No port selected");
-            AppConsole.log("[Machine] Connect clicked, but no port selected.");
-            return;
-        }
-
-        if (selectedBaud == null || selectedBaud.isBlank()) {
-            machineStatusLabel.setText("No baud rate selected");
-            AppConsole.log("[Machine] Connect clicked, but no baud rate selected.");
-            return;
-        }
-
-        try {
-            int baudRate = Integer.parseInt(selectedBaud);
-            boolean connected = machineControlService.connect(selectedPort, baudRate);
-
-            if (connected) {
-                buttonManualSerialSend.setDisable(false);
-                homeMachineButton.setDisable(false);
-                machineStatusLabel.setText("Connected: " + selectedPort);
-                AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate);
-            } else {
-                buttonManualSerialSend.setDisable(true);
-                homeMachineButton.setDisable(true);
-                machineStatusLabel.setText("Connection failed");
-                AppConsole.log("[Machine] Failed to connect to " + selectedPort);
-            }
-        } catch (Exception e) {
-            buttonManualSerialSend.setDisable(true);
-            homeMachineButton.setDisable(true);
-            machineStatusLabel.setText("Connect error");
-            AppConsole.log("[Machine] Connect error: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    @FXML
-    public void onDisconnectMachine() {
-        machineControlService.disconnect();
-        spindleRunning = false;
-        buttonManualSerialSend.setDisable(true);
-        homeMachineButton.setDisable(true);
-        machineStatusLabel.setText("Disconnected");
-        AppConsole.log("[Machine] Disconnect clicked.");
+    public MachineControlService getMachineControlService() {
+        return machineControlService;
     }
 
     public void shutdownMachineConnection() {
@@ -143,12 +78,77 @@ public class MachineController {
         }
     }
 
+    public void saveUiState() {
+        UIStateService.getInstance().saveLayoutState(machineRootPane);
+    }
 
+    public void restoreUiState() {
+        UIStateService.getInstance().restoreLayoutState(machineRootPane);
+    }
+
+    @FXML
+    public void onRefreshPorts() {
+        refreshAvailablePorts();
+    }
+
+    @FXML
+    public void onConnectMachine() {
+        String selectedPort = portComboBox.getValue();
+        String selectedBaud = baudRateComboBox.getValue();
+
+        if (selectedPort == null || selectedPort.isBlank()) {
+            machineStatusLabel.setText("No port selected");
+            AppConsole.log("[Machine] Connect clicked, but no port selected.");
+            droPollingService.stopDroPolling();
+            return;
+        }
+
+        if (selectedBaud == null || selectedBaud.isBlank()) {
+            machineStatusLabel.setText("No baud rate selected");
+            AppConsole.log("[Machine] Connect clicked, but no baud rate selected.");
+            droPollingService.stopDroPolling();
+            return;
+        }
+
+        try {
+            int baudRate = Integer.parseInt(selectedBaud);
+            boolean connected = machineControlService.connect(selectedPort, baudRate);
+
+            if (connected) {
+                homeMachineButton.setDisable(false);
+                machineStatusLabel.setText("Connected: " + selectedPort);
+                droPollingService.startDroPolling();
+                AppConsole.log("[Machine] Connected to " + selectedPort + " @ " + baudRate);
+            } else {
+
+                homeMachineButton.setDisable(true);
+                machineStatusLabel.setText("Connection failed");
+                droPollingService.stopDroPolling();
+                AppConsole.log("[Machine] Failed to connect to " + selectedPort);
+            }
+        } catch (Exception e) {
+
+            homeMachineButton.setDisable(true);
+            machineStatusLabel.setText("Connect error");
+            droPollingService.stopDroPolling();
+            AppConsole.log("[Machine] Connect error: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    public void onDisconnectMachine() {
+        machineControlService.disconnect();
+        spindleRunning = false;
+        homeMachineButton.setDisable(true);
+        machineStatusLabel.setText("Disconnected");
+        AppConsole.log("[Machine] Disconnect clicked.");
+    }
 
     @FXML
     public void onHomeMachine() {
         try {
-            machineControlService.sendCommand("onHomeMachine","$H");
+            machineControlService.sendCommand("onHomeMachine", "$H");
             machineStatusLabel.setText("Homing...");
             AppConsole.log("[Machine] Home machine clicked.");
         } catch (Exception e) {
@@ -157,15 +157,6 @@ public class MachineController {
             e.printStackTrace();
         }
     }
-
-
-
-
-
-
-
-
-
 
     @FXML
     public void onZeroAll() {
@@ -279,7 +270,7 @@ public class MachineController {
     @FXML
     public void onSpindleSpeedFieldChange() {
         try {
-            updateSpindleSpeed(0);   // uses current field value
+            updateSpindleSpeed(0);
             spindleSpeedDirty = false;
             spindleSpeedField.setStyle("-fx-font-style: normal;");
             AppConsole.log("[Machine] Spindle speed applied from text field.");
@@ -287,10 +278,6 @@ public class MachineController {
             AppConsole.log("[Machine] Failed to apply spindle speed from text field: " + e.getMessage());
         }
     }
-
-    private final MachineControlService machineControlService = new MachineControlService();
-
-
 
     private void refreshAvailablePorts() {
         SerialPort[] ports = SerialPort.getCommPorts();
@@ -316,6 +303,7 @@ public class MachineController {
             AppConsole.log("[Machine] No serial ports found.");
         }
     }
+
     private void addBaudRates() {
         List<String> baudRates = Arrays.asList(
                 "9600",
@@ -323,16 +311,14 @@ public class MachineController {
                 "38400",
                 "57600",
                 "115200",
-                "230400");
+                "230400"
+        );
         baudRateComboBox.setItems(FXCollections.observableArrayList(baudRates));
         baudRateComboBox.setValue("115200");
     }
 
     private void setupSpindleSpeedField() {
         spindleSpeedField.textProperty().addListener((obs, oldValue, newValue) -> {
-            if (updatingSpindleFieldProgrammatically) {
-                return;
-            }
 
             spindleSpeedDirty = true;
             spindleSpeedField.setStyle("-fx-font-style: italic;");
@@ -341,21 +327,7 @@ public class MachineController {
         spindleSpeedField.setOnAction(event -> onSpindleSpeedFieldChange());
     }
 
-    private void normalizeSpindleSpeedField() {
-        try {
-            int rpm = getSpindleSpeed();
-            spindleSpeedField.setText(String.valueOf(rpm));
 
-            if (spindleRunning && machineControlService.isConnected()) {
-                machineControlService.setSpindleSpeed(rpm);
-                machineStatusLabel.setText("Spindle ON (" + rpm + " RPM)");
-                AppConsole.log("[Machine] RPM normalized to " + rpm);
-            }
-        } catch (Exception e) {
-            spindleSpeedField.setText("100");
-            AppConsole.log("[Machine] Invalid RPM input, reset to 100");
-        }
-    }
 
     private int getSpindleSpeed() {
         String text = spindleSpeedField.getText();
@@ -380,20 +352,11 @@ public class MachineController {
 
         if (machineControlService.isConnected()) {
             machineStatusLabel.setText("Spindle RPM (" + updated + " RPM)");
-            machineControlService.sendCommand("updateSpindleSpeed","s"+updated);
+            machineControlService.sendCommand("updateSpindleSpeed", "s" + updated);
             AppConsole.log("[Machine] RPM updated to " + updated);
         } else {
             machineStatusLabel.setText("RPM set to " + updated);
             AppConsole.log("[Machine] RPM set to " + updated);
         }
     }
-
-    public void saveUiState() {
-        UIStateService.getInstance().saveLayoutState(machineRootPane);
-    }
-
-    public void restoreUiState() {
-        UIStateService.getInstance().restoreLayoutState(machineRootPane);
-    }
-
 }
