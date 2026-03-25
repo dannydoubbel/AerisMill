@@ -54,6 +54,14 @@ public class MainController {
 
         Platform.runLater(() -> {
             UIStateService.getInstance().restoreLayoutState(rootPane);
+            installCloseHandler();
+        });
+    }
+
+    private void installCloseHandler() {
+        getStage().setOnCloseRequest(event -> {
+            event.consume();
+            handleExit();
         });
     }
 
@@ -192,6 +200,10 @@ public class MainController {
     }
     @FXML
     private void onExitApplication(ActionEvent event) {
+        handleExit();
+    }
+
+    private void handleExit(){
         saveApplicationState();
 
         if (!confirmExit()) {

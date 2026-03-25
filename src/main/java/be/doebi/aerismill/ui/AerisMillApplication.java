@@ -8,6 +8,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.io.IOException;
+import java.util.Objects;
 
 public class AerisMillApplication extends Application {
     @Override
@@ -17,11 +18,12 @@ public class AerisMillApplication extends Application {
         Scene scene = new Scene(root);
 
         scene.getStylesheets().add(
-                AerisMillApplication.class.getResource("/be/doebi/aerismill/ui/app.css").toExternalForm()
+                Objects.requireNonNull(AerisMillApplication.class.getResource("/be/doebi/aerismill/ui/app.css")).toExternalForm()
         );
         stage.setTitle("AerisMill");
         stage.setScene(scene);
         UIStateService.getInstance().restoreWindowState(stage);
         stage.show();
+
     }
 }
