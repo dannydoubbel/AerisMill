@@ -1,5 +1,7 @@
 package be.doebi.aerismill;
 
+import be.doebi.aerismill.parser.step.EntityParserRegistry;
+import be.doebi.aerismill.parser.step.StepEntityType;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -11,11 +13,22 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.parser.step.EntityParser;
+import be.doebi.aerismill.parser.step.StepParserUtils;
+
+
 public class StepEntityInventoryTest {
+    private static final Pattern STEP_ENTITY_PATTERN =
+            Pattern.compile("^\\s*(#\\d+)\\s*=\\s*([A-Z0-9_]+)\\s*\\((.*)\\)\\s*;\\s*$", Pattern.CASE_INSENSITIVE);
     private static final Pattern NORMAL_ENTITY_PATTERN =
             Pattern.compile("^\\s*#\\d+\\s*=\\s*([A-Z0-9_]+)\\s*\\(", Pattern.CASE_INSENSITIVE);
 
-    Map<String, Map<String, Integer>> countsByFileThenType = new TreeMap<>();
+    private final Scanner pauseScanner = new Scanner(System.in);
+    private Map<String, Integer> parseFailsByType = new TreeMap<>();
+
+    private Map<String, Map<String, Integer>> countsByFileThenType = new TreeMap<>();
 
     @Test
     void inventoryStepEntities() throws IOException, URISyntaxException {
@@ -23,6 +36,7 @@ public class StepEntityInventoryTest {
 
         Map<String, Integer> totalCounts = new TreeMap<>();
         Map<String, Set<String>> filesPerType = new TreeMap<>();
+
 
         int scannedFiles = 0;
 
@@ -32,10 +46,28 @@ public class StepEntityInventoryTest {
                     .filter(this::isStepFile)
                     .sorted()
                     .toList();
-
             for (Path file : stepFiles) {
                 scannedFiles++;
                 Map<String, Integer> fileCounts = scanSingleFile(file);
+                ParseStats parseStats = parseSupportedEntities(file);
+                System.out.println();
+                System.out.println("PARSE SUMMARY");
+                System.out.println("--------------------------------------------------");
+                System.out.println("Supported entities seen : " + parseStats.supportedSeen);
+                System.out.println("Parsed successfully     : " + parseStats.parsedOk);
+                System.out.println("Failed to parse         : " + parseStats.parsedFailed);
+                System.out.println("Skipped unsupported     : " + parseStats.skippedUnsupported);
+
+                if (true) {
+                    System.out.println();
+                    System.out.println("Pausing " + 6000 + " ms before next file...");
+                    try {
+                        Thread.sleep(6000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new RuntimeException("Pause interrupted", e);
+                    }
+                }
 
                 System.out.println("\n==================================================");
                 System.out.println("FILE: " + file.getFileName());
@@ -50,6 +82,12 @@ public class StepEntityInventoryTest {
                             .add(file.getFileName().toString());
                 }
                 countsByFileThenType.put(file.getFileName().toString(), fileCounts);
+                System.out.println();
+                System.out.println("FAILURES BY TYPE");
+                System.out.println("--------------------------------------------------");
+                for (Map.Entry<String, Integer> entry : parseFailsByType.entrySet()) {
+                    System.out.printf("%-45s %8d%n", entry.getKey(), entry.getValue());
+                }
             }
 
         }
@@ -195,5 +233,115 @@ public class StepEntityInventoryTest {
             return text;
         }
         return text.substring(0, maxLength - 3) + "...";
+
     }
+
+    private StepEntity toStepEntity(String entityText) {
+        Matcher matcher = STEP_ENTITY_PATTERN.matcher(entityText);
+        if (!matcher.matches()) {
+            return null;
+        }
+
+        String id = matcher.group(1).trim();
+        String type = matcher.group(2).trim().toUpperCase();
+        String rawParameters = "(" + matcher.group(3).trim() + ")";
+
+        return new StepEntity(id, type, rawParameters);
+    }
+
+    private String stripOuterParens(String rawParameters) {
+        String value = rawParameters.trim();
+        if (value.startsWith("(") && value.endsWith(")")) {
+            return value.substring(1, value.length() - 1).trim();
+        }
+        return value;
+    }
+
+    private ParseStats parseSupportedEntities(Path file) throws IOException {
+        ParseStats stats = new ParseStats();
+
+        String content = readStepFile(file);
+        StringBuilder currentEntity = new StringBuilder();
+
+        EntityParserRegistry registry = new EntityParserRegistry();
+
+        for (String line : content.split("\\R")) {
+            String trimmed = line.trim();
+
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+
+            currentEntity.append(trimmed).append(' ');
+
+            if (trimmed.endsWith(";")) {
+                String entityText = currentEntity.toString().trim();
+                currentEntity.setLength(0);
+
+                StepEntity entity = toStepEntity(entityText);
+                if (entity == null) {
+                    continue;
+                }
+
+                System.out.println("RAW PARAMETERS = [" + entity.getRawParameters() + "]");
+                List<String> paramsList = StepParserUtils.splitTopLevelParameters(entity.getRawParameters());
+                System.out.println("PARAMS = " + paramsList);
+
+                StepEntityType entityType;
+                try {
+                    entityType = StepEntityType.fromName(entity.getType());
+                    System.out.println("[Know type] " + entity.getType());
+                } catch (IllegalArgumentException e) {
+                    stats.skippedUnsupported++;
+                    parseFailsByType.merge(entity.getType(), 1, Integer::sum);
+                    System.out.println("[SKIP UNKNOWN TYPE] " + file.getFileName()
+                            + " | " + entity.getId()
+                            + " | " + entity.getType());
+                    continue;
+                }
+
+                EntityParser<?> parser = registry.get(entityType);
+                if (parser == null) {
+                    stats.skippedUnsupported++;
+                    continue;
+                }
+
+                stats.supportedSeen++;
+
+                try {
+
+                    List<String> params = StepParserUtils.splitTopLevelParameters(entity.getRawParameters());;
+
+                    Object parsed = parser.parse(entity, params, Map.of());
+
+                    if (parsed == null) {
+                        stats.parsedFailed++;
+                        System.out.println("[PARSE FAIL] " + file.getFileName()
+                                + " | " + entity.getId()
+                                + " | " + entity.getType()
+                                + " | parser returned null");
+                    } else {
+                        stats.parsedOk++;
+                    }
+
+                } catch (Exception e) {
+                    stats.parsedFailed++;
+                    System.out.println("[PARSE FAIL] " + file.getFileName()
+                            + " | " + entity.getId()
+                            + " | " + entity.getType()
+                            + " | " + e.getClass().getSimpleName()
+                            + ": " + e.getMessage());
+                }
+            }
+        }
+
+        return stats;
+    }
+
+private static class ParseStats {
+    int supportedSeen;
+    int parsedOk;
+    int parsedFailed;
+    int skippedUnsupported;
+}
 }

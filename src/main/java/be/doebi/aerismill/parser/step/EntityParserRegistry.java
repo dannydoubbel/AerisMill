@@ -36,9 +36,9 @@ public class EntityParserRegistry {
         parsers.put(StepEntityType.B_SPLINE_CURVE_WITH_KNOTS, new BSplineCurveWithKnotsParser());
         parsers.put(StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, new BSplineSurfaceWithKnotsParser());
         parsers.put(StepEntityType.COMPLEX_ENTITY, new ComplexEntityParser());
-        //parsers.put(StepEntityType.SHAPE_REPRESENTATION, new SHAPEREPRESENTATIONParser());
-        //parsers.put(StepEntityType.SHAPE_DEFINITION_REPRESENTATION, new   ShapeDefinitionRepresentationParser());
-        //parsers.put(StepEntityType.PRODUCT_DEFINITION_SHAPE, new Product ProductDefinitionShapeParser());
+        parsers.put(StepEntityType.SHAPE_REPRESENTATION, new ShapeRepresentationParser());
+        parsers.put(StepEntityType.SHAPE_DEFINITION_REPRESENTATION, new be.doebi.aerismill.parser.step.ShapeRepresentationParser());
+        parsers.put(StepEntityType.PRODUCT_DEFINITION_SHAPE, new ProductDefinitionShapeParser());
     }
 
     public EntityParser get(StepEntityType type) {

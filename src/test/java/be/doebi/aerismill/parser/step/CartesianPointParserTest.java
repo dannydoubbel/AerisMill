@@ -1,18 +1,28 @@
 package be.doebi.aerismill.parser.step;
 
+import be.doebi.aerismill.model.step.StepEntity;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class CartesianPointParserTest {
 
     @Test
     void parsesCartesianPoint() {
-        String id = "#123";
-        String rawParameters = "'NONE', ( 1.0, 2.5, 3.75 )";
+        StepEntity entity = new StepEntity(
+                "#123",
+                "CARTESIAN_POINT",
+                "('NONE', ( 1.0, 2.5, 3.75 ))"
+        );
 
-        CartesianPoint point = CartesianPointParser.parse(id, rawParameters);
+        List<String> params = List.of("'NONE'", "( 1.0, 2.5, 3.75 )");
+
+        CartesianPointParser parser = new CartesianPointParser();
+        CartesianPoint point = parser.parse(entity, params, Map.of());
 
         assertEquals("#123", point.getId());
         assertEquals("CARTESIAN_POINT", point.getType());

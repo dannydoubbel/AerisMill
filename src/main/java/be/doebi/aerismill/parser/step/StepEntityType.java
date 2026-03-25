@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum StepEntityType {
+    VERTEX_POINT("VERTEX_POINT"),
     CARTESIAN_POINT("CARTESIAN_POINT"),
     DIRECTION("DIRECTION"),
     VECTOR("VECTOR"),

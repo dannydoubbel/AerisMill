@@ -55,13 +55,17 @@ public class StepParserUtils {
     }
 
     public static String stripOuterParens(String value) {
-        String trimmed = value.trim();
-
-        if (!trimmed.startsWith("(") || !trimmed.endsWith(")")) {
-            throw new IllegalArgumentException("Expected parenthesized value but got: " + value);
+        if (value == null) {
+            throw new IllegalArgumentException("Value cannot be null");
         }
 
-        return trimmed.substring(1, trimmed.length() - 1).trim();
+        String trimmed = value.trim();
+
+        if (trimmed.length() >= 2 && trimmed.startsWith("(") && trimmed.endsWith(")")) {
+            return trimmed.substring(1, trimmed.length() - 1).trim();
+        }
+
+        throw new IllegalArgumentException("Expected parenthesized value but got: " + value);
     }
 
     public static List<String> splitTopLevelParameters(String value) {
