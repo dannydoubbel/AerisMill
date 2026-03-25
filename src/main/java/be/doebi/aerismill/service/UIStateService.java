@@ -1,9 +1,11 @@
 package be.doebi.aerismill.service;
 
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TabPane;
+import javafx.stage.Stage;
 
 import java.util.prefs.Preferences;
 
@@ -22,7 +24,41 @@ public class UIStateService {
     }
 
     public void restoreLayoutState(Parent root) {
-        walkAndRestore(root);
+        if (root == null) return;
+
+        walkAndRestoreTabs(root);
+
+        Platform.runLater(() -> walkAndRestoreSplitPanes(root));
+    }
+
+    private void walkAndRestoreTabs(Node node) {
+        if (node.getId() != null && !node.getId().isBlank()) {
+            if (node instanceof TabPane tabPane) {
+                restoreTabPane(node.getId(), tabPane);
+                System.out.println("Restore tabPane " + node);
+            }
+        }
+
+        if (node instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                walkAndRestoreTabs(child);
+            }
+        }
+    }
+
+    private void walkAndRestoreSplitPanes(Node node) {
+        if (node.getId() != null && !node.getId().isBlank()) {
+            if (node instanceof SplitPane splitPane) {
+                restoreSplitPane(node.getId(), splitPane);
+                System.out.println("Restore splitpane " + node);
+            }
+        }
+
+        if (node instanceof Parent parent) {
+            for (Node child : parent.getChildrenUnmodifiable()) {
+                walkAndRestoreSplitPanes(child);
+            }
+        }
     }
 
     private void walkAndSave(Node node) {
@@ -91,5 +127,38 @@ public class UIStateService {
         if (index >= 0 && index < tabPane.getTabs().size()) {
             tabPane.getSelectionModel().select(index);
         }
+    }
+
+
+    public void saveWindowState(Stage stage) {
+        if (stage == null) return;
+
+        prefs.putDouble("window.x", stage.getX());
+        prefs.putDouble("window.y", stage.getY());
+        prefs.putDouble("window.width", stage.getWidth());
+        prefs.putDouble("window.height", stage.getHeight());
+        prefs.putBoolean("window.maximized", stage.isMaximized());
+    }
+
+    public void restoreWindowState(Stage stage) {
+        if (stage == null) return;
+
+        double width = prefs.getDouble("window.width", 1200);
+        double height = prefs.getDouble("window.height", 800);
+        double x = prefs.getDouble("window.x", Double.NaN);
+        double y = prefs.getDouble("window.y", Double.NaN);
+        boolean maximized = prefs.getBoolean("window.maximized", false);
+
+        stage.setWidth(width);
+        stage.setHeight(height);
+
+        if (!Double.isNaN(x)) {
+            stage.setX(x);
+        }
+        if (!Double.isNaN(y)) {
+            stage.setY(y);
+        }
+
+        stage.setMaximized(maximized);
     }
 }

@@ -203,7 +203,9 @@ public class MainController {
     }
 
     private void saveApplicationState() {
+
         UIStateService.getInstance().saveLayoutState(rootPane);
+        UIStateService.getInstance().saveWindowState(getStage());
 
         if (machinePaneController != null) {
             machinePaneController.saveUiState();
