@@ -1,7 +1,7 @@
 package be.doebi.aerismill.service;
 
 import be.doebi.aerismill.io.step.StepReader;
-import be.doebi.aerismill.model.step.core.StepModel;
+import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.parser.step.StepParser;
 
 import java.io.File;

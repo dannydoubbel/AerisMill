@@ -1,6 +1,6 @@
 package be.doebi.aerismill.ui;
 
-import be.doebi.aerismill.model.step.core.StepModel;
+import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.service.StepImportService;
 import be.doebi.aerismill.service.UIStateService;
 import javafx.application.Platform;
