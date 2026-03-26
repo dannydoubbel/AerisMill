@@ -240,7 +240,8 @@ public class MainController {
 
         alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
         alert.getDialogPane().getStylesheets().add(
-                getClass().getResource("/be/doebi/aerismill/ui/app.css").toExternalForm()
+                Objects.requireNonNull(getClass().
+                        getResource("/be/doebi/aerismill/ui/app.css")).toExternalForm()
         );
 
         return alert;
@@ -260,7 +261,8 @@ public class MainController {
     }
 
     private void setupManualSerialSendField() {
-        textManualSerialSend.textProperty().addListener((obs, oldValue, newValue) -> {
+        textManualSerialSend.textProperty().
+                addListener((obs, oldValue, newValue) -> {
             if (newValue == null || newValue.isBlank()) {
                 manualSerialSendDirty = false;
                 textManualSerialSend.setStyle("-fx-font-style: normal;");
