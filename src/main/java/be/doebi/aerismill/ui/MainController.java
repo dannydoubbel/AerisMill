@@ -1,5 +1,6 @@
 package be.doebi.aerismill.ui;
 
+import be.doebi.aerismill.model.step.core.StepModel;
 import be.doebi.aerismill.service.StepImportService;
 import be.doebi.aerismill.service.UIStateService;
 import javafx.application.Platform;
@@ -11,6 +12,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import java.io.File;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.prefs.Preferences;
 
@@ -102,7 +104,7 @@ public class MainController {
         rememberLastDirectory(selectedFile);
 
         try {
-            Object loadedModel = stepImportService.open(selectedFile);
+            StepModel loadedModel = stepImportService.open(selectedFile);
             applyLoadedStepFile(selectedFile, loadedModel);
         } catch (Exception e) {
             handleOpenStepFileFailure(selectedFile, e);
@@ -154,7 +156,7 @@ public class MainController {
         }
     }
 
-    private void applyLoadedStepFile(File selectedFile, Object loadedModel) {
+    private void applyLoadedStepFile(File selectedFile, StepModel loadedModel) {
         currentFile = selectedFile;
         currentStepFile = loadedModel;
 
@@ -326,7 +328,7 @@ public class MainController {
 
     private void addAppCss(Alert alert) {
         alert.getDialogPane().getStylesheets().add(
-                getClass().getResource("/be/doebi/aerismill/ui/app.css").toExternalForm()
+                Objects.requireNonNull(getClass().getResource("/be/doebi/aerismill/ui/app.css")).toExternalForm()
         );
     }
 }
