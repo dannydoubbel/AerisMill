@@ -2,6 +2,8 @@ package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
+
 import java.util.List;
 
 public class AdvancedFace extends TopologyEntity {
@@ -16,7 +18,7 @@ public class AdvancedFace extends TopologyEntity {
                         List<StepEntity> bounds,
                         StepEntity faceGeometry,
                         boolean sameSense) {
-        super(id, "ADVANCED_FACE", rawParameters);
+        super(id, StepEntityType.ADVANCED_FACE, rawParameters);
         this.name = name;
         this.bounds = bounds;
         this.faceGeometry = faceGeometry;

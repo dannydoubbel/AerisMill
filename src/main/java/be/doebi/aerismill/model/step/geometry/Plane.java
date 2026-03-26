@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class Plane extends GeometricEntity {
     private final String name;
@@ -10,7 +11,7 @@ public class Plane extends GeometricEntity {
                  String rawParameters,
                  String name,
                  Axis2Placement3D position) {
-        super(id, "PLANE", rawParameters);
+        super(id, StepEntityType.PLANE, rawParameters);
         this.name = name;
         this.position = position;
     }

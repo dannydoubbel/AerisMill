@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class ClosedShell extends TopologyEntity {
                        String rawParameters,
                        String name,
                        List<AdvancedFace> cfsFaces) {
-        super(id, "CLOSED_SHELL", rawParameters);
+        super(id, StepEntityType.CLOSED_SHELL, rawParameters);
         this.name = name;
         this.cfsFaces = cfsFaces;
     }

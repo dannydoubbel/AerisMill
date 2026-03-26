@@ -38,10 +38,10 @@ Phase 3 - product/shape root plumbing
 
 public class StepEntity {
     private final String id;
-    private final String type;
+    private final StepEntityType type;
     private final String rawParameters;
 
-    public StepEntity(String id, String type, String rawParameters) {
+    public StepEntity(String id, StepEntityType type, String rawParameters) {
         this.id = id;
         this.type = type;
         this.rawParameters = rawParameters;
@@ -51,7 +51,7 @@ public class StepEntity {
         return id;
     }
 
-    public String getType() {
+    public StepEntityType getType() {
         return type;
     }
 

@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.EdgeLoop;
 import be.doebi.aerismill.model.step.topology.FaceBound;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class FaceBoundParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "FACE_BOUND",
+                StepEntityType.FACE_BOUND,
                 "( 'NONE', #10, .T. )"
         );
 

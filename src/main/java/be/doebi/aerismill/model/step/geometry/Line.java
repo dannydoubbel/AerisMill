@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class Line extends GeometricEntity {
     private final String name;
@@ -12,7 +13,7 @@ public class Line extends GeometricEntity {
                 String name,
                 CartesianPoint point,
                 Vector vector) {
-        super(id, "LINE", rawParameters);
+        super(id, StepEntityType.LINE, rawParameters);
         this.name = name;
         this.point = point;
         this.vector = vector;

@@ -17,17 +17,17 @@ class BSplineCurveWithKnotsParserTest {
     void parseBSplineCurveWithKnots_shouldParseCorrectly() {
         StepEntity cp1 = new StepEntity(
                 "#1",
-                StepEntityType.CARTESIAN_POINT.getName(),
+                StepEntityType.CARTESIAN_POINT,
                 "( 'NONE', ( 0.0, 0.0, 0.0 ) )"
         );
         StepEntity cp2 = new StepEntity(
                 "#2",
-                StepEntityType.CARTESIAN_POINT.getName(),
+                StepEntityType.CARTESIAN_POINT,
                 "( 'NONE', ( 1.0, 0.0, 0.0 ) )"
         );
         StepEntity cp3 = new StepEntity(
                 "#3",
-                StepEntityType.CARTESIAN_POINT.getName(),
+                StepEntityType.CARTESIAN_POINT,
                 "( 'NONE', ( 2.0, 0.0, 0.0 ) )"
         );
 
@@ -39,7 +39,7 @@ class BSplineCurveWithKnotsParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                StepEntityType.B_SPLINE_CURVE_WITH_KNOTS.getName(),
+                StepEntityType.B_SPLINE_CURVE_WITH_KNOTS,
                 "( dummy raw parameters )"
         );
 

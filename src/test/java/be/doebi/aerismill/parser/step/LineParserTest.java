@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 import be.doebi.aerismill.model.step.geometry.Direction;
 import be.doebi.aerismill.model.step.geometry.Line;
@@ -44,7 +45,7 @@ class LineParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "LINE",
+                StepEntityType.LINE,
                 "( 'NONE', #10, #30 )"
         );
 

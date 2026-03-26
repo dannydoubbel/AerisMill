@@ -36,7 +36,7 @@ public class BSplineSurfaceWithKnots extends GeometricEntity {
             List<Double> vKnots,
             String knotSpec
     ) {
-        super(id, StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS.getName(), rawParameters);
+        super(id, StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, rawParameters);
         this.uDegree = uDegree;
         this.vDegree = vDegree;
         this.controlPointsList = controlPointsList;

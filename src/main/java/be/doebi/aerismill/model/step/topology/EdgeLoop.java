@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 import java.util.List;
 
@@ -12,7 +13,7 @@ public class EdgeLoop extends TopologyEntity {
                     String rawParameters,
                     String name,
                     List<OrientedEdge> edgeList) {
-        super(id, "EDGE_LOOP", rawParameters);
+        super(id, StepEntityType.EDGE_LOOP, rawParameters);
         this.name = name;
         this.edgeList = edgeList;
     }

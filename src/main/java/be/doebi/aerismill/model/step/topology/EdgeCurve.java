@@ -2,6 +2,7 @@ package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 
 public class EdgeCurve extends TopologyEntity {
@@ -18,7 +19,7 @@ public class EdgeCurve extends TopologyEntity {
                      VertexPoint edgeEnd,
                      StepEntity edgeGeometry,
                      boolean sameSense) {
-        super(id, "EDGE_CURVE", rawParameters);
+        super(id, StepEntityType.EDGE_CURVE, rawParameters);
         this.name = name;
         this.edgeStart = edgeStart;
         this.edgeEnd = edgeEnd;

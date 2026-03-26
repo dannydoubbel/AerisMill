@@ -25,7 +25,7 @@ class AdvancedBrepShapeRepresentationParserTest {
 
         StepEntity context = new StepEntity(
                 "#20",
-                 StepEntityType.GEOMETRIC_REPRESENTATION_CONTEXT.getName(),
+                 StepEntityType.GEOMETRIC_REPRESENTATION_CONTEXT,
                 "( 3 )"
         );
 
@@ -35,7 +35,7 @@ class AdvancedBrepShapeRepresentationParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                 StepEntityType.ADVANCED_BREP_SHAPE_REPRESENTATION.getName(),
+                 StepEntityType.ADVANCED_BREP_SHAPE_REPRESENTATION,
                 "( 'NONE', ( #10 ), #20 )"
         );
 

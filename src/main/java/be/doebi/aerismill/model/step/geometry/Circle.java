@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class Circle extends GeometricEntity {
     private final String name;
@@ -12,7 +13,7 @@ public class Circle extends GeometricEntity {
                   String name,
                   Axis2Placement3D position,
                   double radius) {
-        super(id, "CIRCLE", rawParameters);
+        super(id, StepEntityType.CIRCLE, rawParameters);
         this.name = name;
         this.position = position;
         this.radius = radius;

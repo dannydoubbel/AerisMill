@@ -16,7 +16,7 @@ class ComplexEntityParserTest {
     void parseComplexEntity_shouldParsePartsCorrectly() {
         StepEntity entity = new StepEntity(
                 "#15013",
-                StepEntityType.COMPLEX_ENTITY.getName(),
+                StepEntityType.COMPLEX_ENTITY,
                 "( BOUNDED_CURVE ( ) " +
                         "B_SPLINE_CURVE ( 2, ( #1, #2, #3 ), .UNSPECIFIED., .F., .F. ) " +
                         "B_SPLINE_CURVE_WITH_KNOTS ( ( 3, 3 ), ( 0.0, 1.0 ), .UNSPECIFIED. ) )"
@@ -47,7 +47,7 @@ class ComplexEntityParserTest {
     void parseComplexEntity_shouldHandleEmptyParameterPart() {
         StepEntity entity = new StepEntity(
                 "#15013",
-                StepEntityType.COMPLEX_ENTITY.getName(),
+                StepEntityType.COMPLEX_ENTITY,
                 "( BOUNDED_CURVE ( ) )"
         );
 
@@ -67,7 +67,7 @@ class ComplexEntityParserTest {
     void parseComplexEntity_shouldParseMixedPartsCorrectly() {
         StepEntity entity = new StepEntity(
                 "#15013",
-                StepEntityType.COMPLEX_ENTITY.getName(),
+                StepEntityType.COMPLEX_ENTITY,
                 "( BOUNDED_CURVE ( ) " +
                         "B_SPLINE_CURVE ( 2, ( #1, #2, #3 ), .UNSPECIFIED., .F., .F. ) " +
                         "B_SPLINE_CURVE_WITH_KNOTS ( ( 3, 3 ), ( 0.0, 1.0 ), .UNSPECIFIED. ) )"

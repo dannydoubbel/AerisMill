@@ -29,7 +29,7 @@ public class BSplineCurveWithKnots extends GeometricEntity {
             List<Double> knots,
             String knotSpec
     ) {
-        super(id, StepEntityType.B_SPLINE_CURVE_WITH_KNOTS.getName(), rawParameters);
+        super(id, StepEntityType.B_SPLINE_CURVE_WITH_KNOTS, rawParameters);
 
         this.degree = degree;
         this.controlPoints = controlPoints;

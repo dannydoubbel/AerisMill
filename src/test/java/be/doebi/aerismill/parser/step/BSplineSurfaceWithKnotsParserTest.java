@@ -15,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class BSplineSurfaceWithKnotsParserTest {
     @Test
     void parseBSplineSurfaceWithKnots_shouldParseCorrectly() {
-        StepEntity cp1 = new StepEntity("#1", StepEntityType.CARTESIAN_POINT.getName(), "( 'NONE', ( 0.0, 0.0, 0.0 ) )");
-        StepEntity cp2 = new StepEntity("#2", StepEntityType.CARTESIAN_POINT.getName(), "( 'NONE', ( 1.0, 0.0, 0.0 ) )");
-        StepEntity cp3 = new StepEntity("#3", StepEntityType.CARTESIAN_POINT.getName(), "( 'NONE', ( 0.0, 1.0, 0.0 ) )");
-        StepEntity cp4 = new StepEntity("#4", StepEntityType.CARTESIAN_POINT.getName(), "( 'NONE', ( 1.0, 1.0, 0.0 ) )");
+        StepEntity cp1 = new StepEntity("#1", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 0.0, 0.0, 0.0 ) )");
+        StepEntity cp2 = new StepEntity("#2", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 1.0, 0.0, 0.0 ) )");
+        StepEntity cp3 = new StepEntity("#3", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 0.0, 1.0, 0.0 ) )");
+        StepEntity cp4 = new StepEntity("#4", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 1.0, 1.0, 0.0 ) )");
 
         Map<String, Object> parsedEntities = Map.of(
                 "#1", cp1,
@@ -29,7 +29,7 @@ class BSplineSurfaceWithKnotsParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS.getName(),
+                StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS,
                 "( dummy raw parameters )"
         );
 

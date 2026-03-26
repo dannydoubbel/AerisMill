@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.ClosedShell;
 import be.doebi.aerismill.model.step.topology.ManifoldSolidBrep;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class ManifoldSolidBrepParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "MANIFOLD_SOLID_BREP",
+                StepEntityType.MANIFOLD_SOLID_BREP,
                 "( 'NONE', #10 )"
         );
 

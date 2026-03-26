@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.definition;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class ProductDefinitionShape extends StepEntity {
     private final String name;
@@ -8,7 +9,7 @@ public class ProductDefinitionShape extends StepEntity {
     private final String definitionRef;
 
     public ProductDefinitionShape(String id,
-                                  String type,
+                                  StepEntityType type,
                                   String rawParameters,
                                   String name,
                                   String description,

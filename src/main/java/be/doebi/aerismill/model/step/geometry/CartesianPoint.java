@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class CartesianPoint extends GeometricEntity {
     private final String rawParameters;
 
     public CartesianPoint(String id, String rawParameters, String name, List<Double> coordinates) {
-        super(id, "CARTESIAN_POINT", rawParameters);
+        super(id, StepEntityType.CARTESIAN_POINT, rawParameters);
         this.name = name;
         this.coordinates = coordinates;
         this.id = id;

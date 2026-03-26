@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
 import be.doebi.aerismill.model.step.geometry.Circle;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
@@ -51,7 +52,7 @@ class CircleParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "CIRCLE",
+                StepEntityType.CIRCLE,
                 "( 'NONE', #40, 25.0 )"
         );
 

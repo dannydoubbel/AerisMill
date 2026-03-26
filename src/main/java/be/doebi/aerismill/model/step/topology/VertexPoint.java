@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 
 public class VertexPoint extends TopologyEntity {
@@ -12,7 +13,7 @@ public class VertexPoint extends TopologyEntity {
                        String rawParameters,
                        String name,
                        CartesianPoint vertexGeometry) {
-        super(id, rawParameters, rawParameters);
+        super(id, StepEntityType.VERTEX_POINT, rawParameters);
         this.name = name;
         this.vertexGeometry = vertexGeometry;
     }
@@ -29,7 +30,7 @@ public class VertexPoint extends TopologyEntity {
     public String toString() {
         return "VertexPoint{" +
                 "id='" + getId() + '\'' +
-                ", type='" + getType() + '\'' +
+                ", type=" + getType() +
                 ", rawParameters='" + getRawParameters() + '\'' +
                 ", name='" + name + '\'' +
                 ", vertexGeometry=" + vertexGeometry +

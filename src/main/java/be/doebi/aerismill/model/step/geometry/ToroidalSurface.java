@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class ToroidalSurface extends GeometricEntity {
     private final String name;
@@ -14,7 +15,7 @@ public class ToroidalSurface extends GeometricEntity {
                            Axis2Placement3D position,
                            double majorRadius,
                            double minorRadius) {
-        super(id, "TOROIDAL_SURFACE", rawParameters);
+        super(id, StepEntityType.TOROIDAL_SURFACE, rawParameters);
         this.name = name;
         this.position = position;
         this.majorRadius = majorRadius;

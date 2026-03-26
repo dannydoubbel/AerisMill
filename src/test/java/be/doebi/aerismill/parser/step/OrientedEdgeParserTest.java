@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Direction;
 import be.doebi.aerismill.model.step.geometry.Line;
 import be.doebi.aerismill.model.step.geometry.Vector;
@@ -87,7 +88,7 @@ class OrientedEdgeParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "ORIENTED_EDGE",
+                StepEntityType.ORIENTED_EDGE,
                 "( 'NONE', *, *, #50, .T. )"
         );
 

@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.representation;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public class ShapeRepresentation extends StepEntity {
     private final String contextRef;
 
     public ShapeRepresentation(String id,
-                               String type,
+                               StepEntityType type,
                                String rawParameters,
                                String name,
                                List<String> itemRefs,

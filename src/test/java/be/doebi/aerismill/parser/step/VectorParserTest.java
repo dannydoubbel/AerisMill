@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Vector;
 import be.doebi.aerismill.model.step.geometry.Direction;
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class VectorParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "VECTOR",
+                StepEntityType.VECTOR,
                 "( 'NONE', #20, 5.0 )"
         );
 

@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class ConicalSurface extends GeometricEntity {
     private final String name;
@@ -14,7 +15,7 @@ public class ConicalSurface extends GeometricEntity {
                           Axis2Placement3D position,
                           double radius,
                           double semiAngle) {
-        super(id, "CONICAL_SURFACE", rawParameters);
+        super(id, StepEntityType.CONICAL_SURFACE, rawParameters);
         this.name = name;
         this.position = position;
         this.radius = radius;

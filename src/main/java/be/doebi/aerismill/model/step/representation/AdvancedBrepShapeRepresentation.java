@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.representation;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ public class AdvancedBrepShapeRepresentation extends StepEntity {
                                            String name,
                                            List<StepEntity> items,
                                            StepEntity contextOfItems) {
-        super(id, "ADVANCED_BREP_SHAPE_REPRESENTATION", rawParameters);
+        super(id, StepEntityType.ADVANCED_BREP_SHAPE_REPRESENTATION, rawParameters);
         this.name = name;
         this.items = items;
         this.contextOfItems = contextOfItems;

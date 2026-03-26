@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class ManifoldSolidBrep extends TopologyEntity {
     private final String name;
@@ -10,7 +11,7 @@ public class ManifoldSolidBrep extends TopologyEntity {
                              String rawParameters,
                              String name,
                              ClosedShell outer) {
-        super(id, "MANIFOLD_SOLID_BREP", rawParameters);
+        super(id, StepEntityType.MANIFOLD_SOLID_BREP, rawParameters);
         this.name = name;
         this.outer = outer;
     }

@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class FaceBound extends TopologyEntity {
     private final String name;
@@ -12,7 +13,7 @@ public class FaceBound extends TopologyEntity {
                      String name,
                      EdgeLoop bound,
                      boolean orientation) {
-        super(id, "FACE_BOUND", rawParameters);
+        super(id, StepEntityType.FACE_BOUND, rawParameters);
         this.name = name;
         this.bound = bound;
         this.orientation = orientation;

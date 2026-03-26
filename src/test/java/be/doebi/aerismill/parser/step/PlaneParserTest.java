@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 import be.doebi.aerismill.model.step.geometry.Direction;
@@ -52,7 +53,7 @@ class PlaneParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "PLANE",
+                StepEntityType.PLANE,
                 "( 'NONE', #40 )"
         );
 

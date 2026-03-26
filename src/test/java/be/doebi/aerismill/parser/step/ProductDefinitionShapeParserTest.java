@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.definition.ProductDefinitionShape;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +16,7 @@ class ProductDefinitionShapeParserTest {
     void parsesProductDefinitionShape() {
         StepEntity entity = new StepEntity(
                 "#700",
-                "PRODUCT_DEFINITION_SHAPE",
+                StepEntityType.PRODUCT_DEFINITION_SHAPE,
                 "('Shape Name', 'Shape Description', #800)"
         );
 

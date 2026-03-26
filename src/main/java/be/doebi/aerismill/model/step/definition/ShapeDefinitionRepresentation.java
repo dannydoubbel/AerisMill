@@ -1,13 +1,14 @@
 package be.doebi.aerismill.model.step.definition;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class ShapeDefinitionRepresentation extends StepEntity {
     private final String definitionRef;
     private final String representationRef;
 
     public ShapeDefinitionRepresentation(String id,
-                                         String type,
+                                         StepEntityType type,
                                          String rawParameters,
                                          String definitionRef,
                                          String representationRef) {

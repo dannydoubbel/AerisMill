@@ -163,6 +163,7 @@ public class MainController {
         getStage().setTitle("AerisMill - " + selectedFile.getName());
         setInfoPath(selectedFile.getAbsolutePath());
         log(selectedFile.getName() + " loaded successfully.");
+        log("STEP entities loaded: " + loadedModel.getEntityCount());
 
         System.out.println(loadedModel);
     }

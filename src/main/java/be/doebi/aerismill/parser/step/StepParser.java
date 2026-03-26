@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.core.StepModel;
 
 import java.io.File;
@@ -87,35 +88,41 @@ public class StepParser {
 
 
 
-        private StepEntity parseEntity(String chunk) {
-            String trimmed = chunk.trim();
+    private StepEntity parseEntity(String chunk) {
+        String trimmed = chunk.trim();
 
-            int equalsIndex = trimmed.indexOf('=');
-            if (equalsIndex == -1) {
-                throw new IllegalArgumentException("Invalid STEP entity: " + chunk);
-            }
-
-            String id = trimmed.substring(0, equalsIndex).trim();
-            String rightSide = trimmed.substring(equalsIndex + 1).trim();
-
-            if (rightSide.startsWith("(")) {
-                return new StepEntity(id, "COMPLEX_ENTITY", rightSide);
-            }
-
-            int firstParenIndex = rightSide.indexOf('(');
-            if (firstParenIndex == -1) {
-                throw new IllegalArgumentException("Invalid STEP entity: " + chunk);
-            }
-
-            String type = rightSide.substring(0, firstParenIndex).trim();
-            String rawParameters = rightSide.substring(firstParenIndex).trim();
-
-            if (rawParameters.endsWith(";")) {
-                rawParameters = rawParameters.substring(0, rawParameters.length() - 1).trim();
-            }
-
-            return new StepEntity(id, type, rawParameters);
+        int equalsIndex = trimmed.indexOf('=');
+        if (equalsIndex == -1) {
+            throw new IllegalArgumentException("Invalid STEP entity: " + chunk);
         }
+
+        String id = trimmed.substring(0, equalsIndex).trim();
+        String rightSide = trimmed.substring(equalsIndex + 1).trim();
+
+        if (rightSide.startsWith("(")) {
+            return new StepEntity(id, StepEntityType.COMPLEX_ENTITY, rightSide);
+        }
+
+        int firstParenIndex = rightSide.indexOf('(');
+        if (firstParenIndex == -1) {
+            throw new IllegalArgumentException("Invalid STEP entity: " + chunk);
+        }
+
+        String typeName = rightSide.substring(0, firstParenIndex).trim();
+        StepEntityType type = StepEntityType.fromNameOrNull(typeName);
+        if (type == null) {
+            System.out.println("[SKIP UNKNOWN TYPE] " + id + " | " + typeName);
+            return null;
+        }
+
+        String rawParameters = rightSide.substring(firstParenIndex).trim();
+
+        if (rawParameters.endsWith(";")) {
+            rawParameters = rawParameters.substring(0, rawParameters.length() - 1).trim();
+        }
+
+        return new StepEntity(id, type, rawParameters);
+    }
 
 
 

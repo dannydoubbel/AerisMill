@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class Vector extends GeometricEntity {
     private final String name;
@@ -12,7 +13,7 @@ public class Vector extends GeometricEntity {
                   String name,
                   Direction orientation,
                   double magnitude) {
-        super(id, "VECTOR", rawParameters);
+        super(id, StepEntityType.VECTOR, rawParameters);
         this.name = name;
         this.orientation = orientation;
         this.magnitude = magnitude;

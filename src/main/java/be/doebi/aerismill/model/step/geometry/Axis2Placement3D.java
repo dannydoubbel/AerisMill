@@ -1,9 +1,10 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class Axis2Placement3D extends GeometricEntity {
-    private final String id;
+
     private final String name;
     private final CartesianPoint location;
     private final Direction axis;
@@ -15,16 +16,11 @@ public class Axis2Placement3D extends GeometricEntity {
                             CartesianPoint location,
                             Direction axis,
                             Direction refDirection) {
-        super(id, rawParameters, name);
-        this.id = id;
+        super(id, StepEntityType.AXIS2_PLACEMENT_3D, rawParameters);
         this.name = name;
         this.location = location;
         this.axis = axis;
         this.refDirection = refDirection;
-    }
-
-    public String getId() {
-        return id;
     }
 
     public String getName() {
@@ -45,11 +41,11 @@ public class Axis2Placement3D extends GeometricEntity {
 
     @Override
     public String toString() {
-
         return "Axis2Placement3D{" +
                 "id='" + getId() + '\'' +
+                ", type=" + getType() +
                 ", rawParameters='" + getRawParameters() + '\'' +
-                ", name='" + getName() + '\'' +
+                ", name='" + name + '\'' +
                 ", location=" + location +
                 ", axis=" + axis +
                 ", refDirection=" + refDirection +

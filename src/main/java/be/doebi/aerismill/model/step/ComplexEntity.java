@@ -9,7 +9,7 @@ public class ComplexEntity extends StepEntity {
     private final List<ComplexEntityPart> parts;
 
     public ComplexEntity(String id, String rawParameters, List<ComplexEntityPart> parts) {
-        super(id, StepEntityType.COMPLEX_ENTITY.getName(), rawParameters);
+        super(id, StepEntityType.COMPLEX_ENTITY, rawParameters);
         this.parts = parts;
     }
 

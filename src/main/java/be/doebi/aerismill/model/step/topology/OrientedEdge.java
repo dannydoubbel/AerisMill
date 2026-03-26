@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public class OrientedEdge extends TopologyEntity {
     private final String name;
@@ -16,7 +17,7 @@ public class OrientedEdge extends TopologyEntity {
                         VertexPoint edgeEnd,
                         EdgeCurve edgeElement,
                         boolean orientation) {
-        super(id, "ORIENTED_EDGE", rawParameters);
+        super(id, StepEntityType.ORIENTED_EDGE, rawParameters);
         this.name = name;
         this.edgeStart = edgeStart;
         this.edgeEnd = edgeEnd;

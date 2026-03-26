@@ -2,6 +2,7 @@ package be.doebi.aerismill.parser.step;
 
 import static org.junit.jupiter.api.Assertions.*;
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.AdvancedFace;
 import be.doebi.aerismill.model.step.topology.ClosedShell;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ class ClosedShellParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "CLOSED_SHELL",
+                StepEntityType.CLOSED_SHELL,
                 "( 'NONE', ( #10, #11 ) )"
         );
 

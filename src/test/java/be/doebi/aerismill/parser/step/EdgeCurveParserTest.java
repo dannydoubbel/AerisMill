@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Direction;
 import be.doebi.aerismill.model.step.geometry.Line;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
@@ -76,7 +77,7 @@ class EdgeCurveParserTest {
 
         StepEntity entity = new StepEntity(
                 "#100",
-                "EDGE_CURVE",
+                StepEntityType.EDGE_CURVE,
                 "( 'NONE', #20, #21, #40, .T. )"
         );
 

@@ -1,6 +1,7 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 
 import java.util.List;
 
@@ -10,7 +11,7 @@ public class Direction extends GeometricEntity {
 
 
     public Direction(String id, String rawParameters, String name, List<Double> directionRatios) {
-        super(id, "DIRECTION", rawParameters);
+        super(id, StepEntityType.DIRECTION, rawParameters);
         this.name = name;
         this.directionRatios = directionRatios;
     }

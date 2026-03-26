@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.representation.ShapeRepresentation;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +16,7 @@ class ShapeRepresentationParserTest {
     void parsesShapeRepresentation() {
         StepEntity entity = new StepEntity(
                 "#100",
-                "SHAPE_REPRESENTATION",
+                StepEntityType.SHAPE_REPRESENTATION,
                 "('Body', (#10, #11, #12), #200)"
         );
 
