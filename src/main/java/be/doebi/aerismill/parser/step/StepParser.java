@@ -1,23 +1,28 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
-import be.doebi.aerismill.model.step.StepModel;
+import be.doebi.aerismill.model.step.core.StepModel;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
 public class StepParser {
-        public StepModel parse(File file, String rawContent) {
-            System.out.println("Inside STEP PARSER");
-            System.out.println("Parsing STEP file: " + file.getAbsolutePath());
+    public StepModel parse(File file, String rawContent) {
+        System.out.println("Inside STEP PARSER");
+        System.out.println("Parsing STEP file: " + file.getAbsolutePath());
 
-            String dataSection = extractDataSection(rawContent);
-            List<String> entityChunks = splitEntities(dataSection);
-            List<StepEntity> entities = parseEntities(entityChunks);
+        String dataSection = extractDataSection(rawContent);
+        List<String> entityChunks = splitEntities(dataSection);
 
-            return new StepModel(file, file.getName(), rawContent, entities);
-        }
+        StepModel stepModel = parseEntities(entityChunks);
+        stepModel.setSourceFile(file);
+        stepModel.setFileName(file.getName());
+        stepModel.setRawContent(rawContent);
+
+
+        return stepModel;
+    }
 
         private List<String> splitEntities(String dataSection) {
             List<String> entities = new ArrayList<>();
@@ -54,15 +59,33 @@ public class StepParser {
             return rawContent.substring(dataContentStart, endSec).trim();
         }
 
-        private List<StepEntity> parseEntities(List<String> entityChunks) {
-            List<StepEntity> entities = new ArrayList<>();
+    private StepModel parseEntities(List<String> entityChunks) {
+        StepModel stepModel = new StepModel();
 
-            for (String chunk : entityChunks) {
-                entities.add(parseEntity(chunk));
+        for (String chunk : entityChunks) {
+            StepEntity entity = parseEntity(chunk);
+            if (entity != null) {
+                stepModel.addEntity(entity);
             }
-
-            return entities;
         }
+        return stepModel;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private StepEntity parseEntity(String chunk) {
             String trimmed = chunk.trim();

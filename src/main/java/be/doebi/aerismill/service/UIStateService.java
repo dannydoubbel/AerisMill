@@ -62,7 +62,6 @@ public class UIStateService {
     }
 
     private void walkAndSave(Node node) {
-        System.out.println("Walk and save");
         if (node !=null) {
             if (node.getId() != null && !node.getId().isBlank()) {
                 if (node instanceof SplitPane splitPane) {
