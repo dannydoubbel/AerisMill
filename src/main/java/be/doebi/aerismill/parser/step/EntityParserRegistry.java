@@ -3,6 +3,7 @@ package be.doebi.aerismill.parser.step;
 
 
 import be.doebi.aerismill.model.step.admin.*;
+import be.doebi.aerismill.model.step.presentation.*;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -107,6 +108,48 @@ public class EntityParserRegistry {
 
         parsers.put(StepEntityType.PRODUCT_CATEGORY_RELATIONSHIP,
                 new AdministrativeStepEntityParser<>(ProductCategoryRelationship::new));
+        parsers.put(StepEntityType.COLOUR_RGB,
+                new PresentationStepEntityParser<>(ColourRgb::new));
+
+        parsers.put(StepEntityType.CURVE_STYLE,
+                new PresentationStepEntityParser<>(CurveStyle::new));
+
+        parsers.put(StepEntityType.DRAUGHTING_PRE_DEFINED_COLOUR,
+                new PresentationStepEntityParser<>(DraughtingPreDefinedColour::new));
+
+        parsers.put(StepEntityType.DRAUGHTING_PRE_DEFINED_CURVE_FONT,
+                new PresentationStepEntityParser<>(DraughtingPreDefinedCurveFont::new));
+
+        parsers.put(StepEntityType.FILL_AREA_STYLE,
+                new PresentationStepEntityParser<>(FillAreaStyle::new));
+
+        parsers.put(StepEntityType.FILL_AREA_STYLE_COLOUR,
+                new PresentationStepEntityParser<>(FillAreaStyleColour::new));
+
+        parsers.put(StepEntityType.PRESENTATION_LAYER_ASSIGNMENT,
+                new PresentationStepEntityParser<>(PresentationLayerAssignment::new));
+
+        parsers.put(StepEntityType.PRESENTATION_STYLE_ASSIGNMENT,
+                new PresentationStepEntityParser<>(PresentationStyleAssignment::new));
+
+        parsers.put(StepEntityType.STYLED_ITEM,
+                new PresentationStepEntityParser<>(StyledItem::new));
+
+        parsers.put(StepEntityType.OVER_RIDING_STYLED_ITEM,
+                new PresentationStepEntityParser<>(OverRidingStyledItem::new));
+
+        parsers.put(StepEntityType.SURFACE_SIDE_STYLE,
+                new PresentationStepEntityParser<>(SurfaceSideStyle::new));
+
+        parsers.put(StepEntityType.SURFACE_STYLE_FILL_AREA,
+                new PresentationStepEntityParser<>(SurfaceStyleFillArea::new));
+
+        parsers.put(StepEntityType.SURFACE_STYLE_USAGE,
+                new PresentationStepEntityParser<>(SurfaceStyleUsage::new));
+
+        parsers.put(StepEntityType.MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION,
+                new PresentationStepEntityParser<>(MechanicalDesignGeometricPresentationRepresentation::new));
+
     }
 
     public EntityParser get(StepEntityType type) {
