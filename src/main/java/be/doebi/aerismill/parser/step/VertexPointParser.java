@@ -1,5 +1,5 @@
 package be.doebi.aerismill.parser.step;
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 import be.doebi.aerismill.model.step.topology.VertexPoint;
 

@@ -1,4 +1,4 @@
-package be.doebi.aerismill.parser.step;
+package be.doebi.aerismill.model.step.base;
 
 import java.util.Arrays;
 import java.util.Map;

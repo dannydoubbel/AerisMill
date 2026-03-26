@@ -1,13 +1,11 @@
 package be.doebi.aerismill.parser.step;
 
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.StepModel;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
-import static be.doebi.aerismill.parser.step.StepParserUtils.stripOuterParens;
 
 public class StepParser {
         public StepModel parse(File file, String rawContent) {

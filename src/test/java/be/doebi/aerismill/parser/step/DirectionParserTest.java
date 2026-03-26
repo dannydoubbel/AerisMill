@@ -3,7 +3,7 @@ package be.doebi.aerismill.parser.step;
 import be.doebi.aerismill.model.step.geometry.Direction;
 import org.junit.jupiter.api.Test;
 
-import static be.doebi.aerismill.parser.step.StepEntityType.DIRECTION;
+import static be.doebi.aerismill.model.step.base.StepEntityType.DIRECTION;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DirectionParserTest {

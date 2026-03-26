@@ -1,5 +1,7 @@
 package be.doebi.aerismill.model.step;
 
+import be.doebi.aerismill.model.step.base.StepEntity;
+
 import java.io.File;
 import java.util.List;
 

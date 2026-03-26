@@ -1,7 +1,7 @@
 package be.doebi.aerismill;
 
 import be.doebi.aerismill.parser.step.EntityParserRegistry;
-import be.doebi.aerismill.parser.step.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.parser.step.EntityParser;
 import be.doebi.aerismill.parser.step.StepParserUtils;
 

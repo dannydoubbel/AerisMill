@@ -1,6 +1,6 @@
 package be.doebi.aerismill.model.step.definition;
 
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 
 public class ProductDefinitionShape extends StepEntity {
     private final String name;

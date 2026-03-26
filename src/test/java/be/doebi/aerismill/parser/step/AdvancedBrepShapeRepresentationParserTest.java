@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.representation.AdvancedBrepShapeRepresentation;
 import be.doebi.aerismill.model.step.topology.ManifoldSolidBrep;
 import org.junit.jupiter.api.Test;

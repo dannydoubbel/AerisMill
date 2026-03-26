@@ -1,4 +1,4 @@
-package be.doebi.aerismill.model.step;
+package be.doebi.aerismill.model.step.base;
 
 /*
 STEP roadmap

@@ -2,7 +2,7 @@ package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.ComplexEntity;
 import be.doebi.aerismill.model.step.ComplexEntityPart;
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 
 import java.util.ArrayList;
 import java.util.List;

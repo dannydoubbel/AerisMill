@@ -1,6 +1,6 @@
 package be.doebi.aerismill.model.step.topology;
 
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.TopologyEntity;
 import java.util.List;
 

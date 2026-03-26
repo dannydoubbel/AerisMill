@@ -3,6 +3,7 @@ package be.doebi.aerismill.parser.step;
 
 
 import be.doebi.aerismill.model.step.admin.*;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.presentation.*;
 
 import java.util.EnumMap;

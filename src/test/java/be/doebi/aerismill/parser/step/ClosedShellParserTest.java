@@ -1,7 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import static org.junit.jupiter.api.Assertions.*;
-import be.doebi.aerismill.model.step.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.topology.AdvancedFace;
 import be.doebi.aerismill.model.step.topology.ClosedShell;
 import org.junit.jupiter.api.Test;
