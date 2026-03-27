@@ -51,8 +51,8 @@ class ClosedShellParserTest {
         assertEquals("#100", result.getId());
         assertEquals("( 'NONE', ( #10, #11 ) )", result.getRawParameters());
         assertEquals("NONE", result.getName());
-        assertEquals(2, result.getCfsFaces().size());
-        assertEquals(face1, result.getCfsFaces().get(0));
-        assertEquals(face2, result.getCfsFaces().get(1));
+        assertEquals(2, result.getFaceRefs().size());
+        assertEquals("#10", result.getFaceRefs().get(0));
+        assertEquals("#11", result.getFaceRefs().get(1));
     }
 }

@@ -1,8 +1,5 @@
 package be.doebi.aerismill.model.step.base;
 
-
-
-import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.resolve.StepResolvable;
 import be.doebi.aerismill.model.step.resolve.StepResolveException;
 
@@ -13,16 +10,39 @@ import java.util.List;
 import java.util.Map;
 
 public class StepModel {
-    private final File sourceFile;
-    private final String name;
-    private final String rawContent;
-    private final Map<String, StepEntity> entities;
+    private File sourceFile;
+    private String name;
+    private String rawContent;
+    private final Map<String, StepEntity> entities = new HashMap<>();
 
-    public StepModel(File sourceFile, String name, String rawContent, Map<String, StepEntity> entities) {
+    public StepModel() {
+    }
+
+    public void setSourceFile(File sourceFile) {
         this.sourceFile = sourceFile;
+    }
+
+    public void setFileName(String name) {
         this.name = name;
+    }
+
+    public void setRawContent(String rawContent) {
         this.rawContent = rawContent;
-        this.entities = new HashMap<>(entities);
+    }
+
+    public void addEntity(StepEntity entity) {
+        if (entity == null) {
+            throw new IllegalArgumentException("Step entity cannot be null");
+        }
+        entities.put(entity.getId(), entity);
+    }
+
+    public StepEntity getEntity(String id) {
+        return entities.get(id);
+    }
+
+    public boolean contains(String id) {
+        return entities.containsKey(id);
     }
 
     public <T extends StepEntity> T getEntityAs(String id, Class<T> expectedType) {
@@ -93,5 +113,9 @@ public class StepModel {
     @Override
     public String toString() {
         return "StepModel{sourceName='" + name + "'}";
+    }
+
+    public String getEntityCount() {
+        return String.valueOf(entities.size());
     }
 }

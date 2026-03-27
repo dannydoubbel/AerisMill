@@ -2,48 +2,39 @@ package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.topology.EdgeCurve;
-import be.doebi.aerismill.model.step.topology.VertexPoint;
 
 import java.util.List;
 import java.util.Map;
 
-public class EdgeCurveParser implements EntityParser<EdgeCurve>  {
+public class EdgeCurveParser implements EntityParser<EdgeCurve> {
+
     @Override
     public EdgeCurve parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = StepParserUtils.parseStepString(params.get(0));
-        VertexPoint edgeStart = resolveVertexPoint(params.get(1), parsedEntities);
-        VertexPoint edgeEnd = resolveVertexPoint(params.get(2), parsedEntities);
-        StepEntity edgeGeometry = resolveStepEntity(params.get(3), parsedEntities);
+        String edgeStartRef = parseStepReference(params.get(1));
+        String edgeEndRef = parseStepReference(params.get(2));
+        String edgeGeometryRef = parseStepReference(params.get(3));
         boolean sameSense = parseStepBoolean(params.get(4));
 
         return new EdgeCurve(
                 entity.getId(),
                 entity.getRawParameters(),
                 name,
-                edgeStart,
-                edgeEnd,
-                edgeGeometry,
+                edgeStartRef,
+                edgeEndRef,
+                edgeGeometryRef,
                 sameSense
         );
     }
-
-
 
     private boolean parseStepBoolean(String token) {
         return ".T.".equalsIgnoreCase(token.trim());
     }
 
-    private VertexPoint resolveVertexPoint(String token, Map<String, Object> parsedEntities) {
+    private String parseStepReference(String token) {
         if (token == null || token.equals("$")) {
             return null;
         }
-        return (VertexPoint) parsedEntities.get(token);
-    }
-
-    private StepEntity resolveStepEntity(String token, Map<String, Object> parsedEntities) {
-        if (token == null || token.equals("$")) {
-            return null;
-        }
-        return (StepEntity) parsedEntities.get(token);
+        return token.trim();
     }
 }

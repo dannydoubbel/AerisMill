@@ -8,12 +8,14 @@ import java.util.List;
 
 public class ClosedShell extends TopologyEntity {
     private final String name;
-    private List<AdvancedFace> faceRefs;
+    private final List<String> faceRefs;
+
+    private List<AdvancedFace> faces;
 
     public ClosedShell(String id,
                        String rawParameters,
                        String name,
-                       List<AdvancedFace> faceRefs) {
+                       List<String> faceRefs) {
         super(id, StepEntityType.CLOSED_SHELL, rawParameters);
         this.name = name;
         this.faceRefs = faceRefs;
@@ -23,13 +25,17 @@ public class ClosedShell extends TopologyEntity {
         return name;
     }
 
-    public List<AdvancedFace> getCfsFaces() {
-        return cfsFaces;
+    public List<String> getFaceRefs() {
+        return faceRefs;
+    }
+
+    public List<AdvancedFace> getFaces() {
+        return faces;
     }
 
     @Override
     protected void doResolve(StepModel model) {
-        this.faceRefs = model.resolveEntityList(faceRefs, AdvancedFace.class);
+        this.faces = model.resolveEntityList(faceRefs, AdvancedFace.class);
     }
 
     @Override
@@ -39,7 +45,8 @@ public class ClosedShell extends TopologyEntity {
                 ", type='" + getType() + '\'' +
                 ", rawParameters='" + getRawParameters() + '\'' +
                 ", name='" + name + '\'' +
-                ", cfsFaces=" + cfsFaces +
+                ", faceRefs=" + faceRefs +
+                ", faces=" + faces +
                 '}';
     }
 }

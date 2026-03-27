@@ -23,7 +23,7 @@ public class EdgeLoop extends TopologyEntity {
         return name;
     }
 
-    public List<OrientedEdge> getEdgeList() {
+    public List<OrientedEdge> getEdgeListRefs() {
         return edgeList;
     }
 

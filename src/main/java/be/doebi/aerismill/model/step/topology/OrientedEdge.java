@@ -6,28 +6,44 @@ import be.doebi.aerismill.model.step.base.StepModel;
 
 public class OrientedEdge extends TopologyEntity {
     private final String name;
-    private final VertexPoint edgeStart;
-    private final VertexPoint edgeEnd;
-    private final EdgeCurve edgeElement;
+    private final String edgeStartRef;
+    private final String edgeEndRef;
+    private final String edgeElementRef;
     private final boolean orientation;
+
+    private VertexPoint edgeStart;
+    private VertexPoint edgeEnd;
+    private EdgeCurve edgeElement;
 
     public OrientedEdge(String id,
                         String rawParameters,
                         String name,
-                        VertexPoint edgeStart,
-                        VertexPoint edgeEnd,
-                        EdgeCurve edgeElement,
+                        String edgeStartRef,
+                        String edgeEndRef,
+                        String edgeElementRef,
                         boolean orientation) {
         super(id, StepEntityType.ORIENTED_EDGE, rawParameters);
         this.name = name;
-        this.edgeStart = edgeStart;
-        this.edgeEnd = edgeEnd;
-        this.edgeElement = edgeElement;
+        this.edgeStartRef = edgeStartRef;
+        this.edgeEndRef = edgeEndRef;
+        this.edgeElementRef = edgeElementRef;
         this.orientation = orientation;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getEdgeStartRef() {
+        return edgeStartRef;
+    }
+
+    public String getEdgeEndRef() {
+        return edgeEndRef;
+    }
+
+    public String getEdgeElementRef() {
+        return edgeElementRef;
     }
 
     public VertexPoint getEdgeStart() {
@@ -48,7 +64,9 @@ public class OrientedEdge extends TopologyEntity {
 
     @Override
     protected void doResolve(StepModel model) {
-        // resolve refs here
+        this.edgeStart = edgeStartRef == null ? null : model.resolveEntity(edgeStartRef, VertexPoint.class);
+        this.edgeEnd = edgeEndRef == null ? null : model.resolveEntity(edgeEndRef, VertexPoint.class);
+        this.edgeElement = edgeElementRef == null ? null : model.resolveEntity(edgeElementRef, EdgeCurve.class);
     }
 
     @Override
@@ -58,6 +76,9 @@ public class OrientedEdge extends TopologyEntity {
                 ", type='" + getType() + '\'' +
                 ", rawParameters='" + getRawParameters() + '\'' +
                 ", name='" + name + '\'' +
+                ", edgeStartRef='" + edgeStartRef + '\'' +
+                ", edgeEndRef='" + edgeEndRef + '\'' +
+                ", edgeElementRef='" + edgeElementRef + '\'' +
                 ", edgeStart=" + edgeStart +
                 ", edgeEnd=" + edgeEnd +
                 ", edgeElement=" + edgeElement +

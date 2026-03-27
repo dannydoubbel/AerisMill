@@ -115,4 +115,25 @@ public class StepParserUtils {
         throw new IllegalArgumentException("Invalid STEP string value: " + value);
     }
 
+    public static List<String> parseReferenceList(String token) {
+        List<String> result = new ArrayList<>();
+
+        String trimmed = token.trim();
+        if (trimmed.startsWith("(") && trimmed.endsWith(")")) {
+            trimmed = trimmed.substring(1, trimmed.length() - 1);
+        }
+
+        if (trimmed.isBlank()) {
+            return result;
+        }
+
+        for (String part : trimmed.split(",")) {
+            String ref = part.trim();
+            if (!ref.equals("$") && !ref.isEmpty()) {
+                result.add(ref);
+            }
+        }
+
+        return result;
+    }
 }

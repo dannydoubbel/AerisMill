@@ -1,36 +1,50 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
-import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepModel;
 
-
 public class EdgeCurve extends TopologyEntity {
     private final String name;
-    private final VertexPoint edgeStart;
-    private final VertexPoint edgeEnd;
-    private final StepEntity edgeGeometry;
+    private final String edgeStartRef;
+    private final String edgeEndRef;
+    private final String edgeGeometryRef;
     private final boolean sameSense;
+
+    private VertexPoint edgeStart;
+    private VertexPoint edgeEnd;
+    private StepEntity edgeGeometry;
 
     public EdgeCurve(String id,
                      String rawParameters,
                      String name,
-                     VertexPoint edgeStart,
-                     VertexPoint edgeEnd,
-                     StepEntity edgeGeometry,
+                     String edgeStartRef,
+                     String edgeEndRef,
+                     String edgeGeometryRef,
                      boolean sameSense) {
         super(id, StepEntityType.EDGE_CURVE, rawParameters);
         this.name = name;
-        this.edgeStart = edgeStart;
-        this.edgeEnd = edgeEnd;
-        this.edgeGeometry = edgeGeometry;
+        this.edgeStartRef = edgeStartRef;
+        this.edgeEndRef = edgeEndRef;
+        this.edgeGeometryRef = edgeGeometryRef;
         this.sameSense = sameSense;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getEdgeStartRef() {
+        return edgeStartRef;
+    }
+
+    public String getEdgeEndRef() {
+        return edgeEndRef;
+    }
+
+    public String getEdgeGeometryRef() {
+        return edgeGeometryRef;
     }
 
     public VertexPoint getEdgeStart() {
@@ -55,7 +69,6 @@ public class EdgeCurve extends TopologyEntity {
         this.edgeEnd = model.resolveEntity(edgeEndRef, VertexPoint.class);
         this.edgeGeometry = model.resolveEntity(edgeGeometryRef, StepEntity.class);
     }
-
 
     @Override
     public String toString() {
