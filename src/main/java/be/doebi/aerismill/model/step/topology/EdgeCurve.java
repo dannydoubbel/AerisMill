@@ -1,8 +1,10 @@
 package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepModel;
 
 
 public class EdgeCurve extends TopologyEntity {
@@ -46,6 +48,14 @@ public class EdgeCurve extends TopologyEntity {
     public boolean isSameSense() {
         return sameSense;
     }
+
+    @Override
+    protected void doResolve(StepModel model) {
+        this.edgeStart = model.resolveEntity(edgeStartRef, VertexPoint.class);
+        this.edgeEnd = model.resolveEntity(edgeEndRef, VertexPoint.class);
+        this.edgeGeometry = model.resolveEntity(edgeGeometryRef, StepEntity.class);
+    }
+
 
     @Override
     public String toString() {

@@ -1,6 +1,6 @@
 package be.doebi.aerismill.io.step;
 
-import be.doebi.aerismill.model.step.StepModel;
+import be.doebi.aerismill.model.step.base.StepModel;
 
 import java.io.File;
 import java.io.IOException;

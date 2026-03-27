@@ -2,6 +2,7 @@ package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepModel;
 
 import java.util.List;
 
@@ -24,6 +25,11 @@ public class EdgeLoop extends TopologyEntity {
 
     public List<OrientedEdge> getEdgeList() {
         return edgeList;
+    }
+
+    @Override
+    protected void doResolve(StepModel model) {
+        // resolve refs here
     }
 
     @Override

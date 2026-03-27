@@ -2,6 +2,7 @@ package be.doebi.aerismill.model.step.topology;
 
 import be.doebi.aerismill.model.step.TopologyEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepModel;
 
 public class FaceBound extends TopologyEntity {
     private final String name;
@@ -29,6 +30,11 @@ public class FaceBound extends TopologyEntity {
 
     public boolean isOrientation() {
         return orientation;
+    }
+
+    @Override
+    protected void doResolve(StepModel model) {
+        // resolve refs here
     }
 
     @Override
