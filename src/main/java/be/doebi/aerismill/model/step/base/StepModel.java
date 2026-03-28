@@ -1,5 +1,6 @@
 package be.doebi.aerismill.model.step.base;
 
+import be.doebi.aerismill.report.step.StepResolveReport;
 import be.doebi.aerismill.model.step.resolve.StepResolvable;
 import be.doebi.aerismill.model.step.resolve.StepResolveException;
 
@@ -90,6 +91,36 @@ public class StepModel {
         }
     }
 
+    public StepResolveReport resolveAllWithReport() {
+        StepResolveReport report = new StepResolveReport(name);
+
+        int totalEntities = 0;
+        int resolvableEntities = 0;
+
+        for (StepEntity entity : entities.values()) {
+            totalEntities++;
+
+            if (!(entity instanceof StepResolvable resolvable)) {
+                continue;
+            }
+
+            resolvableEntities++;
+
+            try {
+                resolvable.resolveReferences(this);
+                report.recordSuccess(entity);
+            } catch (Exception e) {
+                report.recordFailure(entity, e);
+            }
+        }
+
+        System.out.println("Model: " + name);
+        System.out.println("Total entities: " + totalEntities);
+        System.out.println("Resolvable entities: " + resolvableEntities);
+
+        return report;
+    }
+
     public File getSourceFile() {
         return sourceFile;
     }
@@ -110,12 +141,12 @@ public class StepModel {
         return new ArrayList<>(entities.values());
     }
 
+    public int getEntityCount() {
+        return entities.size();
+    }
+
     @Override
     public String toString() {
         return "StepModel{sourceName='" + name + "'}";
-    }
-
-    public String getEntityCount() {
-        return String.valueOf(entities.size());
     }
 }

@@ -1,5 +1,7 @@
 package be.doebi.aerismill;
 
+import be.doebi.aerismill.io.FileExtensionHelper;
+import be.doebi.aerismill.io.ResourcePathHelper;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.parser.step.EntityParser;
@@ -33,7 +35,8 @@ public class StepEntityInventoryTest {
 
     @Test
     void inventoryStepEntities() throws IOException, URISyntaxException {
-        Path stepFolder = getStepResourceFolder("step");
+
+        Path stepFolder =     ResourcePathHelper.getResourceFolderPath("step");
 
         Map<StepEntityType, Integer> totalCounts = new EnumMap<>(StepEntityType.class);
         Map<StepEntityType, Set<String>> filesPerType = new EnumMap<>(StepEntityType.class);
@@ -43,7 +46,7 @@ public class StepEntityInventoryTest {
         try (Stream<Path> paths = Files.list(stepFolder)) {
             List<Path> stepFiles = paths
                     .filter(Files::isRegularFile)
-                    .filter(this::isStepFile)
+                    .filter(FileExtensionHelper::isStepFile)
                     .sorted()
                     .toList();
 
@@ -212,18 +215,9 @@ public class StepEntityInventoryTest {
         return null;
     }
 
-    private boolean isStepFile(Path path) {
-        String name = path.getFileName().toString().toLowerCase();
-        return name.endsWith(".step") || name.endsWith(".stp");
-    }
 
-    private Path getStepResourceFolder(String folderName) throws URISyntaxException {
-        URL resource = getClass().getClassLoader().getResource(folderName);
-        if (resource == null) {
-            throw new IllegalStateException("Resource folder not found: " + folderName);
-        }
-        return Paths.get(resource.toURI());
-    }
+
+
 
     private String shorten(String text, int maxLength) {
         if (text.length() <= maxLength) {
