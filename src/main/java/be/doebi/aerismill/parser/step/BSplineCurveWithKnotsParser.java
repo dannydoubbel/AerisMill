@@ -1,13 +1,14 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.BSplineCurveWithKnots;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class BSplineCurveWithKnotsParser implements EntityParser<BSplineCurveWithKnots>{
+public class BSplineCurveWithKnotsParser implements EntityParser<BSplineCurveWithKnots> {
+
     @Override
     public BSplineCurveWithKnots parse(
             StepEntity entity,
@@ -16,7 +17,7 @@ public class BSplineCurveWithKnotsParser implements EntityParser<BSplineCurveWit
     ) {
         int degree = Integer.parseInt(params.get(0).trim());
 
-        List<StepEntity> controlPoints = parseControlPoints(params.get(1), parsedEntities);
+        List<String> controlPointRefs = StepParserUtils.parseReferenceList(params.get(1));
 
         String curveForm = params.get(2).trim();
         boolean closedCurve = StepParserUtils.parseStepBoolean(params.get(3));
@@ -30,7 +31,7 @@ public class BSplineCurveWithKnotsParser implements EntityParser<BSplineCurveWit
                 entity.getId(),
                 entity.getRawParameters(),
                 degree,
-                controlPoints,
+                controlPointRefs,
                 curveForm,
                 closedCurve,
                 selfIntersect,
@@ -40,19 +41,10 @@ public class BSplineCurveWithKnotsParser implements EntityParser<BSplineCurveWit
         );
     }
 
-    private List<StepEntity> parseControlPoints(String value, Map<String, Object> parsedEntities) {
-        String inside = StepParserUtils.stripOuterParens(value);
-        String[] ids = inside.split(",");
-
-        List<StepEntity> result = new ArrayList<>();
-        for (String id : ids) {
-            Object resolved = parsedEntities.get(id.trim());
-            if (!(resolved instanceof StepEntity stepEntity)) {
-                throw new IllegalArgumentException("Could not resolve control point: " + id.trim());
-            }
-            result.add(stepEntity);
-        }
-
-        return result;
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.B_SPLINE_CURVE_WITH_KNOTS, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
     }
 }

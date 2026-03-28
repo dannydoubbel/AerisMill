@@ -6,19 +6,25 @@ import be.doebi.aerismill.model.step.base.StepModel;
 
 public class ManifoldSolidBrep extends TopologyEntity {
     private final String name;
-    private final ClosedShell outer;
+    private final String outerRef;
+
+    private ClosedShell outer;
 
     public ManifoldSolidBrep(String id,
                              String rawParameters,
                              String name,
-                             ClosedShell outer) {
+                             String outerRef) {
         super(id, StepEntityType.MANIFOLD_SOLID_BREP, rawParameters);
         this.name = name;
-        this.outer = outer;
+        this.outerRef = outerRef;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getOuterRef() {
+        return outerRef;
     }
 
     public ClosedShell getOuter() {
@@ -26,8 +32,8 @@ public class ManifoldSolidBrep extends TopologyEntity {
     }
 
     @Override
-    protected void doResolve(StepModel model) {
-        // resolve refs here
+    public void doResolve(StepModel model) {
+        this.outer = outerRef == null ? null : model.resolveEntity(outerRef, ClosedShell.class);
     }
 
     @Override
@@ -37,6 +43,7 @@ public class ManifoldSolidBrep extends TopologyEntity {
                 ", type='" + getType() + '\'' +
                 ", rawParameters='" + getRawParameters() + '\'' +
                 ", name='" + name + '\'' +
+                ", outerRef='" + outerRef + '\'' +
                 ", outer=" + outer +
                 '}';
     }

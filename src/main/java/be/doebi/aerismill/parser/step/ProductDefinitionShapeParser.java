@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.definition.ProductDefinitionShape;
 
 import java.util.List;
@@ -10,9 +11,9 @@ public class ProductDefinitionShapeParser implements EntityParser<ProductDefinit
 
     @Override
     public ProductDefinitionShape parse(StepEntity entity, List<String> params, Map<String, Object> context) {
-        String name = unquote(params.get(0));
-        String description = unquote(params.get(1));
-        String definitionRef = params.get(2);
+        String name = StepParserUtils.parseStepString(params.get(0));
+        String description = StepParserUtils.parseStepString(params.get(1));
+        String definitionRef = parseStepReference(params.get(2));
 
         return new ProductDefinitionShape(
                 entity.getId(),
@@ -24,14 +25,23 @@ public class ProductDefinitionShapeParser implements EntityParser<ProductDefinit
         );
     }
 
-    private String unquote(String value) {
-        if (value == null) {
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.PRODUCT_DEFINITION_SHAPE, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
+    }
+
+    private String parseStepReference(String token) {
+        if (token == null) {
             return null;
         }
-        value = value.trim();
-        if (value.startsWith("'") && value.endsWith("'") && value.length() >= 2) {
-            return value.substring(1, value.length() - 1);
+
+        String trimmed = token.trim();
+        if (trimmed.equals("$") || trimmed.equals("*")) {
+            return null;
         }
-        return value;
+
+        return trimmed;
     }
 }

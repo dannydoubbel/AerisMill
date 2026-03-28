@@ -1,14 +1,11 @@
 package be.doebi.aerismill.parser.step;
 
-
-
 import be.doebi.aerismill.model.step.admin.*;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.presentation.*;
 
 import java.util.EnumMap;
 import java.util.Map;
-
 
 public class EntityParserRegistry {
     private final Map<StepEntityType, EntityParser> parsers = new EnumMap<>(StepEntityType.class);
@@ -41,116 +38,116 @@ public class EntityParserRegistry {
         parsers.put(StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, new BSplineSurfaceWithKnotsParser());
         parsers.put(StepEntityType.COMPLEX_ENTITY, new ComplexEntityParser());
         parsers.put(StepEntityType.SHAPE_REPRESENTATION, new ShapeRepresentationParser());
-        parsers.put(StepEntityType.SHAPE_DEFINITION_REPRESENTATION, new be.doebi.aerismill.parser.step.ShapeRepresentationParser());
+        parsers.put(StepEntityType.SHAPE_DEFINITION_REPRESENTATION, new ShapeDefinitionRepresentationParser());
         parsers.put(StepEntityType.PRODUCT_DEFINITION_SHAPE, new ProductDefinitionShapeParser());
 
         parsers.put(StepEntityType.APPLICATION_CONTEXT,
-                new AdministrativeStepEntityParser<>(ApplicationContext::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.APPLICATION_CONTEXT, ApplicationContext::new));
 
         parsers.put(StepEntityType.APPLICATION_PROTOCOL_DEFINITION,
-                new AdministrativeStepEntityParser<>(ApplicationProtocolDefinition::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.APPLICATION_PROTOCOL_DEFINITION, ApplicationProtocolDefinition::new));
 
         parsers.put(StepEntityType.APPROVAL,
-                new AdministrativeStepEntityParser<>(Approval::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.APPROVAL, Approval::new));
 
         parsers.put(StepEntityType.APPROVAL_DATE_TIME,
-                new AdministrativeStepEntityParser<>(ApprovalDateTime::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.APPROVAL_DATE_TIME, ApprovalDateTime::new));
 
         parsers.put(StepEntityType.APPROVAL_PERSON_ORGANIZATION,
-                new AdministrativeStepEntityParser<>(ApprovalPersonOrganization::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.APPROVAL_PERSON_ORGANIZATION, ApprovalPersonOrganization::new));
 
         parsers.put(StepEntityType.APPROVAL_ROLE,
-                new AdministrativeStepEntityParser<>(ApprovalRole::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.APPROVAL_ROLE, ApprovalRole::new));
 
         parsers.put(StepEntityType.APPROVAL_STATUS,
-                new AdministrativeStepEntityParser<>(ApprovalStatus::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.APPROVAL_STATUS, ApprovalStatus::new));
 
         parsers.put(StepEntityType.CALENDAR_DATE,
-                new AdministrativeStepEntityParser<>(CalendarDate::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.CALENDAR_DATE, CalendarDate::new));
 
         parsers.put(StepEntityType.DATE_AND_TIME,
-                new AdministrativeStepEntityParser<>(DateAndTime::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.DATE_AND_TIME, DateAndTime::new));
 
         parsers.put(StepEntityType.DATE_TIME_ROLE,
-                new AdministrativeStepEntityParser<>(DateTimeRole::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.DATE_TIME_ROLE, DateTimeRole::new));
 
         parsers.put(StepEntityType.DOCUMENT,
-                new AdministrativeStepEntityParser<>(Document::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.DOCUMENT, Document::new));
 
         parsers.put(StepEntityType.DOCUMENT_TYPE,
-                new AdministrativeStepEntityParser<>(DocumentType::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.DOCUMENT_TYPE, DocumentType::new));
 
         parsers.put(StepEntityType.LOCAL_TIME,
-                new AdministrativeStepEntityParser<>(LocalTime::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.LOCAL_TIME, LocalTime::new));
 
         parsers.put(StepEntityType.ORGANIZATION,
-                new AdministrativeStepEntityParser<>(Organization::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.ORGANIZATION, Organization::new));
 
         parsers.put(StepEntityType.PERSON,
-                new AdministrativeStepEntityParser<>(Person::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.PERSON, Person::new));
 
         parsers.put(StepEntityType.PERSONAL_ADDRESS,
-                new AdministrativeStepEntityParser<>(PersonalAddress::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.PERSONAL_ADDRESS, PersonalAddress::new));
 
         parsers.put(StepEntityType.PERSON_AND_ORGANIZATION,
-                new AdministrativeStepEntityParser<>(PersonAndOrganization::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.PERSON_AND_ORGANIZATION, PersonAndOrganization::new));
 
         parsers.put(StepEntityType.PERSON_AND_ORGANIZATION_ROLE,
-                new AdministrativeStepEntityParser<>(PersonAndOrganizationRole::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.PERSON_AND_ORGANIZATION_ROLE, PersonAndOrganizationRole::new));
 
         parsers.put(StepEntityType.SECURITY_CLASSIFICATION,
-                new AdministrativeStepEntityParser<>(SecurityClassification::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.SECURITY_CLASSIFICATION, SecurityClassification::new));
 
         parsers.put(StepEntityType.SECURITY_CLASSIFICATION_LEVEL,
-                new AdministrativeStepEntityParser<>(SecurityClassificationLevel::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.SECURITY_CLASSIFICATION_LEVEL, SecurityClassificationLevel::new));
 
         parsers.put(StepEntityType.PRODUCT_CATEGORY,
-                new AdministrativeStepEntityParser<>(ProductCategory::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.PRODUCT_CATEGORY, ProductCategory::new));
 
         parsers.put(StepEntityType.PRODUCT_CATEGORY_RELATIONSHIP,
-                new AdministrativeStepEntityParser<>(ProductCategoryRelationship::new));
+                new AdministrativeStepEntityParser<>(StepEntityType.PRODUCT_CATEGORY_RELATIONSHIP, ProductCategoryRelationship::new));
+
         parsers.put(StepEntityType.COLOUR_RGB,
-                new PresentationStepEntityParser<>(ColourRgb::new));
+                new PresentationStepEntityParser<>(StepEntityType.COLOUR_RGB, ColourRgb::new));
 
         parsers.put(StepEntityType.CURVE_STYLE,
-                new PresentationStepEntityParser<>(CurveStyle::new));
+                new PresentationStepEntityParser<>(StepEntityType.CURVE_STYLE, CurveStyle::new));
 
         parsers.put(StepEntityType.DRAUGHTING_PRE_DEFINED_COLOUR,
-                new PresentationStepEntityParser<>(DraughtingPreDefinedColour::new));
+                new PresentationStepEntityParser<>(StepEntityType.DRAUGHTING_PRE_DEFINED_COLOUR, DraughtingPreDefinedColour::new));
 
         parsers.put(StepEntityType.DRAUGHTING_PRE_DEFINED_CURVE_FONT,
-                new PresentationStepEntityParser<>(DraughtingPreDefinedCurveFont::new));
+                new PresentationStepEntityParser<>(StepEntityType.DRAUGHTING_PRE_DEFINED_CURVE_FONT, DraughtingPreDefinedCurveFont::new));
 
         parsers.put(StepEntityType.FILL_AREA_STYLE,
-                new PresentationStepEntityParser<>(FillAreaStyle::new));
+                new PresentationStepEntityParser<>(StepEntityType.FILL_AREA_STYLE, FillAreaStyle::new));
 
         parsers.put(StepEntityType.FILL_AREA_STYLE_COLOUR,
-                new PresentationStepEntityParser<>(FillAreaStyleColour::new));
+                new PresentationStepEntityParser<>(StepEntityType.FILL_AREA_STYLE_COLOUR, FillAreaStyleColour::new));
 
         parsers.put(StepEntityType.PRESENTATION_LAYER_ASSIGNMENT,
-                new PresentationStepEntityParser<>(PresentationLayerAssignment::new));
+                new PresentationStepEntityParser<>(StepEntityType.PRESENTATION_LAYER_ASSIGNMENT, PresentationLayerAssignment::new));
 
         parsers.put(StepEntityType.PRESENTATION_STYLE_ASSIGNMENT,
-                new PresentationStepEntityParser<>(PresentationStyleAssignment::new));
+                new PresentationStepEntityParser<>(StepEntityType.PRESENTATION_STYLE_ASSIGNMENT, PresentationStyleAssignment::new));
 
         parsers.put(StepEntityType.STYLED_ITEM,
-                new PresentationStepEntityParser<>(StyledItem::new));
+                new PresentationStepEntityParser<>(StepEntityType.STYLED_ITEM, StyledItem::new));
 
         parsers.put(StepEntityType.OVER_RIDING_STYLED_ITEM,
-                new PresentationStepEntityParser<>(OverRidingStyledItem::new));
+                new PresentationStepEntityParser<>(StepEntityType.OVER_RIDING_STYLED_ITEM, OverRidingStyledItem::new));
 
         parsers.put(StepEntityType.SURFACE_SIDE_STYLE,
-                new PresentationStepEntityParser<>(SurfaceSideStyle::new));
+                new PresentationStepEntityParser<>(StepEntityType.SURFACE_SIDE_STYLE, SurfaceSideStyle::new));
 
         parsers.put(StepEntityType.SURFACE_STYLE_FILL_AREA,
-                new PresentationStepEntityParser<>(SurfaceStyleFillArea::new));
+                new PresentationStepEntityParser<>(StepEntityType.SURFACE_STYLE_FILL_AREA, SurfaceStyleFillArea::new));
 
         parsers.put(StepEntityType.SURFACE_STYLE_USAGE,
-                new PresentationStepEntityParser<>(SurfaceStyleUsage::new));
+                new PresentationStepEntityParser<>(StepEntityType.SURFACE_STYLE_USAGE, SurfaceStyleUsage::new));
 
         parsers.put(StepEntityType.MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION,
-                new PresentationStepEntityParser<>(MechanicalDesignGeometricPresentationRepresentation::new));
-
+                new PresentationStepEntityParser<>(StepEntityType.MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, MechanicalDesignGeometricPresentationRepresentation::new));
     }
 
     public EntityParser get(StepEntityType type) {

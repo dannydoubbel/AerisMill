@@ -1,15 +1,17 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepModel;
 
 import java.util.List;
 
-public class BSplineCurveWithKnots extends GeometricEntity {
+public class BSplineCurveWithKnots extends ResolvableStepEntity {
 
     private final int degree;
-    private final List<StepEntity> controlPoints;
+    private final List<String> controlPointRefs;
     private final String curveForm;
     private final boolean closedCurve;
     private final boolean selfIntersect;
@@ -17,11 +19,13 @@ public class BSplineCurveWithKnots extends GeometricEntity {
     private final List<Double> knots;
     private final String knotSpec;
 
+    private List<StepEntity> controlPoints;
+
     public BSplineCurveWithKnots(
             String id,
             String rawParameters,
             int degree,
-            List<StepEntity> controlPoints,
+            List<String> controlPointRefs,
             String curveForm,
             boolean closedCurve,
             boolean selfIntersect,
@@ -32,7 +36,7 @@ public class BSplineCurveWithKnots extends GeometricEntity {
         super(id, StepEntityType.B_SPLINE_CURVE_WITH_KNOTS, rawParameters);
 
         this.degree = degree;
-        this.controlPoints = controlPoints;
+        this.controlPointRefs = controlPointRefs;
         this.curveForm = curveForm;
         this.closedCurve = closedCurve;
         this.selfIntersect = selfIntersect;
@@ -43,6 +47,10 @@ public class BSplineCurveWithKnots extends GeometricEntity {
 
     public int getDegree() {
         return degree;
+    }
+
+    public List<String> getControlPointRefs() {
+        return controlPointRefs;
     }
 
     public List<StepEntity> getControlPoints() {
@@ -71,5 +79,10 @@ public class BSplineCurveWithKnots extends GeometricEntity {
 
     public String getKnotSpec() {
         return knotSpec;
+    }
+
+    @Override
+    public void doResolve(StepModel model) {
+        this.controlPoints = model.resolveEntityList(controlPointRefs, StepEntity.class);
     }
 }
