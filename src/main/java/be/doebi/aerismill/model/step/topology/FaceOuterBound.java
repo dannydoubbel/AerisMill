@@ -1,27 +1,35 @@
 package be.doebi.aerismill.model.step.topology;
 
-import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.model.step.resolve.StepResolveException;
 
-public class FaceOuterBound extends TopologyEntity {
+public class FaceOuterBound extends ResolvableStepEntity {
     private final String name;
-    private final EdgeLoop bound;
+    private final String boundRef;
     private final boolean orientation;
+
+    private EdgeLoop bound;
 
     public FaceOuterBound(String id,
                           String rawParameters,
                           String name,
-                          EdgeLoop bound,
+                          String boundRef,
                           boolean orientation) {
         super(id, StepEntityType.FACE_OUTER_BOUND, rawParameters);
         this.name = name;
-        this.bound = bound;
+        this.boundRef = boundRef;
         this.orientation = orientation;
     }
 
     public String getName() {
         return name;
+    }
+
+    public String getBoundRef() {
+        return boundRef;
     }
 
     public EdgeLoop getBound() {
@@ -33,8 +41,23 @@ public class FaceOuterBound extends TopologyEntity {
     }
 
     @Override
-    protected void doResolve(StepModel model) {
-        // resolve refs here
+    public void doResolve(StepModel model) {
+        StepEntity entity = model.getEntity(boundRef);
+
+        if (entity == null) {
+            throw new StepResolveException(
+                    "FACE_OUTER_BOUND " + getId() + " missing bound reference: " + boundRef
+            );
+        }
+
+        if (!(entity instanceof EdgeLoop edgeLoop)) {
+            throw new StepResolveException(
+                    "FACE_OUTER_BOUND " + getId() + " expected EDGE_LOOP for bound " + boundRef +
+                            " but found " + entity.getType()
+            );
+        }
+
+        this.bound = edgeLoop;
     }
 
     @Override
@@ -44,6 +67,7 @@ public class FaceOuterBound extends TopologyEntity {
                 ", type='" + getType() + '\'' +
                 ", rawParameters='" + getRawParameters() + '\'' +
                 ", name='" + name + '\'' +
+                ", boundRef='" + boundRef + '\'' +
                 ", bound=" + bound +
                 ", orientation=" + orientation +
                 '}';

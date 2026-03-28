@@ -1,31 +1,31 @@
 package be.doebi.aerismill.parser.step;
+
 import be.doebi.aerismill.model.step.base.StepEntity;
-import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Plane;
 
 import java.util.List;
 import java.util.Map;
 
 public class PlaneParser implements EntityParser<Plane>  {
+
     @Override
     public Plane parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = StepParserUtils.parseStepString(params.get(0));
-        Axis2Placement3D position = resolveAxis2Placement3D(params.get(1), parsedEntities);
+        String positionRef = params.get(1).trim();
 
         return new Plane(
                 entity.getId(),
                 entity.getRawParameters(),
                 name,
-                position
+                positionRef
         );
     }
 
-
-
-    private Axis2Placement3D resolveAxis2Placement3D(String token, Map<String, Object> parsedEntities) {
-        if (token == null || token.equals("$") || token.equals("*")) {
-            return null;
-        }
-        return (Axis2Placement3D) parsedEntities.get(token);
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.PLANE, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
     }
 }

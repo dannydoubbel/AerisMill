@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Direction;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class DirectionParser implements EntityParser<Direction> {
+
     @Override
     public Direction parse(
             StepEntity entity,
@@ -36,29 +38,10 @@ public class DirectionParser implements EntityParser<Direction> {
         );
     }
 
-
-    public static Direction parse(String id, String rawParameters) {
-        String trimmed = rawParameters.trim();
-
-        int firstComma = trimmed.indexOf(",");
-        String namePart = trimmed.substring(0, firstComma).trim();
-        String ratiosPart = trimmed.substring(firstComma + 1).trim();
-
-        String name = StepParserUtils.parseStepString(namePart);
-
-        int start = ratiosPart.indexOf('(');
-        int end = ratiosPart.lastIndexOf(')');
-        String inside = ratiosPart.substring(start + 1, end).trim();
-
-        String[] pieces = inside.split(",");
-        List<Double> directionRatios = new ArrayList<>();
-
-        for (String piece : pieces) {
-            directionRatios.add(Double.parseDouble(piece.trim()));
-        }
-
-        return new Direction(id, rawParameters, name, directionRatios);
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.DIRECTION, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
     }
-
-
 }

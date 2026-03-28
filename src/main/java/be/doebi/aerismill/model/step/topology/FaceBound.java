@@ -1,22 +1,28 @@
 package be.doebi.aerismill.model.step.topology;
 
-import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.model.step.resolve.StepResolveException;
 
-public class FaceBound extends TopologyEntity {
+public class FaceBound extends ResolvableStepEntity {
     private final String name;
-    private final EdgeLoop bound;
+    private final String boundRef;
     private final boolean orientation;
 
-    public FaceBound(String id,
-                     String rawParameters,
-                     String name,
-                     EdgeLoop bound,
-                     boolean orientation) {
+    private EdgeLoop bound;
+
+    public FaceBound(
+            String id,
+            String rawParameters,
+            String name,
+            String boundRef,
+            boolean orientation
+    ) {
         super(id, StepEntityType.FACE_BOUND, rawParameters);
         this.name = name;
-        this.bound = bound;
+        this.boundRef = boundRef;
         this.orientation = orientation;
     }
 
@@ -24,28 +30,36 @@ public class FaceBound extends TopologyEntity {
         return name;
     }
 
-    public EdgeLoop getBound() {
-        return bound;
+    public String getBoundRef() {
+        return boundRef;
     }
 
     public boolean isOrientation() {
         return orientation;
     }
 
-    @Override
-    protected void doResolve(StepModel model) {
-        // resolve refs here
+    public EdgeLoop getBound() {
+        return bound;
     }
 
+
     @Override
-    public String toString() {
-        return "FaceBound{" +
-                "id='" + getId() + '\'' +
-                ", type='" + getType() + '\'' +
-                ", rawParameters='" + getRawParameters() + '\'' +
-                ", name='" + name + '\'' +
-                ", bound=" + bound +
-                ", orientation=" + orientation +
-                '}';
+    public void doResolve(StepModel model) {
+        StepEntity entity = model.getEntity(boundRef);
+
+        if (entity == null) {
+            throw new StepResolveException(
+                    "FACE_BOUND " + getId() + " missing bound reference: " + boundRef
+            );
+        }
+
+        if (!(entity instanceof EdgeLoop edgeLoop)) {
+            throw new StepResolveException(
+                    "FACE_BOUND " + getId() + " expected EDGE_LOOP for bound " + boundRef +
+                            " but found " + entity.getType()
+            );
+        }
+
+        this.bound = edgeLoop;
     }
 }

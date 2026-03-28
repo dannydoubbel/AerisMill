@@ -9,7 +9,6 @@ public class Direction extends GeometricEntity {
     private final String name;
     private final List<Double> directionRatios;
 
-
     public Direction(String id, String rawParameters, String name, List<Double> directionRatios) {
         super(id, StepEntityType.DIRECTION, rawParameters);
         this.name = name;

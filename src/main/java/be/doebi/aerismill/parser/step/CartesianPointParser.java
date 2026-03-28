@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 
 import java.util.List;
@@ -23,5 +24,12 @@ public class CartesianPointParser implements EntityParser<CartesianPoint> {
                 name,
                 coordinates
         );
+    }
+
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.CARTESIAN_POINT, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
     }
 }
