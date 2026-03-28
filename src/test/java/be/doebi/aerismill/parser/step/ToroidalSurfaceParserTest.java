@@ -2,13 +2,9 @@ package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
-import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
-import be.doebi.aerismill.model.step.geometry.CartesianPoint;
-import be.doebi.aerismill.model.step.geometry.Direction;
 import be.doebi.aerismill.model.step.geometry.ToroidalSurface;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,39 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class ToroidalSurfaceParserTest {
     @Test
     void parseToroidalSurface_shouldParseCorrectly() {
-        CartesianPoint point = new CartesianPoint(
-                "#10",
-                "( 'NONE', ( 1.0, 2.0, 3.0 ) )",
-                "NONE",
-                List.of(1.0, 2.0, 3.0)
-        );
-
-        Direction axis = new Direction(
-                "#20",
-                "( 'NONE', ( 0.0, 0.0, 1.0 ) )",
-                "NONE",
-                List.of(0.0, 0.0, 1.0)
-        );
-
-        Direction refDir = new Direction(
-                "#30",
-                "( 'NONE', ( 1.0, 0.0, 0.0 ) )",
-                "NONE",
-                List.of(1.0, 0.0, 0.0)
-        );
-
-        Axis2Placement3D placement = new Axis2Placement3D(
-                "#40",
-                "( 'NONE', #10, #20, #30 )",
-                "NONE",
-                point,
-                axis,
-                refDir
-        );
-
-        Map<String, Object> parsedEntities = new HashMap<>();
-        parsedEntities.put("#40", placement);
-
         StepEntity entity = new StepEntity(
                 "#100",
                 StepEntityType.TOROIDAL_SURFACE,
@@ -59,12 +22,13 @@ class ToroidalSurfaceParserTest {
         List<String> params = List.of("'NONE'", "#40", "30.0", "5.0");
 
         ToroidalSurfaceParser parser = new ToroidalSurfaceParser();
-        ToroidalSurface result = parser.parse(entity, params, parsedEntities);
+        ToroidalSurface result = parser.parse(entity, params, Map.of());
 
         assertEquals("#100", result.getId());
         assertEquals("( 'NONE', #40, 30.0, 5.0 )", result.getRawParameters());
         assertEquals("NONE", result.getName());
-        assertEquals(placement, result.getPosition());
+        assertEquals("#40", result.getPositionRef());
+        assertNull(result.getPosition());
         assertEquals(30.0, result.getMajorRadius(), 0.000001);
         assertEquals(5.0, result.getMinorRadius(), 0.000001);
     }

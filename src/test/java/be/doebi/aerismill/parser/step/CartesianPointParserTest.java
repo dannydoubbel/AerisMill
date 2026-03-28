@@ -26,7 +26,7 @@ class CartesianPointParserTest {
         CartesianPoint point = parser.parse(entity, params, Map.of());
 
         assertEquals("#123", point.getId());
-        assertEquals("CARTESIAN_POINT", point.getType());
+        assertEquals(StepEntityType.CARTESIAN_POINT, point.getType());
         assertEquals("NONE", point.getName());
         assertEquals(3, point.getCoordinates().size());
         assertEquals(1.0, point.getX());

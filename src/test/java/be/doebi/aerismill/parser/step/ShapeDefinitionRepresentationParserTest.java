@@ -26,7 +26,7 @@ class ShapeDefinitionRepresentationParserTest {
         ShapeDefinitionRepresentation result = parser.parse(entity, params, Map.of());
 
         assertEquals("#123", result.getId());
-        assertEquals("SHAPE_DEFINITION_REPRESENTATION", result.getType());
+        assertEquals("SHAPE_DEFINITION_REPRESENTATION", result.getType().getName());
         assertEquals("#500", result.getDefinitionRef());
         assertEquals("#600", result.getRepresentationRef());
     }

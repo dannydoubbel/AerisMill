@@ -5,7 +5,6 @@ import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.EdgeLoop;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,8 +14,6 @@ class EdgeLoopParserTest {
 
     @Test
     void parseEdgeLoop_shouldParseCorrectly() {
-        Map<String, Object> parsedEntities = new HashMap<>();
-
         StepEntity entity = new StepEntity(
                 "#100",
                 StepEntityType.EDGE_LOOP,
@@ -26,13 +23,14 @@ class EdgeLoopParserTest {
         List<String> params = List.of("'NONE'", "( #60, #61 )");
 
         EdgeLoopParser parser = new EdgeLoopParser();
-        EdgeLoop result = parser.parse(entity, params, parsedEntities);
+        EdgeLoop result = parser.parse(entity, params, Map.of());
 
         assertEquals("#100", result.getId());
         assertEquals("( 'NONE', ( #60, #61 ) )", result.getRawParameters());
         assertEquals("NONE", result.getName());
-        assertEquals(2, result.getEdgeListRefs().size());
-        assertEquals("#60", result.getEdgeListRefs().get(0));
-        assertEquals("#61", result.getEdgeListRefs().get(1));
+        assertEquals(2, result.getEdgeRefs().size());
+        assertEquals("#60", result.getEdgeRefs().get(0));
+        assertEquals("#61", result.getEdgeRefs().get(1));
+        assertNull(result.getEdgeList());
     }
 }

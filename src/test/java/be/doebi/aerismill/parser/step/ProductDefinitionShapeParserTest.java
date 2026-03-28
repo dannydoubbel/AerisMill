@@ -26,7 +26,7 @@ class ProductDefinitionShapeParserTest {
         ProductDefinitionShape result = parser.parse(entity, params, Map.of());
 
         assertEquals("#700", result.getId());
-        assertEquals("PRODUCT_DEFINITION_SHAPE", result.getType());
+        assertEquals(StepEntityType.PRODUCT_DEFINITION_SHAPE, result.getType());
         assertEquals("Shape Name", result.getName());
         assertEquals("Shape Description", result.getDescription());
         assertEquals("#800", result.getDefinitionRef());

@@ -26,7 +26,7 @@ class ShapeRepresentationParserTest {
         ShapeRepresentation result = parser.parse(entity, params, Map.of());
 
         assertEquals("#100", result.getId());
-        assertEquals("SHAPE_REPRESENTATION", result.getType());
+        assertEquals("SHAPE_REPRESENTATION", result.getType().getName());
         assertEquals("Body", result.getName());
         assertEquals(List.of("#10", "#11", "#12"), result.getItemRefs());
         assertEquals("#200", result.getContextRef());

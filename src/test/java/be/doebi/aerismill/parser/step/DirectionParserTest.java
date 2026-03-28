@@ -11,12 +11,13 @@ class DirectionParserTest {
     @Test
     void parsesDirection() {
         String id = "#42";
-        String rawParameters = "'NONE', ( 0.0, 0.0, 1.0 )";
+        String rawParameters = "( 'NONE', ( 0.0, 0.0, 1.0 ) )";
 
-        Direction direction = DirectionParser.parse(id, rawParameters);
+        DirectionParser parser = new DirectionParser();
+        Direction direction = (Direction) parser.parse(id, rawParameters);
 
         assertEquals("#42", direction.getId());
-        assertEquals(DIRECTION.getName(), direction.getType());
+        assertEquals(DIRECTION, direction.getType());
         assertEquals("NONE", direction.getName());
 
         assertEquals(3, direction.getDirectionRatios().size());

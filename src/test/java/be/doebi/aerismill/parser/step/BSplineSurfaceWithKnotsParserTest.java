@@ -1,6 +1,5 @@
 package be.doebi.aerismill.parser.step;
 
-
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
@@ -9,24 +8,11 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.*;
 
 class BSplineSurfaceWithKnotsParserTest {
     @Test
     void parseBSplineSurfaceWithKnots_shouldParseCorrectly() {
-        StepEntity cp1 = new StepEntity("#1", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 0.0, 0.0, 0.0 ) )");
-        StepEntity cp2 = new StepEntity("#2", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 1.0, 0.0, 0.0 ) )");
-        StepEntity cp3 = new StepEntity("#3", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 0.0, 1.0, 0.0 ) )");
-        StepEntity cp4 = new StepEntity("#4", StepEntityType.CARTESIAN_POINT, "( 'NONE', ( 1.0, 1.0, 0.0 ) )");
-
-        Map<String, Object> parsedEntities = Map.of(
-                "#1", cp1,
-                "#2", cp2,
-                "#3", cp3,
-                "#4", cp4
-        );
-
         StepEntity entity = new StepEntity(
                 "#100",
                 StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS,
@@ -49,18 +35,22 @@ class BSplineSurfaceWithKnotsParserTest {
         );
 
         BSplineSurfaceWithKnotsParser parser = new BSplineSurfaceWithKnotsParser();
-
-        BSplineSurfaceWithKnots result = parser.parse(entity, params, parsedEntities);
+        BSplineSurfaceWithKnots result = parser.parse(entity, params, Map.of());
 
         assertEquals("#100", result.getId());
         assertEquals(2, result.getUDegree());
         assertEquals(2, result.getVDegree());
-        assertEquals(2, result.getControlPointsList().size());
-        assertEquals(2, result.getControlPointsList().get(0).size());
+
+        assertEquals(2, result.getControlPointRefs().size());
+        assertEquals(List.of("#1", "#2"), result.getControlPointRefs().get(0));
+        assertEquals(List.of("#3", "#4"), result.getControlPointRefs().get(1));
+
+        assertTrue(result.getControlPointsList().isEmpty());
+
         assertEquals(".UNSPECIFIED.", result.getSurfaceForm());
-        assertEquals(false, result.isUClosed());
-        assertEquals(false, result.isVClosed());
-        assertEquals(false, result.isSelfIntersect());
+        assertFalse(result.isUClosed());
+        assertFalse(result.isVClosed());
+        assertFalse(result.isSelfIntersect());
         assertEquals(List.of(3, 3), result.getUMultiplicities());
         assertEquals(List.of(3, 3), result.getVMultiplicities());
         assertEquals(List.of(0.0, 1.0), result.getUKnots());

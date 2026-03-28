@@ -4,7 +4,6 @@ import be.doebi.aerismill.model.step.base.StepEntityType;
 import org.junit.jupiter.api.Test;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
-
 import be.doebi.aerismill.model.step.geometry.BSplineCurveWithKnots;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -15,28 +14,6 @@ import java.util.Map;
 class BSplineCurveWithKnotsParserTest {
     @Test
     void parseBSplineCurveWithKnots_shouldParseCorrectly() {
-        StepEntity cp1 = new StepEntity(
-                "#1",
-                StepEntityType.CARTESIAN_POINT,
-                "( 'NONE', ( 0.0, 0.0, 0.0 ) )"
-        );
-        StepEntity cp2 = new StepEntity(
-                "#2",
-                StepEntityType.CARTESIAN_POINT,
-                "( 'NONE', ( 1.0, 0.0, 0.0 ) )"
-        );
-        StepEntity cp3 = new StepEntity(
-                "#3",
-                StepEntityType.CARTESIAN_POINT,
-                "( 'NONE', ( 2.0, 0.0, 0.0 ) )"
-        );
-
-        Map<String, Object> parsedEntities = Map.of(
-                "#1", cp1,
-                "#2", cp2,
-                "#3", cp3
-        );
-
         StepEntity entity = new StepEntity(
                 "#100",
                 StepEntityType.B_SPLINE_CURVE_WITH_KNOTS,
@@ -55,17 +32,19 @@ class BSplineCurveWithKnotsParserTest {
         );
 
         BSplineCurveWithKnotsParser parser = new BSplineCurveWithKnotsParser();
-        BSplineCurveWithKnots result = parser.parse(entity, params, parsedEntities);
+        BSplineCurveWithKnots result = parser.parse(entity, params, Map.of());
 
         assertEquals("#100", result.getId());
         assertEquals(2, result.getDegree());
-        assertEquals(3, result.getControlPoints().size());
+
+        assertEquals(List.of("#1", "#2", "#3"), result.getControlPointRefs());
+        assertNull(result.getControlPoints());
+
         assertEquals(".UNSPECIFIED.", result.getCurveForm());
-        assertEquals(false, result.isClosedCurve());
-        assertEquals(false, result.isSelfIntersect());
+        assertFalse(result.isClosedCurve());
+        assertFalse(result.isSelfIntersect());
         assertEquals(List.of(3, 3), result.getKnotMultiplicities());
         assertEquals(List.of(0.0, 1.0), result.getKnots());
         assertEquals(".UNSPECIFIED.", result.getKnotSpec());
     }
-
 }
