@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.OrientedEdge;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public class OrientedEdgeParser implements EntityParser<OrientedEdge> {
         String edgeStartRef = parseStepReference(params.get(1));
         String edgeEndRef = parseStepReference(params.get(2));
         String edgeElementRef = parseStepReference(params.get(3));
-        boolean orientation = parseStepBoolean(params.get(4));
+        boolean orientation = StepParserUtils.parseStepBoolean(params.get(4));
 
         return new OrientedEdge(
                 entity.getId(),
@@ -27,8 +28,11 @@ public class OrientedEdgeParser implements EntityParser<OrientedEdge> {
         );
     }
 
-    private boolean parseStepBoolean(String token) {
-        return ".T.".equalsIgnoreCase(token.trim());
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.ORIENTED_EDGE, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
     }
 
     private String parseStepReference(String token) {

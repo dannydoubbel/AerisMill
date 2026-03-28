@@ -33,7 +33,7 @@ public class VertexPoint extends TopologyEntity {
     }
 
     @Override
-    protected void doResolve(StepModel model) {
+    public void doResolve(StepModel model) {
         this.vertexGeometry = model.resolveEntity(vertexGeometryRef, CartesianPoint.class);
     }
 

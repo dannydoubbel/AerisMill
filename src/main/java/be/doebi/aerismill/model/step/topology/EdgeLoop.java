@@ -1,35 +1,41 @@
 package be.doebi.aerismill.model.step.topology;
 
-import be.doebi.aerismill.model.step.TopologyEntity;
+import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepModel;
 
 import java.util.List;
 
-public class EdgeLoop extends TopologyEntity {
+public class EdgeLoop extends ResolvableStepEntity {
     private final String name;
-    private final List<OrientedEdge> edgeList;
+    private final List<String> edgeRefs;
+
+    private List<OrientedEdge> edgeList;
 
     public EdgeLoop(String id,
                     String rawParameters,
                     String name,
-                    List<OrientedEdge> edgeList) {
+                    List<String> edgeRefs) {
         super(id, StepEntityType.EDGE_LOOP, rawParameters);
         this.name = name;
-        this.edgeList = edgeList;
+        this.edgeRefs = edgeRefs;
     }
 
     public String getName() {
         return name;
     }
 
-    public List<OrientedEdge> getEdgeListRefs() {
+    public List<String> getEdgeRefs() {
+        return edgeRefs;
+    }
+
+    public List<OrientedEdge> getEdgeList() {
         return edgeList;
     }
 
     @Override
-    protected void doResolve(StepModel model) {
-        // resolve refs here
+    public void doResolve(StepModel model) {
+        this.edgeList = model.resolveEntityList(edgeRefs, OrientedEdge.class);
     }
 
     @Override
@@ -39,6 +45,7 @@ public class EdgeLoop extends TopologyEntity {
                 ", type='" + getType() + '\'' +
                 ", rawParameters='" + getRawParameters() + '\'' +
                 ", name='" + name + '\'' +
+                ", edgeRefs=" + edgeRefs +
                 ", edgeList=" + edgeList +
                 '}';
     }

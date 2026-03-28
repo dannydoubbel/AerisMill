@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.EdgeCurve;
 
 import java.util.List;
@@ -14,7 +15,7 @@ public class EdgeCurveParser implements EntityParser<EdgeCurve> {
         String edgeStartRef = parseStepReference(params.get(1));
         String edgeEndRef = parseStepReference(params.get(2));
         String edgeGeometryRef = parseStepReference(params.get(3));
-        boolean sameSense = parseStepBoolean(params.get(4));
+        boolean sameSense = StepParserUtils.parseStepBoolean(params.get(4));
 
         return new EdgeCurve(
                 entity.getId(),
@@ -27,12 +28,15 @@ public class EdgeCurveParser implements EntityParser<EdgeCurve> {
         );
     }
 
-    private boolean parseStepBoolean(String token) {
-        return ".T.".equalsIgnoreCase(token.trim());
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.EDGE_CURVE, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
     }
 
     private String parseStepReference(String token) {
-        if (token == null || token.equals("$")) {
+        if (token == null || token.equals("$") || token.equals("*")) {
             return null;
         }
         return token.trim();

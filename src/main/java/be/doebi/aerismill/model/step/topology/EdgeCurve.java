@@ -64,7 +64,7 @@ public class EdgeCurve extends TopologyEntity {
     }
 
     @Override
-    protected void doResolve(StepModel model) {
+    public void doResolve(StepModel model) {
         this.edgeStart = model.resolveEntity(edgeStartRef, VertexPoint.class);
         this.edgeEnd = model.resolveEntity(edgeEndRef, VertexPoint.class);
         this.edgeGeometry = model.resolveEntity(edgeGeometryRef, StepEntity.class);
