@@ -1,15 +1,18 @@
 package be.doebi.aerismill.model.step.geometry;
 
-import be.doebi.aerismill.model.step.GeometricEntity;
+import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.model.step.resolve.StepResolveException;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class BSplineSurfaceWithKnots extends GeometricEntity {
+public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
     private final int uDegree;
     private final int vDegree;
-    private final List<List<StepEntity>> controlPointsList;
+    private final List<List<String>> controlPointRefs;
     private final String surfaceForm;
     private final boolean uClosed;
     private final boolean vClosed;
@@ -20,12 +23,14 @@ public class BSplineSurfaceWithKnots extends GeometricEntity {
     private final List<Double> vKnots;
     private final String knotSpec;
 
+    private final List<List<StepEntity>> controlPointsList;
+
     public BSplineSurfaceWithKnots(
             String id,
             String rawParameters,
             int uDegree,
             int vDegree,
-            List<List<StepEntity>> controlPointsList,
+            List<List<String>> controlPointRefs,
             String surfaceForm,
             boolean uClosed,
             boolean vClosed,
@@ -39,7 +44,7 @@ public class BSplineSurfaceWithKnots extends GeometricEntity {
         super(id, StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, rawParameters);
         this.uDegree = uDegree;
         this.vDegree = vDegree;
-        this.controlPointsList = controlPointsList;
+        this.controlPointRefs = controlPointRefs;
         this.surfaceForm = surfaceForm;
         this.uClosed = uClosed;
         this.vClosed = vClosed;
@@ -49,6 +54,7 @@ public class BSplineSurfaceWithKnots extends GeometricEntity {
         this.uKnots = uKnots;
         this.vKnots = vKnots;
         this.knotSpec = knotSpec;
+        this.controlPointsList = new ArrayList<>();
     }
 
     public int getUDegree() {
@@ -57,6 +63,10 @@ public class BSplineSurfaceWithKnots extends GeometricEntity {
 
     public int getVDegree() {
         return vDegree;
+    }
+
+    public List<List<String>> getControlPointRefs() {
+        return controlPointRefs;
     }
 
     public List<List<StepEntity>> getControlPointsList() {
@@ -97,5 +107,51 @@ public class BSplineSurfaceWithKnots extends GeometricEntity {
 
     public String getKnotSpec() {
         return knotSpec;
+    }
+
+    @Override
+    public void doResolve(StepModel model) {
+        controlPointsList.clear();
+
+        for (List<String> rowRefs : controlPointRefs) {
+            List<StepEntity> resolvedRow = new ArrayList<>();
+
+            for (String ref : rowRefs) {
+                StepEntity entity = model.getEntity(ref);
+
+                if (entity == null) {
+                    throw new StepResolveException(
+                            "B_SPLINE_SURFACE_WITH_KNOTS " + getId() +
+                                    " missing control point reference: " + ref
+                    );
+                }
+
+                resolvedRow.add(entity);
+            }
+
+            controlPointsList.add(resolvedRow);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "BSplineSurfaceWithKnots{" +
+                "id='" + getId() + '\'' +
+                ", type='" + getType() + '\'' +
+                ", rawParameters='" + getRawParameters() + '\'' +
+                ", uDegree=" + uDegree +
+                ", vDegree=" + vDegree +
+                ", controlPointRefs=" + controlPointRefs +
+                ", controlPointsList=" + controlPointsList +
+                ", surfaceForm='" + surfaceForm + '\'' +
+                ", uClosed=" + uClosed +
+                ", vClosed=" + vClosed +
+                ", selfIntersect=" + selfIntersect +
+                ", uMultiplicities=" + uMultiplicities +
+                ", vMultiplicities=" + vMultiplicities +
+                ", uKnots=" + uKnots +
+                ", vKnots=" + vKnots +
+                ", knotSpec='" + knotSpec + '\'' +
+                '}';
     }
 }

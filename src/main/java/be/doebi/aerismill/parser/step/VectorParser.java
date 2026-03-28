@@ -1,33 +1,33 @@
 package be.doebi.aerismill.parser.step;
+
 import be.doebi.aerismill.model.step.base.StepEntity;
-import be.doebi.aerismill.model.step.geometry.Direction;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Vector;
 
 import java.util.List;
 import java.util.Map;
 
 public class VectorParser implements EntityParser<Vector>  {
+
     @Override
     public Vector parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = StepParserUtils.parseStepString(params.get(0));
-        Direction orientation = resolveDirection(params.get(1), parsedEntities);
+        String orientationRef = params.get(1).trim();
         double magnitude = Double.parseDouble(params.get(2).trim());
 
         return new Vector(
                 entity.getId(),
                 entity.getRawParameters(),
                 name,
-                orientation,
+                orientationRef,
                 magnitude
         );
     }
 
-
-
-    private Direction resolveDirection(String token, Map<String, Object> parsedEntities) {
-        if (token == null || token.equals("$")) {
-            return null;
-        }
-        return (Direction) parsedEntities.get(token);
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.VECTOR, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
     }
 }

@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 public class BSplineSurfaceWithKnotsParser implements EntityParser<BSplineSurfaceWithKnots> {
+
     @Override
     public BSplineSurfaceWithKnots parse(
             StepEntity entity,
@@ -17,7 +19,7 @@ public class BSplineSurfaceWithKnotsParser implements EntityParser<BSplineSurfac
         int uDegree = Integer.parseInt(params.get(0).trim());
         int vDegree = Integer.parseInt(params.get(1).trim());
 
-        List<List<StepEntity>> controlPointsList = parseControlPointGrid(params.get(2), parsedEntities);
+        List<List<String>> controlPointRefs = parseControlPointRefGrid(params.get(2));
 
         String surfaceForm = params.get(3).trim();
         boolean uClosed = StepParserUtils.parseStepBoolean(params.get(4));
@@ -36,7 +38,7 @@ public class BSplineSurfaceWithKnotsParser implements EntityParser<BSplineSurfac
                 entity.getRawParameters(),
                 uDegree,
                 vDegree,
-                controlPointsList,
+                controlPointRefs,
                 surfaceForm,
                 uClosed,
                 vClosed,
@@ -49,23 +51,26 @@ public class BSplineSurfaceWithKnotsParser implements EntityParser<BSplineSurfac
         );
     }
 
-    private List<List<StepEntity>> parseControlPointGrid(String value, Map<String, Object> parsedEntities) {
+    @Override
+    public StepEntity parse(String id, String rawParameters) {
+        StepEntity entity = new StepEntity(id, StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, rawParameters);
+        List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
+        return parse(entity, params, Map.of());
+    }
+
+    private List<List<String>> parseControlPointRefGrid(String value) {
         String inside = StepParserUtils.stripOuterParens(value);
 
         List<String> rowStrings = StepParserUtils.splitTopLevelGroups(inside);
-        List<List<StepEntity>> grid = new ArrayList<>();
+        List<List<String>> grid = new ArrayList<>();
 
         for (String rowString : rowStrings) {
             String rowInside = StepParserUtils.stripOuterParens(rowString);
             String[] ids = rowInside.split(",");
 
-            List<StepEntity> row = new ArrayList<>();
+            List<String> row = new ArrayList<>();
             for (String id : ids) {
-                Object resolved = parsedEntities.get(id.trim());
-                if (!(resolved instanceof StepEntity stepEntity)) {
-                    throw new IllegalArgumentException("Could not resolve control point: " + id.trim());
-                }
-                row.add(stepEntity);
+                row.add(id.trim());
             }
 
             grid.add(row);
@@ -73,5 +78,4 @@ public class BSplineSurfaceWithKnotsParser implements EntityParser<BSplineSurfac
 
         return grid;
     }
-
 }
