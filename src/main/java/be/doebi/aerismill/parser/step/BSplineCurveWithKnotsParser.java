@@ -2,6 +2,7 @@ package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepLogical;
 import be.doebi.aerismill.model.step.geometry.BSplineCurveWithKnots;
 
 import java.util.List;
@@ -15,21 +16,24 @@ public class BSplineCurveWithKnotsParser implements EntityParser<BSplineCurveWit
             List<String> params,
             Map<String, Object> parsedEntities
     ) {
-        int degree = Integer.parseInt(params.get(0).trim());
+        String name = StepParserUtils.parseStepString(params.get(0));
+        int degree = Integer.parseInt(params.get(1).trim());
 
-        List<String> controlPointRefs = StepParserUtils.parseReferenceList(params.get(1));
+        List<String> controlPointRefs = StepParserUtils.parseReferenceList(params.get(2));
 
-        String curveForm = params.get(2).trim();
-        boolean closedCurve = StepParserUtils.parseStepBoolean(params.get(3));
-        boolean selfIntersect = StepParserUtils.parseStepBoolean(params.get(4));
+        String curveForm = params.get(3).trim();
 
-        List<Integer> knotMultiplicities = StepParserUtils.parseIntegerList(params.get(5));
-        List<Double> knots = StepParserUtils.parseDoubleList(params.get(6));
-        String knotSpec = params.get(7).trim();
+        StepLogical closedCurve = StepParserUtils.parseStepLogical(params.get(4));
+        StepLogical selfIntersect = StepParserUtils.parseStepLogical(params.get(5));
+
+        List<Integer> knotMultiplicities = StepParserUtils.parseIntegerList(params.get(6));
+        List<Double> knots = StepParserUtils.parseDoubleList(params.get(7));
+        String knotSpec = params.get(8).trim();
 
         return new BSplineCurveWithKnots(
                 entity.getId(),
                 entity.getRawParameters(),
+                name,
                 degree,
                 controlPointRefs,
                 curveForm,

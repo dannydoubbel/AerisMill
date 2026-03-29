@@ -148,6 +148,8 @@ public class EntityParserRegistry {
 
         parsers.put(StepEntityType.MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION,
                 new PresentationStepEntityParser<>(StepEntityType.MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, MechanicalDesignGeometricPresentationRepresentation::new));
+
+        parsers.put(StepEntityType.VERTEX_POINT, new VertexPointParser());
     }
 
     public EntityParser get(StepEntityType type) {

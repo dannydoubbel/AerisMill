@@ -37,6 +37,34 @@ class StepResolveReportTest {
                 scannedFiles++;
                 System.out.println("nr "+scannedFiles + " name " + file.toFile());
                 StepModel loadedModel = stepModelImportService.open(file.toFile());
+
+                loadedModel.getEntities().stream()
+                        .filter(entity -> entity.getType() == StepEntityType.VERTEX_POINT)
+                        .limit(10)
+                        .forEach(entity -> System.out.println(
+                                entity.getId() + " | " +
+                                        entity.getType() + " | " +
+                                        entity.getClass().getName()
+                        ));
+
+
+
+                long vertexPointObjects = loadedModel.getEntities().stream()
+                        .filter(entity -> entity instanceof be.doebi.aerismill.model.step.topology.VertexPoint)
+                        .count();
+
+                long resolvableObjects = loadedModel.getEntities().stream()
+                        .filter(entity -> entity instanceof be.doebi.aerismill.model.step.resolve.StepResolvable)
+                        .count();
+
+                System.out.println("VertexPoint runtime objects: " + vertexPointObjects);
+                System.out.println("Resolvable runtime objects: " + resolvableObjects);
+
+
+
+
+
+
                 StepResolveReport report = loadedModel.resolveAllWithReport();
 
                 System.out.println("File: " +  loadedModel.getName());

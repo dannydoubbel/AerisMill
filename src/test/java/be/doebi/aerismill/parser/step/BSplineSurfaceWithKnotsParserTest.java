@@ -2,6 +2,7 @@ package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepLogical;
 import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
 import org.junit.jupiter.api.Test;
 
@@ -48,9 +49,9 @@ class BSplineSurfaceWithKnotsParserTest {
         assertTrue(result.getControlPointsList().isEmpty());
 
         assertEquals(".UNSPECIFIED.", result.getSurfaceForm());
-        assertFalse(result.isUClosed());
-        assertFalse(result.isVClosed());
-        assertFalse(result.isSelfIntersect());
+        assertEquals(StepLogical.FALSE,result.isUClosed());
+        assertEquals(StepLogical.FALSE,result.isVClosed());
+        assertEquals(StepLogical.FALSE,result.isSelfIntersect());
         assertEquals(List.of(3, 3), result.getUMultiplicities());
         assertEquals(List.of(3, 3), result.getVMultiplicities());
         assertEquals(List.of(0.0, 1.0), result.getUKnots());

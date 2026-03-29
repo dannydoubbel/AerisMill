@@ -7,7 +7,7 @@ import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 
 public class VertexPoint extends TopologyEntity {
 
-    private  CartesianPoint vertexGeometry;
+    private CartesianPoint vertexGeometry;
     private final String name;
     private final String vertexGeometryRef;
 
@@ -33,7 +33,7 @@ public class VertexPoint extends TopologyEntity {
     }
 
     @Override
-    public void doResolve(StepModel model) {
+    protected void doResolve(StepModel model) {
         this.vertexGeometry = model.resolveEntity(vertexGeometryRef, CartesianPoint.class);
     }
 
@@ -45,6 +45,7 @@ public class VertexPoint extends TopologyEntity {
                 ", rawParameters='" + getRawParameters() + '\'' +
                 ", name='" + name + '\'' +
                 ", vertexGeometry=" + vertexGeometry +
+                ", resolved=" + isResolved() +
                 '}';
     }
 }

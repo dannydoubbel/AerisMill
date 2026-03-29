@@ -9,6 +9,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class StepParser {
+
+    private final EntityParserRegistry parserRegistry = new EntityParserRegistry();
+
     public StepModel parse(File file, String rawContent) {
         System.out.println("Inside STEP PARSER");
         System.out.println("Parsing STEP file: " + file.getAbsolutePath());
@@ -21,44 +24,43 @@ public class StepParser {
         stepModel.setFileName(file.getName());
         stepModel.setRawContent(rawContent);
 
-
         return stepModel;
     }
 
-        private List<String> splitEntities(String dataSection) {
-            List<String> entities = new ArrayList<>();
-            StringBuilder current = new StringBuilder();
+    private List<String> splitEntities(String dataSection) {
+        List<String> entities = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
 
-            for (int i = 0; i < dataSection.length(); i++) {
-                char c = dataSection.charAt(i);
-                current.append(c);
+        for (int i = 0; i < dataSection.length(); i++) {
+            char c = dataSection.charAt(i);
+            current.append(c);
 
-                if (c == ';') {
-                    String entity = current.toString().trim();
-                    if (!entity.isEmpty()) {
-                        entities.add(entity);
-                    }
-                    current.setLength(0);
+            if (c == ';') {
+                String entity = current.toString().trim();
+                if (!entity.isEmpty()) {
+                    entities.add(entity);
                 }
+                current.setLength(0);
             }
-
-            return entities;
         }
 
-        private String extractDataSection(String rawContent) {
-            int dataStart = rawContent.indexOf("DATA;");
-            if (dataStart == -1) {
-                throw new IllegalArgumentException("STEP file does not contain DATA section.");
-            }
+        return entities;
+    }
 
-            int dataContentStart = dataStart + "DATA;".length();
-            int endSec = rawContent.indexOf("ENDSEC;", dataContentStart);
-            if (endSec == -1) {
-                throw new IllegalArgumentException("STEP file DATA section is not properly closed with ENDSEC;");
-            }
-
-            return rawContent.substring(dataContentStart, endSec).trim();
+    private String extractDataSection(String rawContent) {
+        int dataStart = rawContent.indexOf("DATA;");
+        if (dataStart == -1) {
+            throw new IllegalArgumentException("STEP file does not contain DATA section.");
         }
+
+        int dataContentStart = dataStart + "DATA;".length();
+        int endSec = rawContent.indexOf("ENDSEC;", dataContentStart);
+        if (endSec == -1) {
+            throw new IllegalArgumentException("STEP file DATA section is not properly closed with ENDSEC;");
+        }
+
+        return rawContent.substring(dataContentStart, endSec).trim();
+    }
 
     private StepModel parseEntities(List<String> entityChunks) {
         StepModel stepModel = new StepModel();
@@ -69,24 +71,9 @@ public class StepParser {
                 stepModel.addEntity(entity);
             }
         }
+
         return stepModel;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     private StepEntity parseEntity(String chunk) {
         String trimmed = chunk.trim();
@@ -100,8 +87,31 @@ public class StepParser {
         String rightSide = trimmed.substring(equalsIndex + 1).trim();
 
         if (rightSide.startsWith("(")) {
-            return new StepEntity(id, StepEntityType.COMPLEX_ENTITY, rightSide);
+            String rawParameters = rightSide;
+
+            if (rawParameters.endsWith(";")) {
+                rawParameters = rawParameters.substring(0, rawParameters.length() - 1).trim();
+            }
+
+            EntityParser parser = parserRegistry.get(StepEntityType.COMPLEX_ENTITY);
+            if (parser != null) {
+                try {
+                    return parser.parse(id, rawParameters);
+                } catch (Exception e) {
+                    System.out.println("[COMPLEX PARSE FAILED] " + id + " | " + e.getMessage());
+                    return new StepEntity(id, StepEntityType.COMPLEX_ENTITY, rawParameters);
+                }
+            }
+
+            return new StepEntity(id, StepEntityType.COMPLEX_ENTITY, rawParameters);
         }
+
+
+
+
+
+
+
 
         int firstParenIndex = rightSide.indexOf('(');
         if (firstParenIndex == -1) {
@@ -121,10 +131,11 @@ public class StepParser {
             rawParameters = rawParameters.substring(0, rawParameters.length() - 1).trim();
         }
 
+        EntityParser parser = parserRegistry.get(type);
+        if (parser != null) {
+            return parser.parse(id, rawParameters);
+        }
+
         return new StepEntity(id, type, rawParameters);
     }
-
-
-
-
 }

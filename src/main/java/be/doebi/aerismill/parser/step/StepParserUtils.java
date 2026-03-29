@@ -1,6 +1,9 @@
 package be.doebi.aerismill.parser.step;
 
 
+import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepLogical;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +23,17 @@ public class StepParserUtils {
         }
 
         throw new IllegalArgumentException("Invalid STEP boolean: " + value);
+    }
+
+    public static StepLogical parseStepLogical(String token) {
+        String value = token.trim();
+
+        return switch (value) {
+            case ".T." -> StepLogical.TRUE;
+            case ".F." -> StepLogical.FALSE;
+            case ".U." -> StepLogical.UNKNOWN;
+            default -> throw new IllegalArgumentException("Invalid STEP logical: " + token);
+        };
     }
 
     public static List<Integer> parseIntegerList(String value) {
@@ -135,5 +149,20 @@ public class StepParserUtils {
         }
 
         return result;
+    }
+
+    public static int parseRequiredInt(String token, String fieldName, StepEntity entity) {
+        String cleaned = token.trim();
+        try {
+            return Integer.parseInt(cleaned);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException(
+                    "Invalid integer for " + fieldName +
+                            " in " + entity.getType() +
+                            " " + entity.getId() +
+                            ": [" + cleaned + "] raw=" + entity.getRawParameters(),
+                    e
+            );
+        }
     }
 }

@@ -1,22 +1,20 @@
 package be.doebi.aerismill.model.step.geometry;
 
-import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
-import be.doebi.aerismill.model.step.base.StepEntity;
-import be.doebi.aerismill.model.step.base.StepEntityType;
-import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.model.step.base.*;
 import be.doebi.aerismill.model.step.resolve.StepResolveException;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
+    private final String name;
     private final int uDegree;
     private final int vDegree;
     private final List<List<String>> controlPointRefs;
     private final String surfaceForm;
-    private final boolean uClosed;
-    private final boolean vClosed;
-    private final boolean selfIntersect;
+    private final StepLogical uClosed;
+    private final StepLogical vClosed;
+    private final StepLogical selfIntersect;
     private final List<Integer> uMultiplicities;
     private final List<Integer> vMultiplicities;
     private final List<Double> uKnots;
@@ -28,13 +26,14 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
     public BSplineSurfaceWithKnots(
             String id,
             String rawParameters,
+            String name,
             int uDegree,
             int vDegree,
             List<List<String>> controlPointRefs,
             String surfaceForm,
-            boolean uClosed,
-            boolean vClosed,
-            boolean selfIntersect,
+            StepLogical uClosed,
+            StepLogical vClosed,
+            StepLogical selfIntersect,
             List<Integer> uMultiplicities,
             List<Integer> vMultiplicities,
             List<Double> uKnots,
@@ -42,6 +41,7 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
             String knotSpec
     ) {
         super(id, StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, rawParameters);
+        this.name = name;
         this.uDegree = uDegree;
         this.vDegree = vDegree;
         this.controlPointRefs = controlPointRefs;
@@ -56,6 +56,7 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
         this.knotSpec = knotSpec;
         this.controlPointsList = new ArrayList<>();
     }
+    public String getName() {        return name;    }
 
     public int getUDegree() {
         return uDegree;
@@ -77,15 +78,15 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
         return surfaceForm;
     }
 
-    public boolean isUClosed() {
+    public StepLogical isUClosed() {
         return uClosed;
     }
 
-    public boolean isVClosed() {
+    public StepLogical isVClosed() {
         return vClosed;
     }
 
-    public boolean isSelfIntersect() {
+    public StepLogical isSelfIntersect() {
         return selfIntersect;
     }
 

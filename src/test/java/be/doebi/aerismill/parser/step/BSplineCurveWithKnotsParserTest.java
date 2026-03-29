@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepLogical;
 import org.junit.jupiter.api.Test;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
@@ -41,8 +42,8 @@ class BSplineCurveWithKnotsParserTest {
         assertNull(result.getControlPoints());
 
         assertEquals(".UNSPECIFIED.", result.getCurveForm());
-        assertFalse(result.isClosedCurve());
-        assertFalse(result.isSelfIntersect());
+        assertEquals(StepLogical.FALSE, result.isClosedCurve());
+        assertEquals(StepLogical.FALSE, result.isSelfIntersect());
         assertEquals(List.of(3, 3), result.getKnotMultiplicities());
         assertEquals(List.of(0.0, 1.0), result.getKnots());
         assertEquals(".UNSPECIFIED.", result.getKnotSpec());

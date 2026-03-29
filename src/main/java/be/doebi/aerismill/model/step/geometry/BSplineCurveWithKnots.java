@@ -1,20 +1,17 @@
 package be.doebi.aerismill.model.step.geometry;
 
 import be.doebi.aerismill.model.step.GeometricEntity;
-import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
-import be.doebi.aerismill.model.step.base.StepEntity;
-import be.doebi.aerismill.model.step.base.StepEntityType;
-import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.model.step.base.*;
 
 import java.util.List;
 
 public class BSplineCurveWithKnots extends ResolvableStepEntity {
-
+    private final String name;
     private final int degree;
     private final List<String> controlPointRefs;
     private final String curveForm;
-    private final boolean closedCurve;
-    private final boolean selfIntersect;
+    private final StepLogical closedCurve;
+    private final StepLogical selfIntersect;
     private final List<Integer> knotMultiplicities;
     private final List<Double> knots;
     private final String knotSpec;
@@ -24,11 +21,12 @@ public class BSplineCurveWithKnots extends ResolvableStepEntity {
     public BSplineCurveWithKnots(
             String id,
             String rawParameters,
+            String name,
             int degree,
             List<String> controlPointRefs,
             String curveForm,
-            boolean closedCurve,
-            boolean selfIntersect,
+            StepLogical closedCurve,
+            StepLogical selfIntersect,
             List<Integer> knotMultiplicities,
             List<Double> knots,
             String knotSpec
@@ -43,6 +41,11 @@ public class BSplineCurveWithKnots extends ResolvableStepEntity {
         this.knotMultiplicities = knotMultiplicities;
         this.knots = knots;
         this.knotSpec = knotSpec;
+        this.name = name;
+    }
+
+    public String getName(){
+        return name;
     }
 
     public int getDegree() {
@@ -61,11 +64,11 @@ public class BSplineCurveWithKnots extends ResolvableStepEntity {
         return curveForm;
     }
 
-    public boolean isClosedCurve() {
+    public StepLogical isClosedCurve() {
         return closedCurve;
     }
 
-    public boolean isSelfIntersect() {
+    public StepLogical isSelfIntersect() {
         return selfIntersect;
     }
 
