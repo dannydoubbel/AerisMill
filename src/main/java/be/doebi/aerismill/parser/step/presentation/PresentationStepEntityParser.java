@@ -1,8 +1,9 @@
-package be.doebi.aerismill.parser.step;
+package be.doebi.aerismill.parser.step.presentation;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.presentation.PresentationStepEntity;
+import be.doebi.aerismill.parser.step.EntityParser;
 
 import java.util.List;
 import java.util.Map;

@@ -1,13 +1,15 @@
-package be.doebi.aerismill.parser.step;
+package be.doebi.aerismill.parser.step.geometry;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.ToroidalSurface;
+import be.doebi.aerismill.parser.step.EntityParser;
+import be.doebi.aerismill.parser.step.StepParserUtils;
 
 import java.util.List;
 import java.util.Map;
 
-public class ToroidalSurfaceParser implements EntityParser<ToroidalSurface>  {
+public class ToroidalSurfaceParser implements EntityParser<ToroidalSurface> {
 
     @Override
     public ToroidalSurface parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {

@@ -3,6 +3,7 @@ package be.doebi.aerismill.parser.step;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.FaceOuterBound;
+import be.doebi.aerismill.parser.step.topology.FaceOuterBoundParser;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

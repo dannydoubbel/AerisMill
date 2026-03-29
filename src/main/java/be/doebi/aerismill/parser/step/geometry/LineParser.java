@@ -1,13 +1,15 @@
-package be.doebi.aerismill.parser.step;
+package be.doebi.aerismill.parser.step.geometry;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.geometry.Line;
+import be.doebi.aerismill.parser.step.EntityParser;
+import be.doebi.aerismill.parser.step.StepParserUtils;
 
 import java.util.List;
 import java.util.Map;
 
-public class LineParser implements EntityParser<Line>  {
+public class LineParser implements EntityParser<Line> {
 
     @Override
     public Line parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {

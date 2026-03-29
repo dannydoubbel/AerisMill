@@ -3,6 +3,7 @@ package be.doebi.aerismill.parser.step;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.definition.ShapeDefinitionRepresentation;
+import be.doebi.aerismill.parser.step.definition.ShapeDefinitionRepresentationParser;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -22,7 +23,7 @@ class ShapeDefinitionRepresentationParserTest {
 
         List<String> params = List.of("#500", "#600");
 
-        be.doebi.aerismill.parser.step.ShapeDefinitionRepresentationParser parser = new be.doebi.aerismill.parser.step.ShapeDefinitionRepresentationParser();
+        ShapeDefinitionRepresentationParser parser = new ShapeDefinitionRepresentationParser();
         ShapeDefinitionRepresentation result = parser.parse(entity, params, Map.of());
 
         assertEquals("#123", result.getId());
