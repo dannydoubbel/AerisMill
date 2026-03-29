@@ -1,6 +1,7 @@
 package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.geometry.Direction;
+import be.doebi.aerismill.parser.step.geometry.DirectionParser;
 import org.junit.jupiter.api.Test;
 
 import static be.doebi.aerismill.model.step.base.StepEntityType.DIRECTION;

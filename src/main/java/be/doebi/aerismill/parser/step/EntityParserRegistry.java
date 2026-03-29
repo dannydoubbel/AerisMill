@@ -3,6 +3,14 @@ package be.doebi.aerismill.parser.step;
 import be.doebi.aerismill.model.step.admin.*;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.presentation.*;
+import be.doebi.aerismill.parser.step.admin.AdministrativeStepEntityParser;
+import be.doebi.aerismill.parser.step.definition.ProductDefinitionShapeParser;
+import be.doebi.aerismill.parser.step.definition.ShapeDefinitionRepresentationParser;
+import be.doebi.aerismill.parser.step.geometry.*;
+import be.doebi.aerismill.parser.step.presentation.PresentationStepEntityParser;
+import be.doebi.aerismill.parser.step.representation.AdvancedBrepShapeRepresentationParser;
+import be.doebi.aerismill.parser.step.representation.ShapeRepresentationParser;
+import be.doebi.aerismill.parser.step.topology.*;
 
 import java.util.EnumMap;
 import java.util.Map;

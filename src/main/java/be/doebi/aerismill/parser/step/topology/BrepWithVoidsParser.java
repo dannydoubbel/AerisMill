@@ -1,32 +1,34 @@
-package be.doebi.aerismill.parser.step;
+package be.doebi.aerismill.parser.step.topology;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
-import be.doebi.aerismill.model.step.geometry.Axis1Placement;
+import be.doebi.aerismill.model.step.topology.BrepWithVoids;
+import be.doebi.aerismill.parser.step.EntityParser;
+import be.doebi.aerismill.parser.step.StepParserUtils;
 
 import java.util.List;
 import java.util.Map;
 
-public class Axis1PlacementParser implements EntityParser<Axis1Placement> {
+public class BrepWithVoidsParser implements EntityParser<BrepWithVoids> {
 
     @Override
-    public Axis1Placement parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
+    public BrepWithVoids parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = StepParserUtils.parseStepString(params.get(0));
-        String locationRef = parseStepReference(params.get(1));
-        String axisRef = parseStepReference(params.get(2));
+        String outerRef = parseStepReference(params.get(1));
+        List<String> voidRefs = StepParserUtils.parseReferenceList(params.get(2));
 
-        return new Axis1Placement(
+        return new BrepWithVoids(
                 entity.getId(),
                 entity.getRawParameters(),
                 name,
-                locationRef,
-                axisRef
+                outerRef,
+                voidRefs
         );
     }
 
     @Override
     public StepEntity parse(String id, String rawParameters) {
-        StepEntity entity = new StepEntity(id, StepEntityType.AXIS1_PLACEMENT, rawParameters);
+        StepEntity entity = new StepEntity(id, StepEntityType.BREP_WITH_VOIDS, rawParameters);
         List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
         return parse(entity, params, Map.of());
     }

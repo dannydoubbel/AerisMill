@@ -5,6 +5,7 @@ import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.topology.AdvancedFace;
 import be.doebi.aerismill.model.step.topology.ClosedShell;
+import be.doebi.aerismill.parser.step.topology.ClosedShellParser;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;

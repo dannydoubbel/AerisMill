@@ -4,6 +4,7 @@ import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepLogical;
 import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
+import be.doebi.aerismill.parser.step.geometry.BSplineSurfaceWithKnotsParser;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

@@ -1,32 +1,32 @@
-package be.doebi.aerismill.parser.step;
+package be.doebi.aerismill.parser.step.topology;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
-import be.doebi.aerismill.model.step.geometry.SurfaceOfRevolution;
+import be.doebi.aerismill.model.step.topology.ManifoldSolidBrep;
+import be.doebi.aerismill.parser.step.EntityParser;
+import be.doebi.aerismill.parser.step.StepParserUtils;
 
 import java.util.List;
 import java.util.Map;
 
-public class SurfaceOfRevolutionParser implements EntityParser<SurfaceOfRevolution> {
+public class ManifoldSolidBrepParser implements EntityParser<ManifoldSolidBrep> {
 
     @Override
-    public SurfaceOfRevolution parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
+    public ManifoldSolidBrep parse(StepEntity entity, List<String> params, Map<String, Object> parsedEntities) {
         String name = StepParserUtils.parseStepString(params.get(0));
-        String sweptCurveRef = parseStepReference(params.get(1));
-        String axisPositionRef = parseStepReference(params.get(2));
+        String outerRef = parseStepReference(params.get(1));
 
-        return new SurfaceOfRevolution(
+        return new ManifoldSolidBrep(
                 entity.getId(),
                 entity.getRawParameters(),
                 name,
-                sweptCurveRef,
-                axisPositionRef
+                outerRef
         );
     }
 
     @Override
     public StepEntity parse(String id, String rawParameters) {
-        StepEntity entity = new StepEntity(id, StepEntityType.SURFACE_OF_REVOLUTION, rawParameters);
+        StepEntity entity = new StepEntity(id, StepEntityType.MANIFOLD_SOLID_BREP, rawParameters);
         List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
         return parse(entity, params, Map.of());
     }

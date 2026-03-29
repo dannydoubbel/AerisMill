@@ -1,9 +1,11 @@
-package be.doebi.aerismill.parser.step;
+package be.doebi.aerismill.parser.step.geometry;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepLogical;
 import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
+import be.doebi.aerismill.parser.step.EntityParser;
+import be.doebi.aerismill.parser.step.StepParserUtils;
 
 import java.util.ArrayList;
 import java.util.List;

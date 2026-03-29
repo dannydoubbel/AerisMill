@@ -2,6 +2,7 @@ package be.doebi.aerismill.parser.step;
 
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepLogical;
+import be.doebi.aerismill.parser.step.geometry.BSplineCurveWithKnotsParser;
 import org.junit.jupiter.api.Test;
 
 import be.doebi.aerismill.model.step.base.StepEntity;
