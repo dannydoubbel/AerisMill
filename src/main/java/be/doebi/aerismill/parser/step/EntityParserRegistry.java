@@ -26,6 +26,7 @@ public class EntityParserRegistry {
 
         parsers.put(StepEntityType.PLANE, new PlaneParser());
         parsers.put(StepEntityType.CYLINDRICAL_SURFACE, new CylindricalSurfaceParser());
+        parsers.put(StepEntityType.SPHERICAL_SURFACE, new SphericalSurfaceParser());
         parsers.put(StepEntityType.CONICAL_SURFACE, new ConicalSurfaceParser());
 
         parsers.put(StepEntityType.ADVANCED_FACE, new AdvancedFaceParser());
@@ -150,6 +151,12 @@ public class EntityParserRegistry {
                 new PresentationStepEntityParser<>(StepEntityType.MECHANICAL_DESIGN_GEOMETRIC_PRESENTATION_REPRESENTATION, MechanicalDesignGeometricPresentationRepresentation::new));
 
         parsers.put(StepEntityType.VERTEX_POINT, new VertexPointParser());
+
+        parsers.put(StepEntityType.SURFACE_OF_REVOLUTION, new SurfaceOfRevolutionParser());
+
+        parsers.put(StepEntityType.AXIS1_PLACEMENT, new Axis1PlacementParser());
+
+        parsers.put(StepEntityType.BREP_WITH_VOIDS, new BrepWithVoidsParser());
     }
 
     public EntityParser get(StepEntityType type) {
