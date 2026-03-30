@@ -64,9 +64,13 @@ public class OrientedEdge extends TopologyEntity {
 
     @Override
     public void doResolve(StepModel model) {
-        this.edgeStart = edgeStartRef == null ? null : model.resolveEntity(edgeStartRef, VertexPoint.class);
-        this.edgeEnd = edgeEndRef == null ? null : model.resolveEntity(edgeEndRef, VertexPoint.class);
-        this.edgeElement = edgeElementRef == null ? null : model.resolveEntity(edgeElementRef, EdgeCurve.class);
+        this.edgeStart = isAbsent(edgeStartRef) ? null : model.resolveEntity(edgeStartRef, VertexPoint.class);
+        this.edgeEnd = isAbsent(edgeEndRef) ? null : model.resolveEntity(edgeEndRef, VertexPoint.class);
+        this.edgeElement = isAbsent(edgeElementRef) ? null : model.resolveEntity(edgeElementRef, EdgeCurve.class);
+    }
+
+    private boolean isAbsent(String ref) {
+        return ref == null || "$".equals(ref) || "*".equals(ref);
     }
 
     @Override

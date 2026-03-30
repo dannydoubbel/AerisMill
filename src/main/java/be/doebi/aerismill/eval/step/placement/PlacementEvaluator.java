@@ -8,7 +8,6 @@ import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 import be.doebi.aerismill.model.step.geometry.Direction;
 import be.doebi.aerismill.model.step.geometry.Vector;
-import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
 
 public interface PlacementEvaluator {
     Point3 evaluatePoint(CartesianPoint point);
