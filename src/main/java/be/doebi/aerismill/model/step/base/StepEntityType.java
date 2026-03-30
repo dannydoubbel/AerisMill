@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public enum StepEntityType {
+
     ADVANCED_BREP_SHAPE_REPRESENTATION("ADVANCED_BREP_SHAPE_REPRESENTATION"),
     ADVANCED_FACE("ADVANCED_FACE"),
     APPLICATION_CONTEXT("APPLICATION_CONTEXT"),
