@@ -4,7 +4,10 @@ import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepEntityType;
 import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.model.step.topology.ClosedShell;
+import be.doebi.aerismill.model.step.topology.OrientedClosedShell;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AdvancedBrepShapeRepresentation extends ResolvableStepEntity {
@@ -45,6 +48,22 @@ public class AdvancedBrepShapeRepresentation extends ResolvableStepEntity {
     public StepEntity getContextOfItems() {
         return contextOfItems;
     }
+
+    public List<ClosedShell> getClosedShellItems() {
+        List<ClosedShell> result = new ArrayList<>();
+
+        for (StepEntity item : items) {
+            if (item instanceof ClosedShell closedShell) {
+                result.add(closedShell);
+            } else if (item instanceof OrientedClosedShell orientedClosedShell && orientedClosedShell.getClosedShell() != null) {
+                result.add(orientedClosedShell.getClosedShell());
+            }
+        }
+
+        return result;
+    }
+
+
 
     @Override
     public void doResolve(StepModel model) {

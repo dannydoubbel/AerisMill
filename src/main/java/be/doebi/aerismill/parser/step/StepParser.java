@@ -13,8 +13,7 @@ public class StepParser {
     private final EntityParserRegistry parserRegistry = new EntityParserRegistry();
 
     public StepModel parse(File file, String rawContent) {
-        System.out.println("Inside STEP PARSER");
-        System.out.println("Parsing STEP file: " + file.getAbsolutePath());
+
 
         String dataSection = extractDataSection(rawContent);
         List<String> entityChunks = splitEntities(dataSection);
@@ -121,7 +120,7 @@ public class StepParser {
         String typeName = rightSide.substring(0, firstParenIndex).trim();
         StepEntityType type = StepEntityType.fromNameOrNull(typeName);
         if (type == null) {
-            //System.out.println("[SKIP UNKNOWN TYPE] " + id + " | " + typeName);
+            System.out.println("[SKIP UNKNOWN TYPE] " + id + " | " + typeName);
             return null;
         }
 

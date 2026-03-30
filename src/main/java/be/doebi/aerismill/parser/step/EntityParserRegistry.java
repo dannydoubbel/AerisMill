@@ -99,6 +99,8 @@ public class EntityParserRegistry {
 
         parsers.put(StepEntityType.EDGE_LOOP, new EdgeLoopParser());
 
+        parsers.put(StepEntityType.ELLIPSE, new EllipseParser());
+
         parsers.put(StepEntityType.FACE_BOUND, new FaceBoundParser());
 
         parsers.put(StepEntityType.FACE_OUTER_BOUND, new FaceOuterBoundParser());
@@ -121,6 +123,8 @@ public class EntityParserRegistry {
 
         parsers.put(StepEntityType.ORGANIZATION,
                 new AdministrativeStepEntityParser<>(StepEntityType.ORGANIZATION, Organization::new));
+
+        parsers.put(StepEntityType.ORIENTED_CLOSED_SHELL, new OrientedClosedShellParser());
 
         parsers.put(StepEntityType.ORIENTED_EDGE, new OrientedEdgeParser());
 

@@ -12,7 +12,7 @@ public class StepImportService {
 
 
     public StepModel open(File file) {
-        System.out.println("INSIDE SERVICE StepImportService");
+
         String rawContent = stepReader.read(file);
         return stepParser.parse(file, rawContent);
 

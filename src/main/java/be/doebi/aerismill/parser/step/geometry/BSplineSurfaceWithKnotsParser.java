@@ -86,11 +86,6 @@ public class BSplineSurfaceWithKnotsParser implements EntityParser<BSplineSurfac
         StepEntity entity = new StepEntity(id, StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, rawParameters);
         List<String> params = StepParserUtils.splitTopLevelParameters(rawParameters);
 
-        //String uDegreeToken = params.get(0).trim();
-        //String vDegreeToken = params.get(1).trim();
-
-        //System.out.println("BSPLINE " + entity.getId() + " uDegreeToken=[" + uDegreeToken + "] vDegreeToken=[" + vDegreeToken + "]");
-
 
         return parse(entity, params, Map.of());
     }

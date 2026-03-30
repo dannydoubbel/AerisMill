@@ -114,9 +114,9 @@ public class StepModel {
             }
         }
 
-        System.out.println("Model: " + name);
-        System.out.println("Total entities: " + totalEntities);
-        System.out.println("Resolvable entities: " + resolvableEntities);
+        //System.out.println("Model: " + name);
+        //System.out.println("Total entities: " + totalEntities);
+        //System.out.println("Resolvable entities: " + resolvableEntities);
 
         return report;
     }
