@@ -16,6 +16,8 @@ import be.doebi.aerismill.model.step.geometry.Circle;
 import be.doebi.aerismill.model.step.geometry.Line;
 import be.doebi.aerismill.model.step.geometry.Vector;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
+import be.doebi.aerismill.model.geom.curve.EllipseCurve3;
+import be.doebi.aerismill.model.step.geometry.Ellipse;
 
 import java.util.Objects;
 
@@ -88,6 +90,43 @@ public final class DefaultCurveEvaluator implements CurveEvaluator {
         cache.putCurve(circle.getId(), result);
         return result;
     }
+
+    @Override
+    public Curve3 evaluate(Ellipse ellipse) {
+        return evaluateEllipse(ellipse);
+    }
+
+    @Override
+    public EllipseCurve3 evaluateEllipse(Ellipse ellipse) {
+        Objects.requireNonNull(ellipse, "ellipse must not be null");
+
+        Curve3 cached = cache.getCurve(ellipse.getId());
+        if (cached instanceof EllipseCurve3 ellipseCurve3) {
+            return ellipseCurve3;
+        }
+
+        Axis2Placement3D position = ellipse.getPosition();
+        if (position == null) {
+            position = requireAxis2Placement3D(ellipse.getPositionRef(), ellipse.getId(), "position");
+        }
+
+        Frame3 frame = placementEvaluator.evaluateAxis2Placement3D(position);
+        EllipseCurve3 result = new EllipseCurve3(frame, ellipse.getSemiAxis1(), ellipse.getSemiAxis2());
+
+        cache.putCurve(ellipse.getId(), result);
+        return result;
+    }
+
+
+
+
+
+
+
+
+
+
+
 
     private CartesianPoint requireCartesianPoint(String ref, String ownerId, String role) {
         StepEntity entity = context.getStepModel().getEntity(ref);
