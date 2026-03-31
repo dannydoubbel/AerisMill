@@ -2,9 +2,14 @@ package be.doebi.aerismill.eval.step.surface;
 
 import be.doebi.aerismill.eval.step.context.StepEvaluationCache;
 import be.doebi.aerismill.eval.step.context.StepEvaluationContext;
+import be.doebi.aerismill.eval.step.curve.CurveEvaluator;
+import be.doebi.aerismill.eval.step.curve.DefaultCurveEvaluator;
 import be.doebi.aerismill.eval.step.placement.PlacementEvaluator;
+import be.doebi.aerismill.model.geom.curve.Curve3;
 import be.doebi.aerismill.model.geom.math.Frame3;
 import be.doebi.aerismill.model.geom.math.Point3;
+import be.doebi.aerismill.model.geom.math.UnitVec3;
+import be.doebi.aerismill.model.geom.math.Vec3;
 import be.doebi.aerismill.model.geom.surface.*;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepLogical;
@@ -15,6 +20,9 @@ import java.util.List;
 import java.util.Objects;
 
 public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
+    private static final UnitVec3 DEFAULT_Z = UnitVec3.of(new Vec3(0.0, 0.0, 1.0));
+
+    private final CurveEvaluator curveEvaluator;
     private final StepEvaluationContext context;
     private final StepEvaluationCache cache;
     private final PlacementEvaluator placementEvaluator;
@@ -23,6 +31,7 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
         this.context = Objects.requireNonNull(context, "context must not be null");
         this.cache = Objects.requireNonNull(context.getCache(), "context cache must not be null");
         this.placementEvaluator = Objects.requireNonNull(placementEvaluator, "placementEvaluator must not be null");
+        this.curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
     }
 
     @Override
@@ -53,6 +62,50 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
     @Override
     public Surface3 evaluate(ToroidalSurface toroidalSurface) {
         return evaluateToroidalSurface(toroidalSurface);
+    }
+    @Override
+    public Surface3 evaluate(SurfaceOfRevolution surfaceOfRevolution) {
+        return evaluateSurfaceOfRevolution(surfaceOfRevolution);
+    }
+
+    @Override
+    public SurfaceOfRevolution3 evaluateSurfaceOfRevolution(SurfaceOfRevolution surfaceOfRevolution) {
+        Objects.requireNonNull(surfaceOfRevolution, "surfaceOfRevolution must not be null");
+
+        Surface3 cached = cache.getSurface(surfaceOfRevolution.getId());
+        if (cached instanceof SurfaceOfRevolution3 surfaceOfRevolution3) {
+            return surfaceOfRevolution3;
+        }
+
+        Curve3 sweptCurve = evaluateSweptCurve(surfaceOfRevolution.getSweptCurve());
+
+        Axis1Placement axisPlacement = surfaceOfRevolution.getAxisPosition();
+        if (axisPlacement == null) {
+            throw new IllegalStateException(
+                    "SURFACE_OF_REVOLUTION " + surfaceOfRevolution.getId() + " has no resolved axis position"
+            );
+        }
+
+        CartesianPoint axisLocation = axisPlacement.getLocation();
+        if (axisLocation == null) {
+            throw new IllegalStateException(
+                    "SURFACE_OF_REVOLUTION " + surfaceOfRevolution.getId() + " axis placement has no location"
+            );
+        }
+
+        Point3 axisOrigin = placementEvaluator.evaluatePoint(axisLocation);
+        UnitVec3 axisDirection = axisPlacement.getAxis() != null
+                ? placementEvaluator.evaluateDirection(axisPlacement.getAxis())
+                : DEFAULT_Z;
+
+        SurfaceOfRevolution3 result = new SurfaceOfRevolution3(
+                sweptCurve,
+                axisOrigin,
+                axisDirection
+        );
+
+        cache.putSurface(surfaceOfRevolution.getId(), result);
+        return result;
     }
 
     @Override
@@ -284,5 +337,25 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
         }
 
         return List.copyOf(expanded);
+    }
+
+    private Curve3 evaluateSweptCurve(StepEntity entity) {
+        if (entity instanceof Line line) {
+            return curveEvaluator.evaluateLine(line);
+        }
+        if (entity instanceof Circle circle) {
+            return curveEvaluator.evaluateCircle(circle);
+        }
+        if (entity instanceof Ellipse ellipse) {
+            return curveEvaluator.evaluateEllipse(ellipse);
+        }
+        if (entity instanceof BSplineCurveWithKnots bSplineCurveWithKnots) {
+            return curveEvaluator.evaluateBSplineCurveWithKnots(bSplineCurveWithKnots);
+        }
+
+        throw new IllegalStateException(
+                "Unsupported swept curve type for SURFACE_OF_REVOLUTION: " +
+                        (entity == null ? "null" : entity.getType())
+        );
     }
 }

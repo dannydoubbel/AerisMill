@@ -727,6 +727,171 @@ class DefaultSurfaceEvaluatorTest {
         assertSame(first, second);
     }
 
+    @Test
+    void evaluateSurfaceOfRevolution_shouldCreateSurfaceOfRevolution3() {
+        StepModel model = new StepModel();
+
+        CartesianPoint linePoint = new CartesianPoint(
+                "#10",
+                "('P',(2.0,0.0,0.0))",
+                "P",
+                List.of(2.0, 0.0, 0.0)
+        );
+        Direction lineDirection = new Direction(
+                "#11",
+                "('D',(0.0,0.0,1.0))",
+                "D",
+                List.of(0.0, 0.0, 1.0)
+        );
+        Vector lineVector = new Vector(
+                "#12",
+                "('V',#11,1.0)",
+                "V",
+                "#11",
+                1.0
+        );
+        Line sweptLine = new Line(
+                "#13",
+                "('L',#10,#12)",
+                "L",
+                "#10",
+                "#12"
+        );
+
+        CartesianPoint axisLocation = new CartesianPoint(
+                "#20",
+                "('O',(0.0,0.0,0.0))",
+                "O",
+                List.of(0.0, 0.0, 0.0)
+        );
+        Direction axisDirection = new Direction(
+                "#21",
+                "('Z',(0.0,0.0,1.0))",
+                "Z",
+                List.of(0.0, 0.0, 1.0)
+        );
+        Axis1Placement axis1Placement = new Axis1Placement(
+                "#22",
+                "('A',#20,#21)",
+                "A",
+                "#20",
+                "#21"
+        );
+
+        SurfaceOfRevolution surfaceOfRevolution = new SurfaceOfRevolution(
+                "#30",
+                "('SOR',#13,#22)",
+                "SOR",
+                "#13",
+                "#22"
+        );
+
+        model.addEntity(linePoint);
+        model.addEntity(lineDirection);
+        model.addEntity(lineVector);
+        model.addEntity(sweptLine);
+        model.addEntity(axisLocation);
+        model.addEntity(axisDirection);
+        model.addEntity(axis1Placement);
+        model.addEntity(surfaceOfRevolution);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultSurfaceEvaluator surfaceEvaluator = new DefaultSurfaceEvaluator(context, placementEvaluator);
+
+        SurfaceOfRevolution3 result = surfaceEvaluator.evaluateSurfaceOfRevolution(surfaceOfRevolution);
+
+        assertNotNull(result);
+
+        Point3 p0 = result.pointAt(0.0, 0.0);
+        assertEquals(2.0, p0.x(), EPS);
+        assertEquals(0.0, p0.y(), EPS);
+        assertEquals(0.0, p0.z(), EPS);
+
+        Point3 p90 = result.pointAt(Math.PI / 2.0, 0.0);
+        assertEquals(0.0, p90.x(), 1e-6);
+        assertEquals(2.0, p90.y(), 1e-6);
+        assertEquals(0.0, p90.z(), 1e-6);
+
+        Point3 pHeight = result.pointAt(0.0, 5.0);
+        assertEquals(2.0, pHeight.x(), EPS);
+        assertEquals(0.0, pHeight.y(), EPS);
+        assertEquals(5.0, pHeight.z(), EPS);
+    }
+
+    @Test
+    void evaluateSurfaceOfRevolution_shouldUseCache() {
+        StepModel model = new StepModel();
+
+        CartesianPoint linePoint = new CartesianPoint(
+                "#10",
+                "('P',(2.0,0.0,0.0))",
+                "P",
+                List.of(2.0, 0.0, 0.0)
+        );
+        Direction lineDirection = new Direction(
+                "#11",
+                "('D',(0.0,0.0,1.0))",
+                "D",
+                List.of(0.0, 0.0, 1.0)
+        );
+        Vector lineVector = new Vector(
+                "#12",
+                "('V',#11,1.0)",
+                "V",
+                "#11",
+                1.0
+        );
+        Line sweptLine = new Line(
+                "#13",
+                "('L',#10,#12)",
+                "L",
+                "#10",
+                "#12"
+        );
+
+        CartesianPoint axisLocation = new CartesianPoint(
+                "#20",
+                "('O',(0.0,0.0,0.0))",
+                "O",
+                List.of(0.0, 0.0, 0.0)
+        );
+        Axis1Placement axis1Placement = new Axis1Placement(
+                "#22",
+                "('A',#20,$)",
+                "A",
+                "#20",
+                null
+        );
+
+        SurfaceOfRevolution surfaceOfRevolution = new SurfaceOfRevolution(
+                "#30",
+                "('SOR',#13,#22)",
+                "SOR",
+                "#13",
+                "#22"
+        );
+
+        model.addEntity(linePoint);
+        model.addEntity(lineDirection);
+        model.addEntity(lineVector);
+        model.addEntity(sweptLine);
+        model.addEntity(axisLocation);
+        model.addEntity(axis1Placement);
+        model.addEntity(surfaceOfRevolution);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultSurfaceEvaluator surfaceEvaluator = new DefaultSurfaceEvaluator(context, placementEvaluator);
+
+        SurfaceOfRevolution3 first = surfaceEvaluator.evaluateSurfaceOfRevolution(surfaceOfRevolution);
+        SurfaceOfRevolution3 second = surfaceEvaluator.evaluateSurfaceOfRevolution(surfaceOfRevolution);
+
+        assertSame(first, second);
+    }
+
 
 
 }
