@@ -488,6 +488,50 @@ class DefaultCurveEvaluatorTest {
         assertEquals(0.0, mid.z(), 1e-6);
     }
 
+    @Test
+    void evaluateEllipse_shouldUseCache() {
+        StepModel model = new StepModel();
+
+        CartesianPoint origin = new CartesianPoint(
+                "#10",
+                "( 'NONE', ( 0.0, 0.0, 0.0 ) )",
+                "NONE",
+                List.of(0.0, 0.0, 0.0)
+        );
+
+        Axis2Placement3D placement = new Axis2Placement3D(
+                "#13",
+                "( 'NONE', #10, $, $ )",
+                "NONE",
+                "#10",
+                "$",
+                "$"
+        );
+
+        Ellipse ellipse = new Ellipse(
+                "#20",
+                "( 'NONE', #13, 5.0, 3.0 )",
+                "NONE",
+                "#13",
+                5.0,
+                3.0
+        );
+
+        model.addEntity(origin);
+        model.addEntity(placement);
+        model.addEntity(ellipse);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultCurveEvaluator curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
+
+        EllipseCurve3 first = curveEvaluator.evaluateEllipse(ellipse);
+        EllipseCurve3 second = curveEvaluator.evaluateEllipse(ellipse);
+
+        assertSame(first, second);
+    }
+
 
 
 

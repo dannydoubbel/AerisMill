@@ -892,6 +892,51 @@ class DefaultSurfaceEvaluatorTest {
         assertSame(first, second);
     }
 
+    @Test
+    void evaluateConicalSurface_shouldUseCache() {
+        StepModel model = new StepModel();
+
+        CartesianPoint origin = new CartesianPoint(
+                "#10",
+                "('O',(0.0,0.0,0.0))",
+                "O",
+                List.of(0.0, 0.0, 0.0)
+        );
+
+        Axis2Placement3D placement = new Axis2Placement3D(
+                "#13",
+                "('A',#10,$,$)",
+                "A",
+                "#10",
+                "$",
+                "$"
+        );
+
+        ConicalSurface conicalSurface = new ConicalSurface(
+                "#20",
+                "('C',#13,5.0,0.5)",
+                "C",
+                "#13",
+                5.0,
+                0.5
+        );
+
+        model.addEntity(origin);
+        model.addEntity(placement);
+        model.addEntity(conicalSurface);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultSurfaceEvaluator surfaceEvaluator = new DefaultSurfaceEvaluator(context, placementEvaluator);
+
+        ConicalSurface3 first = surfaceEvaluator.evaluateConicalSurface(conicalSurface);
+        ConicalSurface3 second = surfaceEvaluator.evaluateConicalSurface(conicalSurface);
+
+        assertSame(first, second);
+    }
+
+
 
 
 }
