@@ -4,16 +4,14 @@ import be.doebi.aerismill.eval.step.context.StepEvaluationCache;
 import be.doebi.aerismill.eval.step.context.StepEvaluationContext;
 import be.doebi.aerismill.eval.step.placement.PlacementEvaluator;
 import be.doebi.aerismill.model.geom.math.Frame3;
-import be.doebi.aerismill.model.geom.surface.CylindricalSurface3;
-import be.doebi.aerismill.model.geom.surface.PlaneSurface3;
-import be.doebi.aerismill.model.geom.surface.Surface3;
+import be.doebi.aerismill.model.geom.math.Point3;
+import be.doebi.aerismill.model.geom.surface.*;
 import be.doebi.aerismill.model.step.base.StepEntity;
-import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
-import be.doebi.aerismill.model.step.geometry.CylindricalSurface;
-import be.doebi.aerismill.model.step.geometry.Plane;
-import be.doebi.aerismill.model.geom.surface.ConicalSurface3;
-import be.doebi.aerismill.model.step.geometry.ConicalSurface;
+import be.doebi.aerismill.model.step.base.StepLogical;
+import be.doebi.aerismill.model.step.geometry.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
@@ -41,6 +39,42 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
     public Surface3 evaluate(CylindricalSurface cylindricalSurface) {
         return evaluateCylindricalSurface(cylindricalSurface);
     }
+
+    @Override
+    public Surface3 evaluate(BSplineSurfaceWithKnots bSplineSurfaceWithKnots) {
+        return evaluateBSplineSurfaceWithKnots(bSplineSurfaceWithKnots);
+    }
+
+    @Override
+    public Surface3 evaluate(SphericalSurface sphericalSurface) {
+        return evaluateSphericalSurface(sphericalSurface);
+    }
+
+    @Override
+    public SphericalSurface3 evaluateSphericalSurface(SphericalSurface sphericalSurface) {
+        Objects.requireNonNull(sphericalSurface, "sphericalSurface must not be null");
+
+        Surface3 cached = cache.getSurface(sphericalSurface.getId());
+        if (cached instanceof SphericalSurface3 sphericalSurface3) {
+            return sphericalSurface3;
+        }
+
+        Axis2Placement3D position = sphericalSurface.getPosition();
+        if (position == null) {
+            position = requireAxis2Placement3D(
+                    sphericalSurface.getPositionRef(),
+                    sphericalSurface.getId(),
+                    "position"
+            );
+        }
+
+        Frame3 frame = placementEvaluator.evaluateAxis2Placement3D(position);
+        SphericalSurface3 result = new SphericalSurface3(frame, sphericalSurface.getRadius());
+
+        cache.putSurface(sphericalSurface.getId(), result);
+        return result;
+    }
+
 
     @Override
     public PlaneSurface3 evaluatePlane(Plane plane) {
@@ -125,5 +159,95 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
             );
         }
         return placement;
+    }
+
+    @Override
+    public BSplineSurface3 evaluateBSplineSurfaceWithKnots(BSplineSurfaceWithKnots splineSurface) {
+        Objects.requireNonNull(splineSurface, "splineSurface must not be null");
+
+        Surface3 cached = cache.getSurface(splineSurface.getId());
+        if (cached instanceof BSplineSurface3 bSplineSurface3) {
+            return bSplineSurface3;
+        }
+
+        List<List<Point3>> controlPoints = toPointGrid(splineSurface);
+        List<Double> expandedUKnots = expandKnots(
+                splineSurface.getUMultiplicities(),
+                splineSurface.getUKnots(),
+                splineSurface.getId(),
+                "u"
+        );
+        List<Double> expandedVKnots = expandKnots(
+                splineSurface.getVMultiplicities(),
+                splineSurface.getVKnots(),
+                splineSurface.getId(),
+                "v"
+        );
+
+        BSplineSurface3 result = new BSplineSurface3(
+                splineSurface.getUDegree(),
+                splineSurface.getVDegree(),
+                controlPoints,
+                expandedUKnots,
+                expandedVKnots,
+                splineSurface.isUClosed() == StepLogical.TRUE,
+                splineSurface.isVClosed() == StepLogical.TRUE,
+                splineSurface.isSelfIntersect() == StepLogical.TRUE,
+                splineSurface.getSurfaceForm(),
+                splineSurface.getKnotSpec()
+        );
+
+        cache.putSurface(splineSurface.getId(), result);
+        return result;
+    }
+
+    private List<List<Point3>> toPointGrid(BSplineSurfaceWithKnots splineSurface) {
+        List<List<Point3>> result = new ArrayList<>();
+
+        for (List<StepEntity> row : splineSurface.getControlPointsList()) {
+            List<Point3> pointRow = new ArrayList<>();
+
+            for (StepEntity entity : row) {
+                if (!(entity instanceof CartesianPoint point)) {
+                    throw new IllegalStateException(
+                            "B_SPLINE_SURFACE_WITH_KNOTS " + splineSurface.getId() +
+                                    " expected CARTESIAN_POINT but found " +
+                                    (entity == null ? "null" : entity.getType())
+                    );
+                }
+
+                pointRow.add(placementEvaluator.evaluatePoint(point));
+            }
+
+            result.add(List.copyOf(pointRow));
+        }
+
+        return List.copyOf(result);
+    }
+
+    private List<Double> expandKnots(List<Integer> multiplicities, List<Double> knots, String ownerId, String axisName) {
+        if (multiplicities == null || knots == null) {
+            throw new IllegalStateException(
+                    "Spline surface " + ownerId + " has null " + axisName + " knot data"
+            );
+        }
+        if (multiplicities.size() != knots.size()) {
+            throw new IllegalStateException(
+                    "Spline surface " + ownerId + " " + axisName +
+                            " knot multiplicities size does not match knot values size"
+            );
+        }
+
+        List<Double> expanded = new ArrayList<>();
+        for (int i = 0; i < knots.size(); i++) {
+            int multiplicity = multiplicities.get(i);
+            double knot = knots.get(i);
+
+            for (int j = 0; j < multiplicity; j++) {
+                expanded.add(knot);
+            }
+        }
+
+        return List.copyOf(expanded);
     }
 }
