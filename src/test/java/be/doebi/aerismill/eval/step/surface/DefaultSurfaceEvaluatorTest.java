@@ -608,6 +608,125 @@ class DefaultSurfaceEvaluatorTest {
         assertSame(first, second);
     }
 
+    @Test
+    void evaluateToroidalSurface_shouldCreateToroidalSurface3() {
+        StepModel model = new StepModel();
+
+        CartesianPoint origin = new CartesianPoint(
+                "#10",
+                "('O',(1.0,2.0,3.0))",
+                "O",
+                List.of(1.0, 2.0, 3.0)
+        );
+        Direction axis = new Direction(
+                "#11",
+                "('Z',(0.0,0.0,1.0))",
+                "Z",
+                List.of(0.0, 0.0, 1.0)
+        );
+        Direction refDirection = new Direction(
+                "#12",
+                "('X',(1.0,0.0,0.0))",
+                "X",
+                List.of(1.0, 0.0, 0.0)
+        );
+        Axis2Placement3D placement = new Axis2Placement3D(
+                "#13",
+                "('A',#10,#11,#12)",
+                "A",
+                "#10",
+                "#11",
+                "#12"
+        );
+        ToroidalSurface toroidalSurface = new ToroidalSurface(
+                "#20",
+                "('T',#13,10.0,2.0)",
+                "T",
+                "#13",
+                10.0,
+                2.0
+        );
+
+        model.addEntity(origin);
+        model.addEntity(axis);
+        model.addEntity(refDirection);
+        model.addEntity(placement);
+        model.addEntity(toroidalSurface);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultSurfaceEvaluator surfaceEvaluator = new DefaultSurfaceEvaluator(context, placementEvaluator);
+
+        ToroidalSurface3 result = surfaceEvaluator.evaluateToroidalSurface(toroidalSurface);
+
+        assertNotNull(result);
+        assertEquals(10.0, result.majorRadius(), EPS);
+        assertEquals(2.0, result.minorRadius(), EPS);
+
+        Point3 p0 = result.pointAt(0.0, 0.0);
+        assertEquals(13.0, p0.x(), EPS);
+        assertEquals(2.0, p0.y(), EPS);
+        assertEquals(3.0, p0.z(), EPS);
+
+        Point3 p90u = result.pointAt(Math.PI / 2.0, 0.0);
+        assertEquals(1.0, p90u.x(), 1e-9);
+        assertEquals(14.0, p90u.y(), 1e-9);
+        assertEquals(3.0, p90u.z(), 1e-9);
+
+        Point3 p90v = result.pointAt(0.0, Math.PI / 2.0);
+        assertEquals(11.0, p90v.x(), 1e-9);
+        assertEquals(2.0, p90v.y(), 1e-9);
+        assertEquals(5.0, p90v.z(), 1e-9);
+
+        Vec3 n = result.normalAt(0.0, 0.0);
+        assertEquals(1.0, n.x(), EPS);
+        assertEquals(0.0, n.y(), EPS);
+        assertEquals(0.0, n.z(), EPS);
+    }
+
+    @Test
+    void evaluateToroidalSurface_shouldUseCache() {
+        StepModel model = new StepModel();
+
+        CartesianPoint origin = new CartesianPoint(
+                "#10",
+                "('O',(0.0,0.0,0.0))",
+                "O",
+                List.of(0.0, 0.0, 0.0)
+        );
+        Axis2Placement3D placement = new Axis2Placement3D(
+                "#13",
+                "('A',#10,$,$)",
+                "A",
+                "#10",
+                "$",
+                "$"
+        );
+        ToroidalSurface toroidalSurface = new ToroidalSurface(
+                "#20",
+                "('T',#13,8.0,2.0)",
+                "T",
+                "#13",
+                8.0,
+                2.0
+        );
+
+        model.addEntity(origin);
+        model.addEntity(placement);
+        model.addEntity(toroidalSurface);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultSurfaceEvaluator surfaceEvaluator = new DefaultSurfaceEvaluator(context, placementEvaluator);
+
+        ToroidalSurface3 first = surfaceEvaluator.evaluateToroidalSurface(toroidalSurface);
+        ToroidalSurface3 second = surfaceEvaluator.evaluateToroidalSurface(toroidalSurface);
+
+        assertSame(first, second);
+    }
+
 
 
 }

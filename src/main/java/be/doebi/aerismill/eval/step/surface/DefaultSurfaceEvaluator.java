@@ -51,6 +51,41 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
     }
 
     @Override
+    public Surface3 evaluate(ToroidalSurface toroidalSurface) {
+        return evaluateToroidalSurface(toroidalSurface);
+    }
+
+    @Override
+    public ToroidalSurface3 evaluateToroidalSurface(ToroidalSurface toroidalSurface) {
+        Objects.requireNonNull(toroidalSurface, "toroidalSurface must not be null");
+
+        Surface3 cached = cache.getSurface(toroidalSurface.getId());
+        if (cached instanceof ToroidalSurface3 toroidalSurface3) {
+            return toroidalSurface3;
+        }
+
+        Axis2Placement3D position = toroidalSurface.getPosition();
+        if (position == null) {
+            position = requireAxis2Placement3D(
+                    toroidalSurface.getPositionRef(),
+                    toroidalSurface.getId(),
+                    "position"
+            );
+        }
+
+        Frame3 frame = placementEvaluator.evaluateAxis2Placement3D(position);
+        ToroidalSurface3 result = new ToroidalSurface3(
+                frame,
+                toroidalSurface.getMajorRadius(),
+                toroidalSurface.getMinorRadius()
+        );
+
+        cache.putSurface(toroidalSurface.getId(), result);
+        return result;
+    }
+
+
+    @Override
     public SphericalSurface3 evaluateSphericalSurface(SphericalSurface sphericalSurface) {
         Objects.requireNonNull(sphericalSurface, "sphericalSurface must not be null");
 

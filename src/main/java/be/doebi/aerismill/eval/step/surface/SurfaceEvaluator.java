@@ -11,6 +11,9 @@ import be.doebi.aerismill.model.geom.surface.BSplineSurface3;
 import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
 import be.doebi.aerismill.model.geom.surface.SphericalSurface3;
 import be.doebi.aerismill.model.step.geometry.SphericalSurface;
+import be.doebi.aerismill.model.geom.surface.ToroidalSurface3;
+import be.doebi.aerismill.model.step.geometry.ToroidalSurface;
+
 
 public interface SurfaceEvaluator {
     Surface3 evaluate(Plane plane);
@@ -18,7 +21,9 @@ public interface SurfaceEvaluator {
     Surface3 evaluate(ConicalSurface conicalSurface);
     Surface3 evaluate(BSplineSurfaceWithKnots bSplineSurfaceWithKnots);
     Surface3 evaluate(SphericalSurface sphericalSurface);
+    Surface3 evaluate(ToroidalSurface toroidalSurface);
 
+    ToroidalSurface3 evaluateToroidalSurface(ToroidalSurface toroidalSurface);
     SphericalSurface3 evaluateSphericalSurface(SphericalSurface sphericalSurface);
     BSplineSurface3 evaluateBSplineSurfaceWithKnots(BSplineSurfaceWithKnots bSplineSurfaceWithKnots);
     PlaneSurface3 evaluatePlane(Plane plane);
