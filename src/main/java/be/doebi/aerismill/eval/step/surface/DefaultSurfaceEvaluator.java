@@ -11,6 +11,8 @@ import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.geometry.Axis2Placement3D;
 import be.doebi.aerismill.model.step.geometry.CylindricalSurface;
 import be.doebi.aerismill.model.step.geometry.Plane;
+import be.doebi.aerismill.model.geom.surface.ConicalSurface3;
+import be.doebi.aerismill.model.step.geometry.ConicalSurface;
 
 import java.util.Objects;
 
@@ -28,6 +30,11 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
     @Override
     public Surface3 evaluate(Plane plane) {
         return evaluatePlane(plane);
+    }
+
+    @Override
+    public Surface3 evaluate(ConicalSurface conicalSurface) {
+        return evaluateConicalSurface(conicalSurface);
     }
 
     @Override
@@ -53,6 +60,35 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
         PlaneSurface3 result = new PlaneSurface3(frame);
 
         cache.putSurface(plane.getId(), result);
+        return result;
+    }
+
+    @Override
+    public ConicalSurface3 evaluateConicalSurface(ConicalSurface conicalSurface) {
+        Objects.requireNonNull(conicalSurface, "conicalSurface must not be null");
+
+        Surface3 cached = cache.getSurface(conicalSurface.getId());
+        if (cached instanceof ConicalSurface3 conicalSurface3) {
+            return conicalSurface3;
+        }
+
+        Axis2Placement3D position = conicalSurface.getPosition();
+        if (position == null) {
+            position = requireAxis2Placement3D(
+                    conicalSurface.getPositionRef(),
+                    conicalSurface.getId(),
+                    "position"
+            );
+        }
+
+        Frame3 frame = placementEvaluator.evaluateAxis2Placement3D(position);
+        ConicalSurface3 result = new ConicalSurface3(
+                frame,
+                conicalSurface.getRadius(),
+                conicalSurface.getSemiAngle()
+        );
+
+        cache.putSurface(conicalSurface.getId(), result);
         return result;
     }
 
