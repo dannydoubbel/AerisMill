@@ -18,7 +18,11 @@ import be.doebi.aerismill.model.step.geometry.Vector;
 import be.doebi.aerismill.model.step.geometry.CartesianPoint;
 import be.doebi.aerismill.model.geom.curve.EllipseCurve3;
 import be.doebi.aerismill.model.step.geometry.Ellipse;
+import be.doebi.aerismill.model.geom.curve.BSplineCurve3;
+import be.doebi.aerismill.model.step.base.StepLogical;
+import be.doebi.aerismill.model.step.geometry.BSplineCurveWithKnots;
 
+import java.util.List;
 import java.util.Objects;
 
 public final class DefaultCurveEvaluator implements CurveEvaluator {
@@ -96,6 +100,50 @@ public final class DefaultCurveEvaluator implements CurveEvaluator {
         return evaluateEllipse(ellipse);
     }
 
+
+    @Override
+    public Curve3 evaluate(BSplineCurveWithKnots bSplineCurveWithKnots) {
+        return evaluateBSplineCurveWithKnots(bSplineCurveWithKnots);
+    }
+
+    @Override
+    public BSplineCurve3 evaluateBSplineCurveWithKnots(BSplineCurveWithKnots spline) {
+        Objects.requireNonNull(spline, "spline must not be null");
+
+        Curve3 cached = cache.getCurve(spline.getId());
+        if (cached instanceof BSplineCurve3 bSplineCurve3) {
+            return bSplineCurve3;
+        }
+
+        List<Point3> controlPoints = spline.getControlPoints() == null
+                ? requireControlPoints(spline)
+                : spline.getControlPoints().stream()
+                  .map(this::asCartesianPoint)
+                  .map(placementEvaluator::evaluatePoint)
+                  .toList();
+
+        List<Double> expandedKnots = expandKnots(
+                spline.getKnotMultiplicities(),
+                spline.getKnots(),
+                spline.getId()
+        );
+
+        BSplineCurve3 result = new BSplineCurve3(
+                spline.getDegree(),
+                controlPoints,
+                expandedKnots,
+                spline.isClosedCurve() == StepLogical.TRUE,
+                spline.isSelfIntersect() == StepLogical.TRUE,
+                spline.getCurveForm(),
+                spline.getKnotSpec()
+        );
+
+        cache.putCurve(spline.getId(), result);
+        return result;
+    }
+
+
+
     @Override
     public EllipseCurve3 evaluateEllipse(Ellipse ellipse) {
         Objects.requireNonNull(ellipse, "ellipse must not be null");
@@ -156,5 +204,45 @@ public final class DefaultCurveEvaluator implements CurveEvaluator {
             );
         }
         return placement;
+    }
+
+    private List<Point3> requireControlPoints(BSplineCurveWithKnots spline) {
+        return spline.getControlPointRefs().stream()
+                .map(ref -> context.getStepModel().getEntity(ref))
+                .map(this::asCartesianPoint)
+                .map(placementEvaluator::evaluatePoint)
+                .toList();
+    }
+
+    private CartesianPoint asCartesianPoint(StepEntity entity) {
+        if (!(entity instanceof CartesianPoint point)) {
+            throw new IllegalStateException(
+                    "Expected CARTESIAN_POINT but found " +
+                            (entity == null ? "null" : entity.getType())
+            );
+        }
+        return point;
+    }
+
+    private List<Double> expandKnots(List<Integer> multiplicities, List<Double> knots, String ownerId) {
+        if (multiplicities == null || knots == null) {
+            throw new IllegalStateException("Spline " + ownerId + " has null knot data");
+        }
+        if (multiplicities.size() != knots.size()) {
+            throw new IllegalStateException(
+                    "Spline " + ownerId + " knot multiplicities size does not match knot values size"
+            );
+        }
+
+        List<Double> expanded = new java.util.ArrayList<>();
+        for (int i = 0; i < knots.size(); i++) {
+            int multiplicity = multiplicities.get(i);
+            double knot = knots.get(i);
+
+            for (int j = 0; j < multiplicity; j++) {
+                expanded.add(knot);
+            }
+        }
+        return List.copyOf(expanded);
     }
 }

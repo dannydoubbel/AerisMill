@@ -3,11 +3,13 @@ package be.doebi.aerismill.eval.step.curve;
 import be.doebi.aerismill.eval.step.context.StepEvaluationContext;
 import be.doebi.aerismill.eval.step.placement.DefaultPlacementEvaluator;
 import be.doebi.aerismill.eval.step.placement.PlacementEvaluator;
+import be.doebi.aerismill.model.geom.curve.BSplineCurve3;
 import be.doebi.aerismill.model.geom.curve.CircleCurve3;
 import be.doebi.aerismill.model.geom.curve.EllipseCurve3;
 import be.doebi.aerismill.model.geom.curve.LineCurve3;
 import be.doebi.aerismill.model.geom.math.Point3;
 import be.doebi.aerismill.model.geom.math.Vec3;
+import be.doebi.aerismill.model.step.base.StepLogical;
 import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.model.step.geometry.*;
 import org.junit.jupiter.api.Test;
@@ -298,6 +300,194 @@ class DefaultCurveEvaluatorTest {
         assertEquals(5.0, p90.y(), 1e-9);
         assertEquals(3.0, p90.z(), 1e-9);
     }
+
+    @Test
+    void evaluateBSplineCurveWithKnots_shouldCreateBSplineCurve3() {
+        StepModel model = new StepModel();
+
+        CartesianPoint p0 = new CartesianPoint(
+                "#10",
+                "('P0',(0.0,0.0,0.0))",
+                "P0",
+                List.of(0.0, 0.0, 0.0)
+        );
+        CartesianPoint p1 = new CartesianPoint(
+                "#11",
+                "('P1',(10.0,0.0,0.0))",
+                "P1",
+                List.of(10.0, 0.0, 0.0)
+        );
+
+        BSplineCurveWithKnots spline = new BSplineCurveWithKnots(
+                "#20",
+                "('S',1,(#10,#11),.UNSPECIFIED.,.F.,.F.,(2,2),(0.0,1.0),.UNSPECIFIED.)",
+                "S",
+                1,
+                List.of("#10", "#11"),
+                ".UNSPECIFIED.",
+                be.doebi.aerismill.model.step.base.StepLogical.FALSE,
+                be.doebi.aerismill.model.step.base.StepLogical.FALSE,
+                List.of(2, 2),
+                List.of(0.0, 1.0),
+                ".UNSPECIFIED."
+        );
+
+        model.addEntity(p0);
+        model.addEntity(p1);
+        model.addEntity(spline);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultCurveEvaluator curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
+
+        BSplineCurve3 result = curveEvaluator.evaluateBSplineCurveWithKnots(spline);
+
+        assertNotNull(result);
+        assertEquals(1, result.degree());
+        assertEquals(2, result.controlPoints().size());
+        assertEquals(List.of(0.0, 0.0, 1.0, 1.0), result.knots());
+
+        Point3 start = result.pointAt(0.0);
+        assertEquals(0.0, start.x(), EPS);
+        assertEquals(0.0, start.y(), EPS);
+        assertEquals(0.0, start.z(), EPS);
+
+        Point3 mid = result.pointAt(0.5);
+        assertEquals(5.0, mid.x(), EPS);
+        assertEquals(0.0, mid.y(), EPS);
+        assertEquals(0.0, mid.z(), EPS);
+
+        Point3 endish = result.pointAt(1.0);
+        assertEquals(10.0, endish.x(), 1e-6);
+        assertEquals(0.0, endish.y(), 1e-6);
+        assertEquals(0.0, endish.z(), 1e-6);
+    }
+
+    @Test
+    void evaluateBSplineCurveWithKnots_shouldUseCache() {
+        StepModel model = new StepModel();
+
+        CartesianPoint p0 = new CartesianPoint(
+                "#10",
+                "('P0',(0.0,0.0,0.0))",
+                "P0",
+                List.of(0.0, 0.0, 0.0)
+        );
+        CartesianPoint p1 = new CartesianPoint(
+                "#11",
+                "('P1',(10.0,0.0,0.0))",
+                "P1",
+                List.of(10.0, 0.0, 0.0)
+        );
+
+        BSplineCurveWithKnots spline = new BSplineCurveWithKnots(
+                "#20",
+                "('S',1,(#10,#11),.UNSPECIFIED.,.F.,.F.,(2,2),(0.0,1.0),.UNSPECIFIED.)",
+                "S",
+                1,
+                List.of("#10", "#11"),
+                ".UNSPECIFIED.",
+                StepLogical.FALSE,
+                StepLogical.FALSE,
+                List.of(2, 2),
+                List.of(0.0, 1.0),
+                ".UNSPECIFIED."
+        );
+
+        model.addEntity(p0);
+        model.addEntity(p1);
+        model.addEntity(spline);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultCurveEvaluator curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
+
+        BSplineCurve3 first = curveEvaluator.evaluateBSplineCurveWithKnots(spline);
+        BSplineCurve3 second = curveEvaluator.evaluateBSplineCurveWithKnots(spline);
+
+        assertSame(first, second);
+    }
+
+
+    @Test
+    void evaluateBSplineCurveWithKnots_shouldEvaluateCubicOpenUniformSpline() {
+        StepModel model = new StepModel();
+
+        CartesianPoint p0 = new CartesianPoint(
+                "#10",
+                "('P0',(0.0,0.0,0.0))",
+                "P0",
+                List.of(0.0, 0.0, 0.0)
+        );
+        CartesianPoint p1 = new CartesianPoint(
+                "#11",
+                "('P1',(10.0,0.0,0.0))",
+                "P1",
+                List.of(10.0, 0.0, 0.0)
+        );
+        CartesianPoint p2 = new CartesianPoint(
+                "#12",
+                "('P2',(10.0,10.0,0.0))",
+                "P2",
+                List.of(10.0, 10.0, 0.0)
+        );
+        CartesianPoint p3 = new CartesianPoint(
+                "#13",
+                "('P3',(20.0,10.0,0.0))",
+                "P3",
+                List.of(20.0, 10.0, 0.0)
+        );
+
+        BSplineCurveWithKnots spline = new BSplineCurveWithKnots(
+                "#20",
+                "('S',3,(#10,#11,#12,#13),.UNSPECIFIED.,.F.,.F.,(4,4),(0.0,1.0),.UNSPECIFIED.)",
+                "S",
+                3,
+                List.of("#10", "#11", "#12", "#13"),
+                ".UNSPECIFIED.",
+                StepLogical.FALSE,
+                StepLogical.FALSE,
+                List.of(4, 4),
+                List.of(0.0, 1.0),
+                ".UNSPECIFIED."
+        );
+
+        model.addEntity(p0);
+        model.addEntity(p1);
+        model.addEntity(p2);
+        model.addEntity(p3);
+        model.addEntity(spline);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultCurveEvaluator curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
+
+        BSplineCurve3 result = curveEvaluator.evaluateBSplineCurveWithKnots(spline);
+
+        assertNotNull(result);
+        assertEquals(3, result.degree());
+        assertEquals(4, result.controlPoints().size());
+        assertEquals(List.of(0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0), result.knots());
+
+        Point3 start = result.pointAt(0.0);
+        assertEquals(0.0, start.x(), EPS);
+        assertEquals(0.0, start.y(), EPS);
+        assertEquals(0.0, start.z(), EPS);
+
+        Point3 end = result.pointAt(1.0);
+        assertEquals(20.0, end.x(), 1e-6);
+        assertEquals(10.0, end.y(), 1e-6);
+        assertEquals(0.0, end.z(), 1e-6);
+
+        Point3 mid = result.pointAt(0.5);
+        assertEquals(10.0, mid.x(), 1e-6);
+        assertEquals(5.0, mid.y(), 1e-6);
+        assertEquals(0.0, mid.z(), 1e-6);
+    }
+
 
 
 
