@@ -88,11 +88,11 @@ class DefaultLoopGeomEvaluatorTest {
         assertEquals("#80", result.stepId());
         assertEquals(2, result.edges().size());
 
-        assertEquals(0.0, result.edges().get(0).start().x(), EPS);
-        assertEquals(0.0, result.edges().get(0).start().y(), EPS);
-        assertEquals(0.0, result.edges().get(0).start().z(), EPS);
+        assertEquals(0.0, result.edges().getFirst().start().x(), EPS);
+        assertEquals(0.0, result.edges().getFirst().start().y(), EPS);
+        assertEquals(0.0, result.edges().getFirst().start().z(), EPS);
 
-        assertEquals(5.0, result.edges().get(0).end().x(), EPS);
+        assertEquals(5.0, result.edges().getFirst().end().x(), EPS);
         assertEquals(0.0, result.edges().get(0).end().y(), EPS);
         assertEquals(0.0, result.edges().get(0).end().z(), EPS);
 
