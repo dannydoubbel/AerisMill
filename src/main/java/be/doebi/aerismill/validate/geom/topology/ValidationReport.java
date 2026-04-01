@@ -36,7 +36,15 @@ public final class ValidationReport {
         ));
     }
 
+    public void addMessage(ValidationMessage message) {
+        messages.add(message);
+    }
+
+
+
     public boolean isEmpty() {
         return messages.isEmpty();
     }
+
+
 }
