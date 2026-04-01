@@ -1,6 +1,11 @@
 package be.doebi.aerismill.ui;
 
+import be.doebi.aerismill.assemble.step.geom.AssemblyIssue;
+import be.doebi.aerismill.assemble.step.geom.AssemblyResult;
+import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
+import be.doebi.aerismill.assemble.step.geom.StepToGeomAssembler;
 import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.service.StepAssemblyService;
 import be.doebi.aerismill.service.StepImportService;
 import be.doebi.aerismill.service.UIStateService;
 import javafx.application.Platform;
@@ -22,6 +27,7 @@ public class MainController {
 
     private final Preferences prefs = Preferences.userNodeForPackage(getClass());
     private final StepImportService stepImportService = new StepImportService();
+    private final StepAssemblyService stepAssemblyService = new StepAssemblyService();
 
     private File currentFile;
     private Object currentStepFile; // temporary, until your real model type exists
@@ -105,7 +111,12 @@ public class MainController {
 
         try {
             StepModel loadedModel = stepImportService.open(selectedFile);
+
+            AssemblyResult assemblyResult = stepAssemblyService.assemble(loadedModel);
+
             applyLoadedStepFile(selectedFile, loadedModel);
+            applyAssemblyResult(assemblyResult);
+
         } catch (Exception e) {
             handleOpenStepFileFailure(selectedFile, e);
         }
@@ -333,5 +344,24 @@ public class MainController {
         alert.getDialogPane().getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/be/doebi/aerismill/ui/app.css")).toExternalForm()
         );
+    }
+
+    private void applyAssemblyResult(AssemblyResult assemblyResult) {
+        System.out.println("ASSEMBLY RESULT");
+        System.out.println("assembled solids: " + assemblyResult.solids().size());
+        System.out.println("issues: " + assemblyResult.issues().size());
+
+        for (SolidAssemblyResult solid : assemblyResult.solids()) {
+            System.out.println("solid " + solid.stepId()
+                    + " | validation errors=" + solid.validationReport().errorCount()
+                    + " | warnings=" + solid.validationReport().warningCount());
+        }
+
+        for (AssemblyIssue issue : assemblyResult.issues()) {
+            System.out.println(issue.severity()
+                    + " | " + issue.code()
+                    + " | " + issue.stepId()
+                    + " | " + issue.message());
+        }
     }
 }

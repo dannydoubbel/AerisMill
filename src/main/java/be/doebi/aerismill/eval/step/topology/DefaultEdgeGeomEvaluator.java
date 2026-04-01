@@ -11,6 +11,8 @@ import be.doebi.aerismill.model.step.geometry.Circle;
 import be.doebi.aerismill.model.step.geometry.Line;
 import be.doebi.aerismill.model.step.topology.EdgeCurve;
 import be.doebi.aerismill.model.step.topology.VertexPoint;
+import be.doebi.aerismill.model.step.geometry.Ellipse;
+import be.doebi.aerismill.model.step.geometry.BSplineCurveWithKnots;
 
 import java.util.Objects;
 
@@ -77,6 +79,12 @@ public final class DefaultEdgeGeomEvaluator implements EdgeGeomEvaluator {
         }
         if (edgeGeometry instanceof Circle circle) {
             return curveEvaluator.evaluateCircle(circle);
+        }
+        if (edgeGeometry instanceof Ellipse ellipse) {
+            return curveEvaluator.evaluateEllipse(ellipse);
+        }
+        if (edgeGeometry instanceof BSplineCurveWithKnots bSplineCurveWithKnots) {
+            return curveEvaluator.evaluateBSplineCurveWithKnots(bSplineCurveWithKnots);
         }
 
         throw new IllegalStateException(
