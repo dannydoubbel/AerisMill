@@ -24,6 +24,9 @@ import java.util.prefs.Preferences;
 public class MainController {
 
     private static final String PREF_LAST_STEP_DIR = "lastStepDirectory";
+    private static final String ABOUT_TEXT = """
+            AerisMill is a CNC-focused engineering application designed to import STEP geometry, build an internal geometric and topological memory model, and eventually generate machining toolpaths. The project emphasizes clear architecture, validation, and pragmatic engineering evolution. This text is temporary and can be refined later.
+            """;
 
     private final Preferences prefs = Preferences.userNodeForPackage(getClass());
     private final StepImportService stepImportService = new StepImportService();
@@ -215,6 +218,27 @@ public class MainController {
     @FXML
     private void onExitApplication(ActionEvent event) {
         handleExit();
+    }
+
+    @FXML
+    private void onShowAbout(ActionEvent event) {
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.initOwner(getStage());
+        dialog.setTitle("About AerisMill");
+        dialog.setHeaderText("AerisMill");
+
+        TextArea aboutTextArea = new TextArea(ABOUT_TEXT);
+        aboutTextArea.setWrapText(true);
+        aboutTextArea.setEditable(false);
+        aboutTextArea.setPrefColumnCount(48);
+        aboutTextArea.setPrefRowCount(10);
+
+        DialogPane dialogPane = dialog.getDialogPane();
+        dialogPane.setContent(aboutTextArea);
+        dialogPane.getButtonTypes().add(ButtonType.OK);
+        addAppCss(dialogPane);
+
+        dialog.showAndWait();
     }
 
     private void handleExit(){
