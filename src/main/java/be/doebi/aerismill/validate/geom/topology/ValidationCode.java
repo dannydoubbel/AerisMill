@@ -15,5 +15,6 @@ public enum ValidationCode {
     SHELL_EMPTY,
     SHELL_FACE_NULL,
     SOLID_NULL,
-    SOLID_OUTER_SHELL_NULL
+    SOLID_OUTER_SHELL_NULL,
+    SHELL_HAS_NO_FACES // not impelemted yet
 }
