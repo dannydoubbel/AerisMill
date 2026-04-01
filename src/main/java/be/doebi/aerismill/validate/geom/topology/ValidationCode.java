@@ -10,5 +10,8 @@ public enum ValidationCode {
     LOOP_NOT_CLOSED,
     FACE_NULL,
     FACE_NO_BOUNDS,
-    FACE_BOUND_NULL
+    FACE_BOUND_NULL,
+    SHELL_NULL,
+    SHELL_EMPTY,
+    SHELL_FACE_NULL
 }
