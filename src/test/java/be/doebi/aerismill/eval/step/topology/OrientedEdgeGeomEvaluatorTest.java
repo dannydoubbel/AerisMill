@@ -204,4 +204,102 @@ class DefaultOrientedEdgeGeomEvaluatorTest {
 
         assertSame(first, second);
     }
+
+
+    @Test
+    void evaluateOrientedEdge_shouldUseForwardDirection_whenOrientationIsTrue() {
+        StepModel model = new StepModel();
+
+        CartesianPoint p1 = new CartesianPoint("#10", "('P1',(0.0,0.0,0.0))", "P1", List.of(0.0, 0.0, 0.0));
+        CartesianPoint p2 = new CartesianPoint("#11", "('P2',(5.0,0.0,0.0))", "P2", List.of(5.0, 0.0, 0.0));
+
+        Direction dx = new Direction("#20", "('DX',(1.0,0.0,0.0))", "DX", List.of(1.0, 0.0, 0.0));
+        Vector vx = new Vector("#21", "('VX',#20,5.0)", "VX", "#20", 5.0);
+        Line line = new Line("#22", "('L1',#10,#21)", "L1", "#10", "#21");
+
+        VertexPoint v1 = new VertexPoint("#30", "('V1',#10)", "V1", "#10");
+        VertexPoint v2 = new VertexPoint("#31", "('V2',#11)", "V2", "#11");
+
+        EdgeCurve edgeCurve = new EdgeCurve("#40", "('E1',#30,#31,#22,.T.)", "E1", "#30", "#31", "#22", true);
+        OrientedEdge orientedEdge = new OrientedEdge("#50", "('OE1',*,*,#40,.T.)", "OE1", null, null, "#40", true);
+
+        model.addEntity(p1);
+        model.addEntity(p2);
+        model.addEntity(dx);
+        model.addEntity(vx);
+        model.addEntity(line);
+        model.addEntity(v1);
+        model.addEntity(v2);
+        model.addEntity(edgeCurve);
+        model.addEntity(orientedEdge);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        CurveEvaluator curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
+        VertexGeomEvaluator vertexGeomEvaluator = new DefaultVertexGeomEvaluator(context, placementEvaluator);
+        EdgeGeomEvaluator edgeGeomEvaluator = new DefaultEdgeGeomEvaluator(context, curveEvaluator, vertexGeomEvaluator);
+        DefaultOrientedEdgeGeomEvaluator evaluator =
+                new DefaultOrientedEdgeGeomEvaluator(context, edgeGeomEvaluator);
+
+        OrientedEdgeGeom result = evaluator.evaluateOrientedEdge(orientedEdge);
+
+        assertEquals("#50", result.stepId());
+        assertEquals(0.0, result.start().x(), EPS);
+        assertEquals(0.0, result.start().y(), EPS);
+        assertEquals(0.0, result.start().z(), EPS);
+
+        assertEquals(5.0, result.end().x(), EPS);
+        assertEquals(0.0, result.end().y(), EPS);
+        assertEquals(0.0, result.end().z(), EPS);
+    }
+
+
+    @Test
+    void evaluateOrientedEdge_shouldReverseDirection_whenOrientationIsFalse() {
+        StepModel model = new StepModel();
+
+        CartesianPoint p1 = new CartesianPoint("#10", "('P1',(0.0,0.0,0.0))", "P1", List.of(0.0, 0.0, 0.0));
+        CartesianPoint p2 = new CartesianPoint("#11", "('P2',(5.0,0.0,0.0))", "P2", List.of(5.0, 0.0, 0.0));
+
+        Direction dx = new Direction("#20", "('DX',(1.0,0.0,0.0))", "DX", List.of(1.0, 0.0, 0.0));
+        Vector vx = new Vector("#21", "('VX',#20,5.0)", "VX", "#20", 5.0);
+        Line line = new Line("#22", "('L1',#10,#21)", "L1", "#10", "#21");
+
+        VertexPoint v1 = new VertexPoint("#30", "('V1',#10)", "V1", "#10");
+        VertexPoint v2 = new VertexPoint("#31", "('V2',#11)", "V2", "#11");
+
+        EdgeCurve edgeCurve = new EdgeCurve("#40", "('E1',#30,#31,#22,.T.)", "E1", "#30", "#31", "#22", true);
+        OrientedEdge orientedEdge = new OrientedEdge("#50", "('OE1',*,*,#40,.F.)", "OE1", null, null, "#40", false);
+
+        model.addEntity(p1);
+        model.addEntity(p2);
+        model.addEntity(dx);
+        model.addEntity(vx);
+        model.addEntity(line);
+        model.addEntity(v1);
+        model.addEntity(v2);
+        model.addEntity(edgeCurve);
+        model.addEntity(orientedEdge);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        CurveEvaluator curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
+        VertexGeomEvaluator vertexGeomEvaluator = new DefaultVertexGeomEvaluator(context, placementEvaluator);
+        EdgeGeomEvaluator edgeGeomEvaluator = new DefaultEdgeGeomEvaluator(context, curveEvaluator, vertexGeomEvaluator);
+        DefaultOrientedEdgeGeomEvaluator evaluator =
+                new DefaultOrientedEdgeGeomEvaluator(context, edgeGeomEvaluator);
+
+        OrientedEdgeGeom result = evaluator.evaluateOrientedEdge(orientedEdge);
+
+        assertEquals("#50", result.stepId());
+        assertEquals(5.0, result.start().x(), EPS);
+        assertEquals(0.0, result.start().y(), EPS);
+        assertEquals(0.0, result.start().z(), EPS);
+
+        assertEquals(0.0, result.end().x(), EPS);
+        assertEquals(0.0, result.end().y(), EPS);
+        assertEquals(0.0, result.end().z(), EPS);
+    }
 }
