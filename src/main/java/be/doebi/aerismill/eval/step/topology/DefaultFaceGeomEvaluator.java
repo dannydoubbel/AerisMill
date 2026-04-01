@@ -7,8 +7,13 @@ import be.doebi.aerismill.model.geom.surface.Surface3;
 import be.doebi.aerismill.model.geom.topology.FaceGeom;
 import be.doebi.aerismill.model.geom.topology.LoopGeom;
 import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
+import be.doebi.aerismill.model.step.geometry.ConicalSurface;
 import be.doebi.aerismill.model.step.geometry.CylindricalSurface;
 import be.doebi.aerismill.model.step.geometry.Plane;
+import be.doebi.aerismill.model.step.geometry.SphericalSurface;
+import be.doebi.aerismill.model.step.geometry.SurfaceOfRevolution;
+import be.doebi.aerismill.model.step.geometry.ToroidalSurface;
 import be.doebi.aerismill.model.step.topology.AdvancedFace;
 import be.doebi.aerismill.model.step.topology.EdgeLoop;
 import be.doebi.aerismill.model.step.topology.FaceBound;
@@ -80,6 +85,21 @@ public final class DefaultFaceGeomEvaluator implements FaceGeomEvaluator {
         }
         if (faceGeometry instanceof CylindricalSurface cylindricalSurface) {
             return surfaceEvaluator.evaluateCylindricalSurface(cylindricalSurface);
+        }
+        if (faceGeometry instanceof ConicalSurface conicalSurface) {
+            return surfaceEvaluator.evaluateConicalSurface(conicalSurface);
+        }
+        if (faceGeometry instanceof SphericalSurface sphericalSurface) {
+            return surfaceEvaluator.evaluateSphericalSurface(sphericalSurface);
+        }
+        if (faceGeometry instanceof ToroidalSurface toroidalSurface) {
+            return surfaceEvaluator.evaluateToroidalSurface(toroidalSurface);
+        }
+        if (faceGeometry instanceof SurfaceOfRevolution surfaceOfRevolution) {
+            return surfaceEvaluator.evaluateSurfaceOfRevolution(surfaceOfRevolution);
+        }
+        if (faceGeometry instanceof BSplineSurfaceWithKnots bSplineSurfaceWithKnots) {
+            return surfaceEvaluator.evaluateBSplineSurfaceWithKnots(bSplineSurfaceWithKnots);
         }
 
         throw new IllegalStateException(

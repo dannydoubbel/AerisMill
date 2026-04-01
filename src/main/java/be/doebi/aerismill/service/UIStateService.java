@@ -35,7 +35,6 @@ public class UIStateService {
         if (node.getId() != null && !node.getId().isBlank()) {
             if (node instanceof TabPane tabPane) {
                 restoreTabPane(node.getId(), tabPane);
-                System.out.println("Restore tabPane " + node);
             }
         }
 
@@ -50,7 +49,6 @@ public class UIStateService {
         if (node.getId() != null && !node.getId().isBlank()) {
             if (node instanceof SplitPane splitPane) {
                 restoreSplitPane(node.getId(), splitPane);
-                System.out.println("Restore splitpane " + node);
             }
         }
 
@@ -85,10 +83,8 @@ public class UIStateService {
         if (node.getId() != null && !node.getId().isBlank()) {
             if (node instanceof SplitPane splitPane) {
                 restoreSplitPane(node.getId(), splitPane);
-                System.out.println("Restore splitpane" + node.toString());
             } else if (node instanceof TabPane tabPane) {
                 restoreTabPane(node.getId(), tabPane);
-                System.out.println("Restore tabPane");
             }
         }
 
