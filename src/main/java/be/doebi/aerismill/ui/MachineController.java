@@ -12,6 +12,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.control.TextField;
 
@@ -41,6 +42,9 @@ public class MachineController {
     @FXML
     private ComboBox<BaudRate> baudRateComboBox;
 
+    @FXML
+    private SplitPane machineVerticalSplitPane;
+
     @FXML private Label xMachineLabel;
     @FXML private Label xWorkLabel;
     @FXML private Label yMachineLabel;
@@ -50,6 +54,9 @@ public class MachineController {
 
     @FXML
     private Label machineStatusLabel;
+
+    @FXML
+    private Button disconnectButton;
 
     @FXML
     private TextField spindleSpeedField;
@@ -72,12 +79,12 @@ public class MachineController {
         addBaudRates();
         setupSpindleSpeedField();
 
-        homeMachineButton.setDisable(true);
         setStatusListener(statusListener);
         machineControlService.setStatusListener(this::updateDro);
 
         Platform.runLater(() -> {
             restoreUiState();
+            setDisconnectedUiState("Disconnected");
         });
     }
 
@@ -101,7 +108,7 @@ public class MachineController {
                 AppConsole.log("[Machine] Closing serial connection before exit...");
                 droPollingService.stopDroPolling();
                 machineControlService.disconnect();
-                machineStatusLabel.setText("Disconnected");
+                setDisconnectedUiState("Disconnected");
             }
         } catch (Exception e) {
             AppConsole.log("[Machine] Error while closing serial connection on exit: " + e.getMessage());
@@ -161,6 +168,8 @@ public class MachineController {
 
 
     private void handleSuccessfulConnection(String selectedPort, BaudRate baudRate) {
+        machineVerticalSplitPane.setDisable(false);
+        disconnectButton.setDisable(false);
         homeMachineButton.setDisable(false);
         machineStatusLabel.setText("Connected: " + selectedPort);
         droPollingService.startDroPolling();
@@ -184,6 +193,8 @@ public class MachineController {
     }
 
     private void setDisconnectedUiState(String statusText) {
+        machineVerticalSplitPane.setDisable(true);
+        disconnectButton.setDisable(true);
         homeMachineButton.setDisable(true);
         machineStatusLabel.setText(statusText);
         droPollingService.stopDroPolling();
@@ -193,8 +204,7 @@ public class MachineController {
     public void onDisconnectMachine() {
         machineControlService.disconnect();
         spindleRunning = false;
-        homeMachineButton.setDisable(true);
-        machineStatusLabel.setText("Disconnected");
+        setDisconnectedUiState("Disconnected");
         AppConsole.log("[Machine] Disconnect clicked.");
     }
 
