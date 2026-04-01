@@ -13,5 +13,7 @@ public enum ValidationCode {
     FACE_BOUND_NULL,
     SHELL_NULL,
     SHELL_EMPTY,
-    SHELL_FACE_NULL
+    SHELL_FACE_NULL,
+    SOLID_NULL,
+    SOLID_OUTER_SHELL_NULL
 }
