@@ -292,7 +292,7 @@ public class MainController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        addAppCss(alert);
+        addAppCss(alert.getDialogPane());
 
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
@@ -327,7 +327,7 @@ public class MainController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        addAppCss(alert);
+        addAppCss(alert.getDialogPane());
         alert.showAndWait();
     }
 
@@ -336,12 +336,12 @@ public class MainController {
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
-        addAppCss(alert);
+        addAppCss(alert.getDialogPane());
         alert.showAndWait();
     }
 
-    private void addAppCss(Alert alert) {
-        alert.getDialogPane().getStylesheets().add(
+    private void addAppCss(DialogPane dialogPane) {
+        dialogPane.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("/be/doebi/aerismill/ui/app.css")).toExternalForm()
         );
     }

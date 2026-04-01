@@ -34,6 +34,11 @@
                         <MenuItem text="Exit" onAction="#onExitApplication"/>
                     </items>
                 </Menu>
+                <Menu text="Help">
+                    <items>
+                        <MenuItem text="About" onAction="#onShowAbout"/>
+                    </items>
+                </Menu>
             </menus>
         </MenuBar>
     </top>
