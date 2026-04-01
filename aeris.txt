@@ -1,0 +1,153 @@
+Folder PATH listing for volume Data
+Volume serial number is 3F61-12FE
+Y:.
++---src
+¦   +---main
+¦   ¦   +---java
+¦   ¦   ¦   +---be
+¦   ¦   ¦       +---doebi
+¦   ¦   ¦           +---aerismill
+¦   ¦   ¦               +---eval
+¦   ¦   ¦               ¦   +---step
+¦   ¦   ¦               ¦       +---context
+¦   ¦   ¦               ¦       +---curve
+¦   ¦   ¦               ¦       +---placement
+¦   ¦   ¦               ¦       +---representation
+¦   ¦   ¦               ¦       +---surface
+¦   ¦   ¦               ¦       +---topology
+¦   ¦   ¦               +---io
+¦   ¦   ¦               ¦   +---step
+¦   ¦   ¦               +---machine
+¦   ¦   ¦               ¦   +---connection
+¦   ¦   ¦               ¦   +---grbl
+¦   ¦   ¦               +---model
+¦   ¦   ¦               ¦   +---geom
+¦   ¦   ¦               ¦   ¦   +---curve
+¦   ¦   ¦               ¦   ¦   +---math
+¦   ¦   ¦               ¦   ¦   +---representation
+¦   ¦   ¦               ¦   ¦   +---surface
+¦   ¦   ¦               ¦   ¦   +---topology
+¦   ¦   ¦               ¦   +---step
+¦   ¦   ¦               ¦       +---admin
+¦   ¦   ¦               ¦       +---base
+¦   ¦   ¦               ¦       +---core
+¦   ¦   ¦               ¦       +---definition
+¦   ¦   ¦               ¦       +---geometry
+¦   ¦   ¦               ¦       +---presentation
+¦   ¦   ¦               ¦       +---representation
+¦   ¦   ¦               ¦       +---resolve
+¦   ¦   ¦               ¦       +---topology
+¦   ¦   ¦               +---parser
+¦   ¦   ¦               ¦   +---step
+¦   ¦   ¦               ¦       +---admin
+¦   ¦   ¦               ¦       +---definition
+¦   ¦   ¦               ¦       +---geometry
+¦   ¦   ¦               ¦       +---presentation
+¦   ¦   ¦               ¦       +---representation
+¦   ¦   ¦               ¦       +---topology
+¦   ¦   ¦               +---report
+¦   ¦   ¦               ¦   +---gcode
+¦   ¦   ¦               ¦   +---step
+¦   ¦   ¦               ¦   +---stl
+¦   ¦   ¦               +---service
+¦   ¦   ¦               +---ui
+¦   ¦   ¦               +---validation
+¦   ¦   ¦                   +---step
+¦   ¦   +---resources
+¦   ¦       +---be
+¦   ¦           +---doebi
+¦   ¦               +---aerismill
+¦   ¦                   +---STEP FILE EXAMPLES
+¦   ¦                   +---ui
+¦   +---test
+¦       +---java
+¦       ¦   +---be
+¦       ¦       +---doebi
+¦       ¦           +---aerismill
+¦       ¦               +---eval
+¦       ¦               ¦   +---step
+¦       ¦               ¦       +---curve
+¦       ¦               ¦       +---placement
+¦       ¦               ¦       +---representation
+¦       ¦               ¦       +---surface
+¦       ¦               ¦       +---topology
+¦       ¦               +---parser
+¦       ¦               ¦   +---step
+¦       ¦               ¦       +---geometry
+¦       ¦               ¦       +---topology
+¦       ¦               +---report
+¦       ¦                   +---step
+¦       +---resources
+¦           +---step
++---target
+    +---classes
+    ¦   +---be
+    ¦       +---doebi
+    ¦           +---aerismill
+    ¦               +---eval
+    ¦               ¦   +---step
+    ¦               ¦       +---context
+    ¦               ¦       +---curve
+    ¦               ¦       +---placement
+    ¦               ¦       +---representation
+    ¦               ¦       +---surface
+    ¦               ¦       +---topology
+    ¦               +---io
+    ¦               ¦   +---step
+    ¦               +---machine
+    ¦               ¦   +---connection
+    ¦               ¦   +---grbl
+    ¦               +---model
+    ¦               ¦   +---geom
+    ¦               ¦   ¦   +---curve
+    ¦               ¦   ¦   +---math
+    ¦               ¦   ¦   +---representation
+    ¦               ¦   ¦   +---surface
+    ¦               ¦   ¦   +---topology
+    ¦               ¦   +---step
+    ¦               ¦       +---admin
+    ¦               ¦       +---base
+    ¦               ¦       +---core
+    ¦               ¦       +---definition
+    ¦               ¦       +---geometry
+    ¦               ¦       +---presentation
+    ¦               ¦       +---representation
+    ¦               ¦       +---resolve
+    ¦               ¦       +---topology
+    ¦               +---parser
+    ¦               ¦   +---step
+    ¦               ¦       +---admin
+    ¦               ¦       +---definition
+    ¦               ¦       +---geometry
+    ¦               ¦       +---presentation
+    ¦               ¦       +---representation
+    ¦               ¦       +---topology
+    ¦               +---report
+    ¦               ¦   +---step
+    ¦               +---service
+    ¦               +---STEP FILE EXAMPLES
+    ¦               +---ui
+    ¦               +---validation
+    ¦                   +---step
+    +---generated-sources
+    ¦   +---annotations
+    +---generated-test-sources
+    ¦   +---test-annotations
+    +---test-classes
+        +---be
+        ¦   +---doebi
+        ¦       +---aerismill
+        ¦           +---eval
+        ¦           ¦   +---step
+        ¦           ¦       +---curve
+        ¦           ¦       +---placement
+        ¦           ¦       +---representation
+        ¦           ¦       +---surface
+        ¦           ¦       +---topology
+        ¦           +---parser
+        ¦           ¦   +---step
+        ¦           ¦       +---geometry
+        ¦           ¦       +---topology
+        ¦           +---report
+        ¦               +---step
+        +---step
