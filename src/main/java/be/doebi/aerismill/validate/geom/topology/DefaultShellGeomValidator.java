@@ -50,9 +50,8 @@ public class DefaultShellGeomValidator implements ShellGeomValidator {
             }
 
             ValidationReport faceReport = faceValidator.validate(face);
-            for (ValidationMessage message : faceReport.messages()) {
-                report.addMessage(message);
-            }
+            report.addAll(faceReport);
+
         }
 
         return report;

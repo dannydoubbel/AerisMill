@@ -37,9 +37,7 @@ public class DefaultSolidGeomValidator implements SolidGeomValidator {
         }
 
         ValidationReport shellReport = shellValidator.validate(solid.outerShell());
-        for (ValidationMessage message : shellReport.messages()) {
-            report.addMessage(message);
-        }
+        report.addAll(shellReport);
 
         return report;
     }

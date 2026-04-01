@@ -18,6 +18,18 @@ public final class ValidationReport {
         return !isValid();
     }
 
+    public int errorCount() {
+        return (int) messages.stream()
+                .filter(message -> message.severity() == ValidationSeverity.ERROR)
+                .count();
+    }
+
+    public int warningCount() {
+        return (int) messages.stream()
+                .filter(message -> message.severity() == ValidationSeverity.WARNING)
+                .count();
+    }
+
     public void addError(ValidationCode code, String target, String message) {
         messages.add(new ValidationMessage(
                 ValidationSeverity.ERROR,
@@ -38,6 +50,13 @@ public final class ValidationReport {
 
     public void addMessage(ValidationMessage message) {
         messages.add(message);
+    }
+
+    public void addAll(ValidationReport other) {
+        if (other == null) {
+            return;
+        }
+        messages.addAll(other.messages());
     }
 
 

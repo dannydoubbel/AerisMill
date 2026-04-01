@@ -51,9 +51,7 @@ public class DefaultFaceGeomValidator implements FaceGeomValidator {
 
             ValidationReport loopReport = loopValidator.validate(bound);
 
-            for (ValidationMessage message : loopReport.messages()) {
-                report.addMessage(message);
-            }
+            report.addAll(loopReport);
         }
 
         return report;
