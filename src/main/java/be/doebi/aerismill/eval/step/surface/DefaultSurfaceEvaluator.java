@@ -258,6 +258,12 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
             return bSplineSurface3;
         }
 
+
+
+        if (splineSurface.getControlPointsList().isEmpty() && !splineSurface.getControlPointRefs().isEmpty()) {
+            splineSurface.resolveReferences(context.getStepModel());
+        }
+
         List<List<Point3>> controlPoints = toPointGrid(splineSurface);
         List<Double> expandedUKnots = expandKnots(
                 splineSurface.getUMultiplicities(),
