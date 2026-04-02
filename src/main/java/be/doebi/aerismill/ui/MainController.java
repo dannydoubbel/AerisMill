@@ -101,7 +101,7 @@ public class MainController {
 
     @FXML
     private void onOpenStepFile(ActionEvent event) {
-        if (!canOpenStepFile()) {
+        if (!ensureReadyToOpenStepFile()) {
             return;
         }
 
@@ -125,12 +125,27 @@ public class MainController {
         }
     }
 
-    private boolean canOpenStepFile() {
-        if (hasLoadedFile()) {
-            showWarning("File already loaded", "Please close the current file first.");
+    private boolean ensureReadyToOpenStepFile() {
+        return !hasLoadedFile() || confirmCloseCurrentFileAndContinueOpening();
+    }
+
+    private boolean confirmCloseCurrentFileAndContinueOpening() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        ButtonType closeAndOpenButton = new ButtonType("Close current file and open another", ButtonBar.ButtonData.OK_DONE);
+
+        alert.setTitle("File already open");
+        alert.setHeaderText(null);
+        alert.setContentText("A file is already open. It must be closed before another file can be opened.");
+        alert.getButtonTypes().setAll(cancelButton, closeAndOpenButton);
+        addAppCss(alert.getDialogPane());
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isEmpty() || result.get() != closeAndOpenButton) {
             return false;
         }
-        return true;
+
+        return closeCurrentFile();
     }
 
     private File chooseStepFile() {
@@ -204,16 +219,7 @@ public class MainController {
             return;
         }
 
-        String closedPath = currentFile.getAbsolutePath();
-
-        currentFile = null;
-        currentStepFile = null;
-
-        clearInfoPath();
-        log("Closed file: " + closedPath);
-
-        Stage stage = (Stage) rootPane.getScene().getWindow();
-        stage.setTitle("AerisMill");
+        closeCurrentFile();
     }
     @FXML
     private void onExitApplication(ActionEvent event) {
@@ -324,6 +330,22 @@ public class MainController {
 
     private boolean hasLoadedFile() {
         return currentFile != null;
+    }
+
+    private boolean closeCurrentFile() {
+        if (!hasLoadedFile()) {
+            return false;
+        }
+
+        String closedPath = currentFile.getAbsolutePath();
+
+        currentFile = null;
+        currentStepFile = null;
+
+        clearInfoPath();
+        log("Closed file: " + closedPath);
+        getStage().setTitle("AerisMill");
+        return true;
     }
 
     private void log(String message) {
