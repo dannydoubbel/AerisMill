@@ -45,12 +45,18 @@ public class PlanarFaceTessellator implements FaceTessellator {
             throw new IllegalArgumentException("Face bound must contain at least one edge.");
         }
 
-        var firstNonNullEdge = outerBound.edges().stream()
-                .filter(java.util.Objects::nonNull)
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("Face bound must contain at least one non-null edge."));
+        boolean foundNonNullEdge = false;
 
-        edgeDiscretizer.discretize(firstNonNullEdge, tolerance);
+        for (var edge : outerBound.edges()) {
+            if (edge != null) {
+                edgeDiscretizer.discretize(edge, tolerance);
+                foundNonNullEdge = true;
+            }
+        }
+
+        if (!foundNonNullEdge) {
+            throw new IllegalArgumentException("Face bound must contain at least one non-null edge.");
+        }
 
         return new FaceMeshPatch(java.util.List.of(), java.util.List.of());
     }

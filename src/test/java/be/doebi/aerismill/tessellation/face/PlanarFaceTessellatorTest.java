@@ -15,6 +15,7 @@ import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -252,7 +253,7 @@ class PlanarFaceTessellatorTest {
     }
 
     @Test
-    void tessellate_shouldDiscretizeFirstNonNullEdgeOfFirstBound_andStillReturnEmptyPatch() {
+    void tessellate_shouldDiscretizeAllNonNullEdgesOfFirstBound_andStillReturnEmptyPatch() {
         OrientedEdgeGeom firstEdge = new OrientedEdgeGeom("#oe1", null, true);
         OrientedEdgeGeom secondEdge = new OrientedEdgeGeom("#oe2", null, true);
 
@@ -265,7 +266,7 @@ class PlanarFaceTessellatorTest {
         );
 
         RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
-        GeometryTolerance tolerance = null; // replace with a real instance if easy
+        GeometryTolerance tolerance = null; // replace with real instance later if useful
 
         PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
                 edgeDiscretizer,
@@ -276,31 +277,21 @@ class PlanarFaceTessellatorTest {
 
         FaceMeshPatch result = tessellator.tessellate(face);
 
-        assertSame(firstEdge, edgeDiscretizer.recordedEdge());
-        assertSame(tolerance, edgeDiscretizer.recordedTolerance());
         assertNotNull(result);
+        assertNotNull(result.vertices());
+        assertNotNull(result.triangles());
+        assertTrue(result.vertices().isEmpty());
+        assertTrue(result.triangles().isEmpty());
+
+        assertEquals(List.of(firstEdge, secondEdge), edgeDiscretizer.recordedEdges());
+        assertEquals(2, edgeDiscretizer.recordedTolerances().size());
+        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(1));
+
+        assertEquals(2, edgeDiscretizer.recordedTolerances().size());
+        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(0));
+        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(1));
     }
 
-
-    private static final class RecordingEdgeDiscretizer implements EdgeDiscretizer {
-        private OrientedEdgeGeom recordedEdge;
-        private GeometryTolerance recordedTolerance;
-
-        @Override
-        public List<Point3> discretize(OrientedEdgeGeom edge, GeometryTolerance tolerance) {
-            this.recordedEdge = edge;
-            this.recordedTolerance = tolerance;
-            return List.of();
-        }
-
-        OrientedEdgeGeom recordedEdge() {
-            return recordedEdge;
-        }
-
-        GeometryTolerance recordedTolerance() {
-            return recordedTolerance;
-        }
-    }
 
     @Test
     void tessellate_validPlanarFace_returnsEmptyPatchForNow() {
@@ -332,6 +323,28 @@ class PlanarFaceTessellatorTest {
         assertNotNull(result.triangles());
         assertTrue(result.vertices().isEmpty());
         assertTrue(result.triangles().isEmpty());
+
+
+    }
+
+    private static final class RecordingEdgeDiscretizer implements EdgeDiscretizer {
+        private final List<OrientedEdgeGeom> recordedEdges = new ArrayList<>();
+        private final List<GeometryTolerance> recordedTolerances = new ArrayList<>();
+
+        @Override
+        public List<Point3> discretize(OrientedEdgeGeom edge, GeometryTolerance tolerance) {
+            recordedEdges.add(edge);
+            recordedTolerances.add(tolerance);
+            return List.of();
+        }
+
+        List<OrientedEdgeGeom> recordedEdges() {
+            return recordedEdges;
+        }
+
+        List<GeometryTolerance> recordedTolerances() {
+            return recordedTolerances;
+        }
     }
 }
 
