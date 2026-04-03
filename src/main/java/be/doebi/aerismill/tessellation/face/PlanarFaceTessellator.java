@@ -42,22 +42,20 @@ public class PlanarFaceTessellator implements FaceTessellator {
         if (face.bounds() == null || face.bounds().isEmpty()) {
             throw new IllegalArgumentException("Face must have at least one bound.");
         }
-        if (face.bounds().size() > 1) {
-            throw new IllegalArgumentException("Only single-bound planar faces are supported for now.");
-        }
 
-        LoopGeom outerBound = face.bounds().getFirst();
-
-        PreparedLoop preparedOuterLoop = prepareProjectedPolygonLoop(outerBound, plane);
-        PolygonWithHoles2 polygon = buildPolygonWithNoHoles(preparedOuterLoop.polygonLoop());
+        List<PreparedLoop> preparedLoops = prepareProjectedPolygonLoops(face.bounds(), plane);
+        PolygonWithHoles2 polygon = buildPolygonWithHoles(preparedLoops);
         List<int[]> triangles = triangulatePolygon(polygon);
 
-        validateTrianglesNotEmpty(triangles);
-        validateTriangleIndices(preparedOuterLoop.boundaryPoints(), triangles);
-        validateTrianglesAreNonDegenerate(triangles);
-        validateTrianglesHavePositiveArea(preparedOuterLoop.polygonLoop().points(), triangles);
+        List<Point3> boundaryPoints = collectPreparedBoundaryPoints(preparedLoops);
+        List<Point2> projectedBoundaryPoints = collectPreparedProjectedPoints(preparedLoops);
 
-        return buildFaceMeshPatch(preparedOuterLoop.boundaryPoints(), triangles);
+        validateTrianglesNotEmpty(triangles);
+        validateTriangleIndices(boundaryPoints, triangles);
+        validateTrianglesAreNonDegenerate(triangles);
+        validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
+
+        return buildFaceMeshPatch(boundaryPoints, triangles);
     }
 
     List<Point3> collapseConsecutiveDuplicateBoundaryPoints(List<Point3> boundaryPoints) {
@@ -129,7 +127,11 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         for (var point : boundaryPoints) {
-            projectedPoints.add(planeProjector.project(point, plane));
+            Point2 projected = planeProjector.project(point, plane);
+            if (projected == null) {
+                throw new IllegalArgumentException("Projected boundary points must not contain null points.");
+            }
+            projectedPoints.add(projected);
         }
 
         return projectedPoints;
@@ -365,5 +367,68 @@ public class PlanarFaceTessellator implements FaceTessellator {
         validateProjectedBoundaryIsSimple(polygonLoop);
 
         return new PreparedLoop(openBoundaryPoints, polygonLoop);
+    }
+
+    List<PreparedLoop> prepareProjectedPolygonLoops(List<LoopGeom> bounds, PlaneSurface3 plane) {
+        if (bounds == null || bounds.isEmpty()) {
+            throw new IllegalArgumentException("Face must have at least one bound.");
+        }
+
+        List<PreparedLoop> preparedLoops = new ArrayList<>();
+
+        for (LoopGeom bound : bounds) {
+            preparedLoops.add(prepareProjectedPolygonLoop(bound, plane));
+        }
+
+        return preparedLoops;
+    }
+
+    PolygonWithHoles2 buildPolygonWithHoles(List<PreparedLoop> preparedLoops) {
+        if (preparedLoops == null || preparedLoops.isEmpty()) {
+            throw new IllegalArgumentException("Prepared loops must contain at least one loop.");
+        }
+
+        PolygonLoop2 outerLoop = preparedLoops.getFirst().polygonLoop();
+        List<PolygonLoop2> holeLoops = new ArrayList<>();
+
+        for (int i = 1; i < preparedLoops.size(); i++) {
+            holeLoops.add(preparedLoops.get(i).polygonLoop());
+        }
+
+        return new PolygonWithHoles2(outerLoop, holeLoops);
+    }
+
+    List<Point3> collectPreparedBoundaryPoints(List<PreparedLoop> preparedLoops) {
+        List<Point3> boundaryPoints = new ArrayList<>();
+
+        if (preparedLoops == null || preparedLoops.isEmpty()) {
+            return boundaryPoints;
+        }
+
+        for (PreparedLoop preparedLoop : preparedLoops) {
+            if (preparedLoop != null && preparedLoop.boundaryPoints() != null) {
+                boundaryPoints.addAll(preparedLoop.boundaryPoints());
+            }
+        }
+
+        return boundaryPoints;
+    }
+
+    List<Point2> collectPreparedProjectedPoints(List<PreparedLoop> preparedLoops) {
+        List<Point2> projectedPoints = new ArrayList<>();
+
+        if (preparedLoops == null || preparedLoops.isEmpty()) {
+            return projectedPoints;
+        }
+
+        for (PreparedLoop preparedLoop : preparedLoops) {
+            if (preparedLoop != null &&
+                    preparedLoop.polygonLoop() != null &&
+                    preparedLoop.polygonLoop().points() != null) {
+                projectedPoints.addAll(preparedLoop.polygonLoop().points());
+            }
+        }
+
+        return projectedPoints;
     }
 }

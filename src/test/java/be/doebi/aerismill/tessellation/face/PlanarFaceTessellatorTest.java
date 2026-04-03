@@ -161,39 +161,7 @@ class PlanarFaceTessellatorTest {
         assertEquals("Face bound must contain at least one edge.", ex.getMessage());
     }
 
-    @Test
-    void tessellate_planarFaceWithMultipleBounds_throwsIllegalArgumentException() {
-        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
-                stubEdgeDiscretizer(),
-                stubPolygonTriangulator(),
-                stubPlaneProjector(),
-                GeometryTolerance.defaults()
-        );
 
-        LoopGeom loop1 = new LoopGeom(
-                "#loop1",
-                List.of()
-        );
-
-        LoopGeom loop2 = new LoopGeom(
-                "#loop2",
-                List.of()
-        );
-
-        FaceGeom face = new FaceGeom(
-                "#1",
-                new PlaneSurface3(null),
-                List.of(loop1, loop2),
-                true
-        );
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> tessellator.tessellate(face)
-        );
-
-        assertEquals("Only single-bound planar faces are supported for now.", exception.getMessage());
-    }
 
     @Test
     void tessellate_planarFaceWithSingleEmptyBound_throwsIllegalArgumentException() {
@@ -1261,6 +1229,326 @@ class PlanarFaceTessellatorTest {
         assertEquals(List.of(p1, p2, p3), planeProjector.recordedPoints());
     }
 
+    @Test
+    void tessellate_planarFaceWithOuterAndHole_buildsPolygonWithHoles_andReturnsMeshPatch() {
+        OrientedEdgeGeom outerEdge = new OrientedEdgeGeom("#oeOuter", null, true);
+        OrientedEdgeGeom holeEdge = new OrientedEdgeGeom("#oeHole", null, true);
+
+        LoopGeom outerBound = new LoopGeom("#outer", List.of(outerEdge));
+        LoopGeom holeBound = new LoopGeom("#hole", List.of(holeEdge));
+
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(outerBound, holeBound),
+                true
+        );
+
+        Point3 o1 = new Point3(0.0, 0.0, 0.0);
+        Point3 o2 = new Point3(4.0, 0.0, 0.0);
+        Point3 o3 = new Point3(4.0, 4.0, 0.0);
+        Point3 o4 = new Point3(0.0, 4.0, 0.0);
+
+        Point3 h1 = new Point3(1.0, 1.0, 0.0);
+        Point3 h2 = new Point3(2.0, 1.0, 0.0);
+        Point3 h3 = new Point3(2.0, 2.0, 0.0);
+        Point3 h4 = new Point3(1.0, 2.0, 0.0);
+
+        Point2 qO1 = new Point2(0.0, 0.0);
+        Point2 qO2 = new Point2(4.0, 0.0);
+        Point2 qO3 = new Point2(4.0, 4.0);
+        Point2 qO4 = new Point2(0.0, 4.0);
+
+        Point2 qH1 = new Point2(1.0, 1.0);
+        Point2 qH2 = new Point2(2.0, 1.0);
+        Point2 qH3 = new Point2(2.0, 2.0);
+        Point2 qH4 = new Point2(1.0, 2.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(outerEdge, List.of(o1, o2, o3, o4));
+        edgeDiscretizer.stubResult(holeEdge, List.of(h1, h2, h3, h4));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(o1, qO1);
+        planeProjector.stubResult(o2, qO2);
+        planeProjector.stubResult(o3, qO3);
+        planeProjector.stubResult(o4, qO4);
+        planeProjector.stubResult(h1, qH1);
+        planeProjector.stubResult(h2, qH2);
+        planeProjector.stubResult(h3, qH3);
+        planeProjector.stubResult(h4, qH4);
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+        int[] t1 = new int[]{0, 1, 2};
+        int[] t2 = new int[]{4, 5, 6};
+        polygonTriangulator.stubResult(List.of(t1, t2));
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                null
+        );
+
+        FaceMeshPatch result = tessellator.tessellate(face);
+
+        assertNotNull(result);
+        assertEquals(List.of(o1, o2, o3, o4, h1, h2, h3, h4), result.vertices());
+        assertEquals(2, result.triangles().size());
+        assertSame(t1, result.triangles().get(0));
+        assertSame(t2, result.triangles().get(1));
+
+        assertNotNull(polygonTriangulator.recordedPolygon());
+        assertEquals(List.of(qO1, qO2, qO3, qO4), polygonTriangulator.recordedPolygon().outer().points());
+        assertEquals(1, polygonTriangulator.recordedPolygon().holes().size());
+        assertEquals(List.of(qH1, qH2, qH3, qH4), polygonTriangulator.recordedPolygon().holes().getFirst().points());
+    }
+
+    @Test
+    void prepareProjectedPolygonLoops_shouldThrow_whenHoleCleanupLeavesFewerThanThreePoints() {
+        OrientedEdgeGeom outerEdge = new OrientedEdgeGeom("#oeOuter", null, true);
+        OrientedEdgeGeom holeEdge1 = new OrientedEdgeGeom("#oeHole1", null, true);
+        OrientedEdgeGeom holeEdge2 = new OrientedEdgeGeom("#oeHole2", null, true);
+
+        LoopGeom outerBound = new LoopGeom("#outer", List.of(outerEdge));
+        LoopGeom holeBound = new LoopGeom("#hole", List.of(holeEdge1, holeEdge2));
+
+        PlaneSurface3 plane = new PlaneSurface3(null);
+
+        Point3 o1 = new Point3(0.0, 0.0, 0.0);
+        Point3 o2 = new Point3(4.0, 0.0, 0.0);
+        Point3 o3 = new Point3(4.0, 4.0, 0.0);
+        Point3 o4 = new Point3(0.0, 4.0, 0.0);
+
+        Point3 h1 = new Point3(1.0, 1.0, 0.0);
+        Point3 h2 = new Point3(2.0, 1.0, 0.0);
+
+        Point2 qO1 = new Point2(0.0, 0.0);
+        Point2 qO2 = new Point2(4.0, 0.0);
+        Point2 qO3 = new Point2(4.0, 4.0);
+        Point2 qO4 = new Point2(0.0, 4.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(outerEdge, List.of(o1, o2, o3, o4));
+        edgeDiscretizer.stubResult(holeEdge1, List.of(h1, h2));
+        edgeDiscretizer.stubResult(holeEdge2, List.of(h2, h1));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(o1, qO1);
+        planeProjector.stubResult(o2, qO2);
+        planeProjector.stubResult(o3, qO3);
+        planeProjector.stubResult(o4, qO4);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                null,
+                planeProjector,
+                null
+        );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.prepareProjectedPolygonLoops(List.of(outerBound, holeBound), plane)
+        );
+
+        assertEquals("Boundary must contain at least three points for triangulation.", ex.getMessage());
+
+        assertEquals(List.of(outerEdge, holeEdge1, holeEdge2), edgeDiscretizer.recordedEdges());
+        assertEquals(List.of(o1, o2, o3, o4), planeProjector.recordedPoints());
+    }
+
+    @Test
+    void tessellate_shouldThrow_whenHoleCleanupLeavesFewerThanThreePoints() {
+        OrientedEdgeGeom outerEdge = new OrientedEdgeGeom("#oeOuter", null, true);
+        OrientedEdgeGeom holeEdge1 = new OrientedEdgeGeom("#oeHole1", null, true);
+        OrientedEdgeGeom holeEdge2 = new OrientedEdgeGeom("#oeHole2", null, true);
+
+        LoopGeom outerBound = new LoopGeom("#outer", List.of(outerEdge));
+        LoopGeom holeBound = new LoopGeom("#hole", List.of(holeEdge1, holeEdge2));
+
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(outerBound, holeBound),
+                true
+        );
+
+        Point3 o1 = new Point3(0.0, 0.0, 0.0);
+        Point3 o2 = new Point3(4.0, 0.0, 0.0);
+        Point3 o3 = new Point3(4.0, 4.0, 0.0);
+        Point3 o4 = new Point3(0.0, 4.0, 0.0);
+
+        Point3 h1 = new Point3(1.0, 1.0, 0.0);
+        Point3 h2 = new Point3(2.0, 1.0, 0.0);
+
+        Point2 qO1 = new Point2(0.0, 0.0);
+        Point2 qO2 = new Point2(4.0, 0.0);
+        Point2 qO3 = new Point2(4.0, 4.0);
+        Point2 qO4 = new Point2(0.0, 4.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(outerEdge, List.of(o1, o2, o3, o4));
+        edgeDiscretizer.stubResult(holeEdge1, List.of(h1, h2));
+        edgeDiscretizer.stubResult(holeEdge2, List.of(h2, h1));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(o1, qO1);
+        planeProjector.stubResult(o2, qO2);
+        planeProjector.stubResult(o3, qO3);
+        planeProjector.stubResult(o4, qO4);
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                null
+        );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.tessellate(face)
+        );
+
+        assertEquals("Boundary must contain at least three points for triangulation.", ex.getMessage());
+
+        assertEquals(List.of(outerEdge, holeEdge1, holeEdge2), edgeDiscretizer.recordedEdges());
+        assertEquals(List.of(o1, o2, o3, o4), planeProjector.recordedPoints());
+        assertNull(polygonTriangulator.recordedPolygon());
+    }
+
+    @Test
+    void tessellate_shouldThrow_whenProjectedHoleSelfIntersects() {
+        OrientedEdgeGeom outerEdge = new OrientedEdgeGeom("#oeOuter", null, true);
+        OrientedEdgeGeom holeEdge = new OrientedEdgeGeom("#oeHole", null, true);
+
+        LoopGeom outerBound = new LoopGeom("#outer", List.of(outerEdge));
+        LoopGeom holeBound = new LoopGeom("#hole", List.of(holeEdge));
+
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(outerBound, holeBound),
+                true
+        );
+
+        Point3 o1 = new Point3(0.0, 0.0, 0.0);
+        Point3 o2 = new Point3(4.0, 0.0, 0.0);
+        Point3 o3 = new Point3(4.0, 4.0, 0.0);
+        Point3 o4 = new Point3(0.0, 4.0, 0.0);
+
+        Point3 h1 = new Point3(1.0, 1.0, 0.0);
+        Point3 h2 = new Point3(2.0, 2.0, 0.0);
+        Point3 h3 = new Point3(1.0, 2.0, 0.0);
+        Point3 h4 = new Point3(2.0, 1.0, 0.0);
+
+        Point2 qO1 = new Point2(0.0, 0.0);
+        Point2 qO2 = new Point2(4.0, 0.0);
+        Point2 qO3 = new Point2(4.0, 4.0);
+        Point2 qO4 = new Point2(0.0, 4.0);
+
+        Point2 qH1 = new Point2(1.0, 1.0);
+        Point2 qH2 = new Point2(2.0, 2.0);
+        Point2 qH3 = new Point2(1.0, 2.0);
+        Point2 qH4 = new Point2(2.0, 1.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(outerEdge, List.of(o1, o2, o3, o4));
+        edgeDiscretizer.stubResult(holeEdge, List.of(h1, h2, h3, h4));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(o1, qO1);
+        planeProjector.stubResult(o2, qO2);
+        planeProjector.stubResult(o3, qO3);
+        planeProjector.stubResult(o4, qO4);
+        planeProjector.stubResult(h1, qH1);
+        planeProjector.stubResult(h2, qH2);
+        planeProjector.stubResult(h3, qH3);
+        planeProjector.stubResult(h4, qH4);
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                null
+        );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.tessellate(face)
+        );
+
+        assertEquals("Projected boundary must not self-intersect.", ex.getMessage());
+
+        assertEquals(List.of(outerEdge, holeEdge), edgeDiscretizer.recordedEdges());
+        assertEquals(List.of(o1, o2, o3, o4, h1, h2, h3, h4), planeProjector.recordedPoints());
+        assertNull(polygonTriangulator.recordedPolygon());
+    }
+
+    @Test
+    void prepareProjectedPolygonLoops_shouldThrow_whenProjectedHoleSelfIntersects() {
+        OrientedEdgeGeom outerEdge = new OrientedEdgeGeom("#oeOuter", null, true);
+        OrientedEdgeGeom holeEdge = new OrientedEdgeGeom("#oeHole", null, true);
+
+        LoopGeom outerBound = new LoopGeom("#outer", List.of(outerEdge));
+        LoopGeom holeBound = new LoopGeom("#hole", List.of(holeEdge));
+
+        PlaneSurface3 plane = new PlaneSurface3(null);
+
+        Point3 o1 = new Point3(0.0, 0.0, 0.0);
+        Point3 o2 = new Point3(4.0, 0.0, 0.0);
+        Point3 o3 = new Point3(4.0, 4.0, 0.0);
+        Point3 o4 = new Point3(0.0, 4.0, 0.0);
+
+        Point3 h1 = new Point3(1.0, 1.0, 0.0);
+        Point3 h2 = new Point3(2.0, 2.0, 0.0);
+        Point3 h3 = new Point3(1.0, 2.0, 0.0);
+        Point3 h4 = new Point3(2.0, 1.0, 0.0);
+
+        Point2 qO1 = new Point2(0.0, 0.0);
+        Point2 qO2 = new Point2(4.0, 0.0);
+        Point2 qO3 = new Point2(4.0, 4.0);
+        Point2 qO4 = new Point2(0.0, 4.0);
+
+        Point2 qH1 = new Point2(1.0, 1.0);
+        Point2 qH2 = new Point2(2.0, 2.0);
+        Point2 qH3 = new Point2(1.0, 2.0);
+        Point2 qH4 = new Point2(2.0, 1.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(outerEdge, List.of(o1, o2, o3, o4));
+        edgeDiscretizer.stubResult(holeEdge, List.of(h1, h2, h3, h4));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(o1, qO1);
+        planeProjector.stubResult(o2, qO2);
+        planeProjector.stubResult(o3, qO3);
+        planeProjector.stubResult(o4, qO4);
+        planeProjector.stubResult(h1, qH1);
+        planeProjector.stubResult(h2, qH2);
+        planeProjector.stubResult(h3, qH3);
+        planeProjector.stubResult(h4, qH4);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                null,
+                planeProjector,
+                null
+        );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.prepareProjectedPolygonLoops(List.of(outerBound, holeBound), plane)
+        );
+
+        assertEquals("Projected boundary must not self-intersect.", ex.getMessage());
+
+        assertEquals(List.of(outerEdge, holeEdge), edgeDiscretizer.recordedEdges());
+        assertEquals(List.of(o1, o2, o3, o4, h1, h2, h3, h4), planeProjector.recordedPoints());
+    }
 
 }
 
