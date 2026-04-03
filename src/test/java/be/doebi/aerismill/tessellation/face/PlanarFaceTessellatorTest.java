@@ -8,10 +8,7 @@ import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
 import be.doebi.aerismill.model.geom.topology.LoopGeom;
 import be.doebi.aerismill.model.geom.topology.OrientedEdgeGeom;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
-import be.doebi.aerismill.tessellation.polygon.Point2;
-import be.doebi.aerismill.tessellation.polygon.PolygonLoop2;
-import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
-import be.doebi.aerismill.tessellation.polygon.PolygonWithHoles2;
+import be.doebi.aerismill.tessellation.polygon.*;
 import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
 import be.doebi.aerismill.tessellation.projection.RecordingPlaneProjector;
@@ -484,6 +481,172 @@ class PlanarFaceTessellatorTest {
         assertSame(outerLoop, result.outer());
         assertNotNull(result.holes());
         assertTrue(result.holes().isEmpty());
+    }
+
+    @Test
+    void triangulatePolygon_shouldDelegateToPolygonTriangulator() {
+        Point2 p1 = new Point2(1.0, 2.0);
+        Point2 p2 = new Point2(3.0, 4.0);
+
+        PolygonLoop2 outerLoop = new PolygonLoop2(List.of(p1, p2));
+        PolygonWithHoles2 polygon = new PolygonWithHoles2(outerLoop, List.of());
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+        List<int[]> expected = List.of(new int[]{0, 1, 2});
+        polygonTriangulator.stubResult(expected);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                polygonTriangulator,
+                null,
+                null
+        );
+
+        List<int[]> result = tessellator.triangulatePolygon(polygon);
+
+        assertSame(polygon, polygonTriangulator.recordedPolygon());
+        assertSame(expected, result);
+    }
+
+    @Test
+    void tessellate_shouldTriangulateBuiltPolygon_andStillReturnEmptyPatch() {
+        OrientedEdgeGeom edge = new OrientedEdgeGeom("#oe1", null, true);
+
+        LoopGeom firstBound = new LoopGeom("#l1", List.of(edge));
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(firstBound),
+                true
+        );
+
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        Point2 q1 = new Point2(10.0, 20.0);
+        Point2 q2 = new Point2(30.0, 40.0);
+        Point2 q3 = new Point2(50.0, 60.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(edge, List.of(p1, p2, p3));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(p1, q1);
+        planeProjector.stubResult(p2, q2);
+        planeProjector.stubResult(p3, q3);
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+        List<int[]> triangulationResult = List.of(new int[]{0, 1, 2});
+        polygonTriangulator.stubResult(triangulationResult);
+
+        GeometryTolerance tolerance = null;
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                tolerance
+        );
+
+        FaceMeshPatch result = tessellator.tessellate(face);
+
+        assertNotNull(result);
+        assertNotNull(result.vertices());
+        assertNotNull(result.triangles());
+        assertTrue(result.vertices().isEmpty());
+        assertTrue(result.triangles().isEmpty());
+
+        assertNotNull(polygonTriangulator.recordedPolygon());
+        assertEquals(List.of(q1, q2, q3), polygonTriangulator.recordedPolygon().outer().points());
+        assertNotNull(polygonTriangulator.recordedPolygon().holes());
+        assertTrue(polygonTriangulator.recordedPolygon().holes().isEmpty());
+
+        assertEquals(List.of(edge), edgeDiscretizer.recordedEdges());
+        assertEquals(List.of(p1, p2, p3), planeProjector.recordedPoints());
+    }
+
+    @Test
+    void buildFaceMeshPatch_shouldWrapVerticesAndTriangles() {
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        int[] triangle = new int[]{0, 1, 2};
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        FaceMeshPatch result = tessellator.buildFaceMeshPatch(
+                List.of(p1, p2, p3),
+                List.of(triangle)
+        );
+
+        assertNotNull(result);
+        assertEquals(List.of(p1, p2, p3), result.vertices());
+        assertEquals(1, result.triangles().size());
+        assertSame(triangle, result.triangles().get(0));
+    }
+
+    @Test
+    void tessellate_shouldTriangulateBuiltPolygon_andReturnMeshPatch() {
+        OrientedEdgeGeom edge = new OrientedEdgeGeom("#oe1", null, true);
+
+        LoopGeom firstBound = new LoopGeom("#l1", List.of(edge));
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(firstBound),
+                true
+        );
+
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        Point2 q1 = new Point2(10.0, 20.0);
+        Point2 q2 = new Point2(30.0, 40.0);
+        Point2 q3 = new Point2(50.0, 60.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(edge, List.of(p1, p2, p3));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(p1, q1);
+        planeProjector.stubResult(p2, q2);
+        planeProjector.stubResult(p3, q3);
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+        int[] triangle = new int[]{0, 1, 2};
+        polygonTriangulator.stubResult(List.of(triangle));
+
+        GeometryTolerance tolerance = null;
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                tolerance
+        );
+
+        FaceMeshPatch result = tessellator.tessellate(face);
+
+        assertNotNull(result);
+        assertEquals(List.of(p1, p2, p3), result.vertices());
+        assertEquals(1, result.triangles().size());
+        assertSame(triangle, result.triangles().get(0));
+
+        assertEquals(List.of(edge), edgeDiscretizer.recordedEdges());
+        assertEquals(List.of(p1, p2, p3), planeProjector.recordedPoints());
+
+        assertNotNull(polygonTriangulator.recordedPolygon());
+        assertEquals(List.of(q1, q2, q3), polygonTriangulator.recordedPolygon().outer().points());
+        assertNotNull(polygonTriangulator.recordedPolygon().holes());
+        assertTrue(polygonTriangulator.recordedPolygon().holes().isEmpty());
     }
 
 }

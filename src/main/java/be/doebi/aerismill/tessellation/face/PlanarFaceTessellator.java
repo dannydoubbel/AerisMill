@@ -73,8 +73,10 @@ public class PlanarFaceTessellator implements FaceTessellator {
         var projectedBoundaryPoints = projectBoundaryPointsTo2D((PlaneSurface3) face.surface(), boundaryPoints);
         var polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
         var polygon = buildPolygonWithNoHoles(polygonLoop);
+        var triangles = triangulatePolygon(polygon);
 
-        return new FaceMeshPatch(List.of(), List.of());
+        //return new FaceMeshPatch(List.of(), List.of());
+        return buildFaceMeshPatch(boundaryPoints, triangles);
     }
 
 
@@ -146,6 +148,24 @@ public class PlanarFaceTessellator implements FaceTessellator {
             throw new IllegalArgumentException("Outer polygon loop must not be null.");
         }
         return new PolygonWithHoles2(outerLoop, List.of());
+    }
+
+    List<int[]> triangulatePolygon(PolygonWithHoles2 polygon) {
+        if (polygon == null) {
+            throw new IllegalArgumentException("Polygon must not be null.");
+        }
+        return polygonTriangulator.triangulate(polygon);
+    }
+
+    FaceMeshPatch buildFaceMeshPatch(List<Point3> boundaryPoints, List<int[]> triangleIndices) {
+        if (boundaryPoints == null) {
+            throw new IllegalArgumentException("Boundary points must not be null.");
+        }
+        if (triangleIndices == null) {
+            throw new IllegalArgumentException("Triangle indices must not be null.");
+        }
+
+        return new FaceMeshPatch(boundaryPoints, triangleIndices);
     }
 
 
