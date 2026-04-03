@@ -16,7 +16,9 @@ import be.doebi.aerismill.tessellation.projection.PlaneProjector;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -327,6 +329,39 @@ class PlanarFaceTessellatorTest {
 
     }
 
+    @Test
+    void collectDiscretizedEdgePoints_shouldCollectReturnedPointListsForAllNonNullEdgesInOrder() {
+        OrientedEdgeGeom firstEdge = new OrientedEdgeGeom("#oe1", null, true);
+        OrientedEdgeGeom secondEdge = new OrientedEdgeGeom("#oe2", null, true);
+
+        LoopGeom firstBound = new LoopGeom("#l1", List.of(firstEdge, secondEdge));
+
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(firstEdge, List.of(p1, p2));
+        edgeDiscretizer.stubResult(secondEdge, List.of(p3));
+
+        GeometryTolerance tolerance = null;
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                null,
+                null,
+                tolerance
+        );
+
+        List<List<Point3>> result = tessellator.collectDiscretizedEdgePoints(firstBound);
+
+        assertEquals(List.of(List.of(p1, p2), List.of(p3)), result);
+        assertEquals(List.of(firstEdge, secondEdge), edgeDiscretizer.recordedEdges());
+        assertEquals(2, edgeDiscretizer.recordedTolerances().size());
+        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(0));
+        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(1));
+    }
+    /*
     private static final class RecordingEdgeDiscretizer implements EdgeDiscretizer {
         private final List<OrientedEdgeGeom> recordedEdges = new ArrayList<>();
         private final List<GeometryTolerance> recordedTolerances = new ArrayList<>();
@@ -336,6 +371,32 @@ class PlanarFaceTessellatorTest {
             recordedEdges.add(edge);
             recordedTolerances.add(tolerance);
             return List.of();
+        }
+
+        List<OrientedEdgeGeom> recordedEdges() {
+            return recordedEdges;
+        }
+
+        List<GeometryTolerance> recordedTolerances() {
+            return recordedTolerances;
+        }
+    }
+
+     */
+    private static final class RecordingEdgeDiscretizer implements EdgeDiscretizer {
+        private final List<OrientedEdgeGeom> recordedEdges = new ArrayList<>();
+        private final List<GeometryTolerance> recordedTolerances = new ArrayList<>();
+        private final Map<OrientedEdgeGeom, List<Point3>> stubResults = new LinkedHashMap<>();
+
+        @Override
+        public List<Point3> discretize(OrientedEdgeGeom edge, GeometryTolerance tolerance) {
+            recordedEdges.add(edge);
+            recordedTolerances.add(tolerance);
+            return stubResults.getOrDefault(edge, List.of());
+        }
+
+        void stubResult(OrientedEdgeGeom edge, List<Point3> points) {
+            stubResults.put(edge, points);
         }
 
         List<OrientedEdgeGeom> recordedEdges() {

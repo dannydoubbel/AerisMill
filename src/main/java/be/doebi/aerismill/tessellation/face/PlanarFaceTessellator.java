@@ -1,5 +1,6 @@
 package be.doebi.aerismill.tessellation.face;
 
+import be.doebi.aerismill.model.geom.math.Point3;
 import be.doebi.aerismill.model.geom.surface.PlaneSurface3;
 import be.doebi.aerismill.model.geom.topology.FaceGeom;
 import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
@@ -58,7 +59,31 @@ public class PlanarFaceTessellator implements FaceTessellator {
             throw new IllegalArgumentException("Face bound must contain at least one non-null edge.");
         }
 
+        collectDiscretizedEdgePoints(outerBound);
+
         return new FaceMeshPatch(java.util.List.of(), java.util.List.of());
+    }
+
+    java.util.List<java.util.List<Point3>> collectDiscretizedEdgePoints(LoopGeom outerBound) {
+        if (outerBound.edges() == null || outerBound.edges().isEmpty()) {
+            throw new IllegalArgumentException("Face bound must contain at least one edge.");
+        }
+
+        java.util.List<java.util.List<be.doebi.aerismill.model.geom.math.Point3>> discretizedEdges = new java.util.ArrayList<>();
+        boolean foundNonNullEdge = false;
+
+        for (var edge : outerBound.edges()) {
+            if (edge != null) {
+                discretizedEdges.add(edgeDiscretizer.discretize(edge, tolerance));
+                foundNonNullEdge = true;
+            }
+        }
+
+        if (!foundNonNullEdge) {
+            throw new IllegalArgumentException("Face bound must contain at least one non-null edge.");
+        }
+
+        return discretizedEdges;
     }
 
 
