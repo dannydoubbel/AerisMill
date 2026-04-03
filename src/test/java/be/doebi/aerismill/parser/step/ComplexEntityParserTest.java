@@ -99,4 +99,37 @@ class ComplexEntityParserTest {
         assertEquals("( 0.0, 1.0 )", part3.getParams().get(1));
         assertEquals(".UNSPECIFIED.", part3.getParams().get(2));
     }
+
+    @Test
+    void parseString_shouldKeepRealComplexSplineAsComplexEntity() {
+        String rawParameters = """
+                (
+                BOUNDED_CURVE()
+                B_SPLINE_CURVE(2,(#58067,#58068,#58069,#58070,#58071,#58072,#58073,#58074,
+                #58075,#58076,#58077,#58078,#58079,#58080,#58081),.UNSPECIFIED.,.F.,.F.)
+                B_SPLINE_CURVE_WITH_KNOTS((3,2,2,2,2,2,2,3),(0.105617047680327,0.107954545454545,
+                0.110795454545455,0.113636363636364,0.116477272727273,0.119318181818182,
+                0.122159090909091,0.125),.UNSPECIFIED.)
+                CURVE()
+                GEOMETRIC_REPRESENTATION_ITEM()
+                RATIONAL_B_SPLINE_CURVE((0.977803170316602,0.937368138988788,1.,0.923879532511287,
+                1.,0.923879532511287,1.,0.923879532511287,1.,0.923879532511287,1.,0.923879532511287,
+                1.,0.923879532511287,1.))
+                REPRESENTATION_ITEM('')
+                )
+                """;
+
+        ComplexEntityParser parser = new ComplexEntityParser();
+        StepEntity parsed = parser.parse("#932", rawParameters);
+
+        assertInstanceOf(ComplexEntity.class, parsed);
+
+        ComplexEntity complex = (ComplexEntity) parsed;
+        assertEquals("#932", complex.getId());
+        assertEquals(7, complex.getParts().size());
+        assertEquals("BOUNDED_CURVE", complex.getParts().get(0).getType());
+        assertEquals("B_SPLINE_CURVE", complex.getParts().get(1).getType());
+        assertEquals("B_SPLINE_CURVE_WITH_KNOTS", complex.getParts().get(2).getType());
+        assertEquals("RATIONAL_B_SPLINE_CURVE", complex.getParts().get(5).getType());
+    }
 }

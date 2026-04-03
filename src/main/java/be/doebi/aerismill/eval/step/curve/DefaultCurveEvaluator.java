@@ -135,7 +135,8 @@ public final class DefaultCurveEvaluator implements CurveEvaluator {
                 spline.isClosedCurve() == StepLogical.TRUE,
                 spline.isSelfIntersect() == StepLogical.TRUE,
                 spline.getCurveForm(),
-                spline.getKnotSpec()
+                spline.getKnotSpec(),
+                spline.getWeights()
         );
 
         cache.putCurve(spline.getId(), result);

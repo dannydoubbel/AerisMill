@@ -15,6 +15,7 @@ public class BSplineCurveWithKnots extends ResolvableStepEntity {
     private final List<Integer> knotMultiplicities;
     private final List<Double> knots;
     private final String knotSpec;
+    private final List<Double> weights;
 
     private List<StepEntity> controlPoints;
 
@@ -31,6 +32,36 @@ public class BSplineCurveWithKnots extends ResolvableStepEntity {
             List<Double> knots,
             String knotSpec
     ) {
+        this(
+                id,
+                rawParameters,
+                name,
+                degree,
+                controlPointRefs,
+                curveForm,
+                closedCurve,
+                selfIntersect,
+                knotMultiplicities,
+                knots,
+                knotSpec,
+                null
+        );
+    }
+
+    public BSplineCurveWithKnots(
+            String id,
+            String rawParameters,
+            String name,
+            int degree,
+            List<String> controlPointRefs,
+            String curveForm,
+            StepLogical closedCurve,
+            StepLogical selfIntersect,
+            List<Integer> knotMultiplicities,
+            List<Double> knots,
+            String knotSpec,
+            List<Double> weights
+    ) {
         super(id, StepEntityType.B_SPLINE_CURVE_WITH_KNOTS, rawParameters);
 
         this.degree = degree;
@@ -42,6 +73,7 @@ public class BSplineCurveWithKnots extends ResolvableStepEntity {
         this.knots = knots;
         this.knotSpec = knotSpec;
         this.name = name;
+        this.weights = weights == null ? null : List.copyOf(weights);
     }
 
     public String getName(){
@@ -82,6 +114,10 @@ public class BSplineCurveWithKnots extends ResolvableStepEntity {
 
     public String getKnotSpec() {
         return knotSpec;
+    }
+
+    public List<Double> getWeights() {
+        return weights;
     }
 
     @Override

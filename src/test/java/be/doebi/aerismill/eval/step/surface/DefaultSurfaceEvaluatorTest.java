@@ -398,6 +398,62 @@ class DefaultSurfaceEvaluatorTest {
     }
 
     @Test
+    void evaluateBSplineSurfaceWithKnots_shouldEvaluateRationalBilinearSurface() {
+        StepModel model = new StepModel();
+
+        CartesianPoint p00 = new CartesianPoint("#10", "('P00',(0.0,0.0,0.0))", "P00", List.of(0.0, 0.0, 0.0));
+        CartesianPoint p01 = new CartesianPoint("#11", "('P01',(0.0,10.0,0.0))", "P01", List.of(0.0, 10.0, 0.0));
+        CartesianPoint p10 = new CartesianPoint("#12", "('P10',(10.0,0.0,0.0))", "P10", List.of(10.0, 0.0, 0.0));
+        CartesianPoint p11 = new CartesianPoint("#13", "('P11',(10.0,10.0,10.0))", "P11", List.of(10.0, 10.0, 10.0));
+
+        BSplineSurfaceWithKnots surface = new BSplineSurfaceWithKnots(
+                "#20",
+                "('S',1,1,((#10,#11),(#12,#13)),.UNSPECIFIED.,.F.,.F.,.F.,(2,2),(2,2),(0.0,1.0),(0.0,1.0),.UNSPECIFIED.)",
+                "S",
+                1,
+                1,
+                List.of(
+                        List.of("#10", "#11"),
+                        List.of("#12", "#13")
+                ),
+                ".UNSPECIFIED.",
+                StepLogical.FALSE,
+                StepLogical.FALSE,
+                StepLogical.FALSE,
+                List.of(2, 2),
+                List.of(2, 2),
+                List.of(0.0, 1.0),
+                List.of(0.0, 1.0),
+                ".UNSPECIFIED.",
+                List.of(
+                        List.of(1.0, 1.0),
+                        List.of(1.0, 2.0)
+                )
+        );
+
+        model.addEntity(p00);
+        model.addEntity(p01);
+        model.addEntity(p10);
+        model.addEntity(p11);
+        model.addEntity(surface);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultSurfaceEvaluator surfaceEvaluator = new DefaultSurfaceEvaluator(context, placementEvaluator);
+
+        BSplineSurface3 result = surfaceEvaluator.evaluateBSplineSurfaceWithKnots(surface);
+
+        assertNotNull(result);
+        assertEquals(2.0, result.weights().get(1).get(1), EPS);
+
+        Point3 p = result.pointAt(0.5, 0.5);
+        assertEquals(6.0, p.x(), EPS);
+        assertEquals(6.0, p.y(), EPS);
+        assertEquals(4.0, p.z(), EPS);
+    }
+
+    @Test
     void evaluateBSplineSurfaceWithKnots_shouldEvaluateCubicSurface() {
         StepModel model = new StepModel();
 

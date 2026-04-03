@@ -17,8 +17,36 @@ public record BSplineSurface3(
         boolean vClosed,
         boolean selfIntersect,
         String surfaceForm,
-        String knotSpec
+        String knotSpec,
+        List<List<Double>> weights
 ) implements Surface3 {
+
+    public BSplineSurface3(
+            int uDegree,
+            int vDegree,
+            List<List<Point3>> controlPoints,
+            List<Double> uKnots,
+            List<Double> vKnots,
+            boolean uClosed,
+            boolean vClosed,
+            boolean selfIntersect,
+            String surfaceForm,
+            String knotSpec
+    ) {
+        this(
+                uDegree,
+                vDegree,
+                controlPoints,
+                uKnots,
+                vKnots,
+                uClosed,
+                vClosed,
+                selfIntersect,
+                surfaceForm,
+                knotSpec,
+                null
+        );
+    }
 
     public BSplineSurface3 {
         Objects.requireNonNull(controlPoints, "controlPoints must not be null");
@@ -45,6 +73,18 @@ public record BSplineSurface3(
         for (List<Point3> row : controlPoints) {
             if (row == null || row.size() != rowSize) {
                 throw new IllegalArgumentException("controlPoints must form a rectangular grid");
+            }
+        }
+
+        if (weights != null) {
+            if (weights.size() != controlPoints.size()) {
+                throw new IllegalArgumentException("weights must match controlPoints row count");
+            }
+            for (int i = 0; i < weights.size(); i++) {
+                List<Double> weightRow = weights.get(i);
+                if (weightRow == null || weightRow.size() != controlPoints.get(i).size()) {
+                    throw new IllegalArgumentException("weights must match controlPoints shape");
+                }
             }
         }
 
@@ -87,6 +127,10 @@ public record BSplineSurface3(
         double uc = clampU(u);
         double vc = clampV(v);
 
+        if (weights != null) {
+            return evaluateRationalPoint(uc, vc);
+        }
+
         List<Point3> intermediate = new ArrayList<>(controlPoints.get(0).size());
 
         int vCount = controlPoints.get(0).size();
@@ -99,6 +143,24 @@ public record BSplineSurface3(
         }
 
         return evaluateCurvePoint(intermediate, vDegree, vKnots, vc);
+    }
+
+    private Point3 evaluateRationalPoint(double u, double v) {
+        List<WeightedPoint> intermediate = new ArrayList<>(controlPoints.get(0).size());
+
+        int vCount = controlPoints.get(0).size();
+        for (int j = 0; j < vCount; j++) {
+            List<WeightedPoint> columnCurve = new ArrayList<>(controlPoints.size());
+            for (int i = 0; i < controlPoints.size(); i++) {
+                Point3 point = controlPoints.get(i).get(j);
+                double weight = weights.get(i).get(j);
+                columnCurve.add(WeightedPoint.of(point, weight));
+            }
+            intermediate.add(evaluateWeightedCurvePoint(columnCurve, uDegree, uKnots, u));
+        }
+
+        WeightedPoint weightedPoint = evaluateWeightedCurvePoint(intermediate, vDegree, vKnots, v);
+        return weightedPoint.toPoint3();
     }
 
     @Override
@@ -171,6 +233,40 @@ public record BSplineSurface3(
         return d[degree];
     }
 
+    private static WeightedPoint evaluateWeightedCurvePoint(
+            List<WeightedPoint> controlPoints,
+            int degree,
+            List<Double> knots,
+            double t
+    ) {
+        int span = findSpan(controlPoints.size(), degree, knots, t);
+
+        WeightedPoint[] d = new WeightedPoint[degree + 1];
+        for (int j = 0; j <= degree; j++) {
+            d[j] = controlPoints.get(span - degree + j);
+        }
+
+        for (int r = 1; r <= degree; r++) {
+            for (int j = degree; j >= r; j--) {
+                int i = span - degree + j;
+                double left = knots.get(i);
+                double right = knots.get(i + degree - r + 1);
+
+                double alpha;
+                double denom = right - left;
+                if (denom == 0.0) {
+                    alpha = 0.0;
+                } else {
+                    alpha = (t - left) / denom;
+                }
+
+                d[j] = d[j - 1].lerp(d[j], alpha);
+            }
+        }
+
+        return d[degree];
+    }
+
     private static int findSpan(int controlPointCount, int degree, List<Double> knots, double t) {
         int n = controlPointCount - 1;
 
@@ -204,5 +300,33 @@ public record BSplineSurface3(
                 beta * a.y() + alpha * b.y(),
                 beta * a.z() + alpha * b.z()
         );
+    }
+
+    private record WeightedPoint(double xw, double yw, double zw, double w) {
+        private static WeightedPoint of(Point3 point, double weight) {
+            return new WeightedPoint(
+                    point.x() * weight,
+                    point.y() * weight,
+                    point.z() * weight,
+                    weight
+            );
+        }
+
+        private WeightedPoint lerp(WeightedPoint other, double alpha) {
+            double beta = 1.0 - alpha;
+            return new WeightedPoint(
+                    beta * xw + alpha * other.xw,
+                    beta * yw + alpha * other.yw,
+                    beta * zw + alpha * other.zw,
+                    beta * w + alpha * other.w
+            );
+        }
+
+        private Point3 toPoint3() {
+            if (w == 0.0) {
+                throw new IllegalStateException("Cannot dehomogenize rational spline point with zero weight");
+            }
+            return new Point3(xw / w, yw / w, zw / w);
+        }
     }
 }

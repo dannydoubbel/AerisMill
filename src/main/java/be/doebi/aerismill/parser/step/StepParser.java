@@ -11,6 +11,7 @@ import java.util.List;
 public class StepParser {
 
     private final EntityParserRegistry parserRegistry = new EntityParserRegistry();
+    private final ComplexEntityInterpreter complexEntityInterpreter = new ComplexEntityInterpreter();
 
     public StepModel parse(File file, String rawContent) {
 
@@ -71,6 +72,7 @@ public class StepParser {
             }
         }
 
+        complexEntityInterpreter.normalize(stepModel);
         return stepModel;
     }
 

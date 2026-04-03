@@ -489,6 +489,55 @@ class DefaultCurveEvaluatorTest {
     }
 
     @Test
+    void evaluateBSplineCurveWithKnots_shouldRespectRationalWeights() {
+        StepModel model = new StepModel();
+
+        CartesianPoint p0 = new CartesianPoint(
+                "#10",
+                "('P0',(0.0,0.0,0.0))",
+                "P0",
+                List.of(0.0, 0.0, 0.0)
+        );
+        CartesianPoint p1 = new CartesianPoint(
+                "#11",
+                "('P1',(10.0,0.0,0.0))",
+                "P1",
+                List.of(10.0, 0.0, 0.0)
+        );
+
+        BSplineCurveWithKnots spline = new BSplineCurveWithKnots(
+                "#20",
+                "complex rational spline",
+                "",
+                1,
+                List.of("#10", "#11"),
+                ".UNSPECIFIED.",
+                StepLogical.FALSE,
+                StepLogical.FALSE,
+                List.of(2, 2),
+                List.of(0.0, 1.0),
+                ".UNSPECIFIED.",
+                List.of(1.0, 2.0)
+        );
+
+        model.addEntity(p0);
+        model.addEntity(p1);
+        model.addEntity(spline);
+        model.resolveAll();
+
+        StepEvaluationContext context = new StepEvaluationContext(model);
+        PlacementEvaluator placementEvaluator = new DefaultPlacementEvaluator(context);
+        DefaultCurveEvaluator curveEvaluator = new DefaultCurveEvaluator(context, placementEvaluator);
+
+        BSplineCurve3 result = curveEvaluator.evaluateBSplineCurveWithKnots(spline);
+        Point3 mid = result.pointAt(0.5);
+
+        assertEquals(6.666666666666667, mid.x(), 1e-9);
+        assertEquals(0.0, mid.y(), EPS);
+        assertEquals(0.0, mid.z(), EPS);
+    }
+
+    @Test
     void evaluateEllipse_shouldUseCache() {
         StepModel model = new StepModel();
 

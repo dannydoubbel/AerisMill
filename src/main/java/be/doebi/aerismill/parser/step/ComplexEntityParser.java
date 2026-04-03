@@ -3,14 +3,12 @@ package be.doebi.aerismill.parser.step;
 import be.doebi.aerismill.model.step.ComplexEntity;
 import be.doebi.aerismill.model.step.ComplexEntityPart;
 import be.doebi.aerismill.model.step.base.StepEntity;
-import be.doebi.aerismill.model.step.base.StepEntityType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class ComplexEntityParser implements EntityParser<ComplexEntity> {
-
     @Override
     public ComplexEntity parse(
             StepEntity entity,
@@ -28,8 +26,8 @@ public class ComplexEntityParser implements EntityParser<ComplexEntity> {
 
     @Override
     public StepEntity parse(String id, String rawParameters) {
-        StepEntity entity = new StepEntity(id, StepEntityType.COMPLEX_ENTITY, rawParameters);
-        return parse(entity, List.of(), Map.of());
+        List<ComplexEntityPart> parts = parseParts(rawParameters);
+        return new ComplexEntity(id, rawParameters, parts);
     }
 
     private List<ComplexEntityPart> parseParts(String rawParameters) {

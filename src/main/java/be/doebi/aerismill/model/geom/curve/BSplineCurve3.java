@@ -13,10 +13,24 @@ public record BSplineCurve3(
         boolean closed,
         boolean selfIntersect,
         String curveForm,
-        String knotSpec
+        String knotSpec,
+        List<Double> weights
 ) implements BoundedCurve3 {
 
+    public BSplineCurve3(
+            int degree,
+            List<Point3> controlPoints,
+            List<Double> knots,
+            boolean closed,
+            boolean selfIntersect,
+            String curveForm,
+            String knotSpec
+    ) {
+        this(degree, controlPoints, knots, closed, selfIntersect, curveForm, knotSpec, null);
+    }
+
     public BSplineCurve3 {
+        weights = weights == null ? null : List.copyOf(weights);
         Objects.requireNonNull(controlPoints, "controlPoints must not be null");
         Objects.requireNonNull(knots, "knots must not be null");
         Objects.requireNonNull(curveForm, "curveForm must not be null");
@@ -33,6 +47,9 @@ public record BSplineCurve3(
                     "Expanded knot vector size must equal controlPoints.size() + degree + 1"
             );
         }
+        if (weights != null && weights.size() != controlPoints.size()) {
+            throw new IllegalArgumentException("weights size must match controlPoints size");
+        }
     }
 
     public double startParam() {
@@ -47,6 +64,10 @@ public record BSplineCurve3(
     public Point3 pointAt(double t) {
         double clamped = clampToDomain(t);
         int span = findSpan(clamped);
+
+        if (weights != null) {
+            return rationalPointAt(clamped, span);
+        }
 
         Point3[] d = new Point3[degree + 1];
         for (int j = 0; j <= degree; j++) {
@@ -134,6 +155,62 @@ public record BSplineCurve3(
         }
 
         return mid;
+    }
+
+    private Point3 rationalPointAt(double t, int span) {
+        double[] basis = basisFunctions(span, t);
+
+        double weightedX = 0.0;
+        double weightedY = 0.0;
+        double weightedZ = 0.0;
+        double weightSum = 0.0;
+
+        for (int j = 0; j <= degree; j++) {
+            int index = span - degree + j;
+            double basisValue = basis[j];
+            double weight = weights.get(index);
+            double weightedBasis = basisValue * weight;
+            Point3 point = controlPoints.get(index);
+
+            weightedX += weightedBasis * point.x();
+            weightedY += weightedBasis * point.y();
+            weightedZ += weightedBasis * point.z();
+            weightSum += weightedBasis;
+        }
+
+        if (weightSum == 0.0) {
+            throw new IllegalStateException("Rational B-spline weight sum is zero");
+        }
+
+        return new Point3(
+                weightedX / weightSum,
+                weightedY / weightSum,
+                weightedZ / weightSum
+        );
+    }
+
+    private double[] basisFunctions(int span, double t) {
+        double[] basis = new double[degree + 1];
+        double[] left = new double[degree + 1];
+        double[] right = new double[degree + 1];
+
+        basis[0] = 1.0;
+        for (int j = 1; j <= degree; j++) {
+            left[j] = t - knots.get(span + 1 - j);
+            right[j] = knots.get(span + j) - t;
+
+            double saved = 0.0;
+            for (int r = 0; r < j; r++) {
+                double denom = right[r + 1] + left[j - r];
+                double term = denom == 0.0 ? 0.0 : basis[r] / denom;
+
+                basis[r] = saved + right[r + 1] * term;
+                saved = left[j - r] * term;
+            }
+            basis[j] = saved;
+        }
+
+        return basis;
     }
 
     private static Point3 lerp(Point3 a, Point3 b, double alpha) {

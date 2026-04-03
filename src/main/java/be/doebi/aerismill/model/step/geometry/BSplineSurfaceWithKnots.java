@@ -20,6 +20,7 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
     private final List<Double> uKnots;
     private final List<Double> vKnots;
     private final String knotSpec;
+    private final List<List<Double>> weights;
 
     private final List<List<StepEntity>> controlPointsList;
 
@@ -40,6 +41,44 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
             List<Double> vKnots,
             String knotSpec
     ) {
+        this(
+                id,
+                rawParameters,
+                name,
+                uDegree,
+                vDegree,
+                controlPointRefs,
+                surfaceForm,
+                uClosed,
+                vClosed,
+                selfIntersect,
+                uMultiplicities,
+                vMultiplicities,
+                uKnots,
+                vKnots,
+                knotSpec,
+                null
+        );
+    }
+
+    public BSplineSurfaceWithKnots(
+            String id,
+            String rawParameters,
+            String name,
+            int uDegree,
+            int vDegree,
+            List<List<String>> controlPointRefs,
+            String surfaceForm,
+            StepLogical uClosed,
+            StepLogical vClosed,
+            StepLogical selfIntersect,
+            List<Integer> uMultiplicities,
+            List<Integer> vMultiplicities,
+            List<Double> uKnots,
+            List<Double> vKnots,
+            String knotSpec,
+            List<List<Double>> weights
+    ) {
         super(id, StepEntityType.B_SPLINE_SURFACE_WITH_KNOTS, rawParameters);
         this.name = name;
         this.uDegree = uDegree;
@@ -54,6 +93,7 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
         this.uKnots = uKnots;
         this.vKnots = vKnots;
         this.knotSpec = knotSpec;
+        this.weights = weights == null ? null : copyDoubleGrid(weights);
         this.controlPointsList = new ArrayList<>();
     }
     public String getName() {        return name;    }
@@ -110,6 +150,10 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
         return knotSpec;
     }
 
+    public List<List<Double>> getWeights() {
+        return weights;
+    }
+
     @Override
     public void doResolve(StepModel model) {
         controlPointsList.clear();
@@ -152,7 +196,16 @@ public class BSplineSurfaceWithKnots extends ResolvableStepEntity {
                 ", vMultiplicities=" + vMultiplicities +
                 ", uKnots=" + uKnots +
                 ", vKnots=" + vKnots +
+                ", weights=" + weights +
                 ", knotSpec='" + knotSpec + '\'' +
                 '}';
+    }
+
+    private List<List<Double>> copyDoubleGrid(List<List<Double>> source) {
+        List<List<Double>> copy = new ArrayList<>(source.size());
+        for (List<Double> row : source) {
+            copy.add(List.copyOf(row));
+        }
+        return List.copyOf(copy);
     }
 }

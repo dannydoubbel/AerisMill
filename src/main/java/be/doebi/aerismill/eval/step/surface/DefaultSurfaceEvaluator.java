@@ -288,7 +288,8 @@ public final class DefaultSurfaceEvaluator implements SurfaceEvaluator {
                 splineSurface.isVClosed() == StepLogical.TRUE,
                 splineSurface.isSelfIntersect() == StepLogical.TRUE,
                 splineSurface.getSurfaceForm(),
-                splineSurface.getKnotSpec()
+                splineSurface.getKnotSpec(),
+                splineSurface.getWeights()
         );
 
         cache.putSurface(splineSurface.getId(), result);
