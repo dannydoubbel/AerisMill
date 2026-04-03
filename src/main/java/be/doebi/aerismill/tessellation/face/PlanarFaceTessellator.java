@@ -6,8 +6,13 @@ import be.doebi.aerismill.model.geom.topology.FaceGeom;
 import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
 import be.doebi.aerismill.model.geom.topology.LoopGeom;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
+import be.doebi.aerismill.tessellation.polygon.Point2;
+import be.doebi.aerismill.tessellation.polygon.PolygonLoop2;
 import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
+import be.doebi.aerismill.tessellation.polygon.PolygonWithHoles2;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
+
+import java.util.List;
 
 public class PlanarFaceTessellator implements FaceTessellator {
 
@@ -46,6 +51,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
             throw new IllegalArgumentException("Face bound must contain at least one edge.");
         }
 
+        /*
         boolean foundNonNullEdge = false;
 
         for (var edge : outerBound.edges()) {
@@ -58,13 +64,22 @@ public class PlanarFaceTessellator implements FaceTessellator {
         if (!foundNonNullEdge) {
             throw new IllegalArgumentException("Face bound must contain at least one non-null edge.");
         }
+         */
 
-        collectDiscretizedEdgePoints(outerBound);
 
-        return new FaceMeshPatch(java.util.List.of(), java.util.List.of());
+
+        var discretizedEdgePointLists = collectDiscretizedEdgePoints(outerBound);
+        var boundaryPoints = flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
+        var projectedBoundaryPoints = projectBoundaryPointsTo2D((PlaneSurface3) face.surface(), boundaryPoints);
+        var polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
+        var polygon = buildPolygonWithNoHoles(polygonLoop);
+
+        return new FaceMeshPatch(List.of(), List.of());
     }
 
-    java.util.List<java.util.List<Point3>> collectDiscretizedEdgePoints(LoopGeom outerBound) {
+
+
+    List<List<Point3>> collectDiscretizedEdgePoints(LoopGeom outerBound) {
         if (outerBound.edges() == null || outerBound.edges().isEmpty()) {
             throw new IllegalArgumentException("Face bound must contain at least one edge.");
         }
@@ -84,6 +99,53 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         return discretizedEdges;
+    }
+
+    List<Point3> flattenDiscretizedEdgePointLists(
+            java.util.List<java.util.List<be.doebi.aerismill.model.geom.math.Point3>> discretizedEdgePointLists
+    ) {
+        java.util.List<be.doebi.aerismill.model.geom.math.Point3> flattened = new java.util.ArrayList<>();
+
+        if (discretizedEdgePointLists == null || discretizedEdgePointLists.isEmpty()) {
+            return flattened;
+        }
+
+        for (var edgePoints : discretizedEdgePointLists) {
+            if (edgePoints != null && !edgePoints.isEmpty()) {
+                flattened.addAll(edgePoints);
+            }
+        }
+
+        return flattened;
+    }
+
+    List<Point2> projectBoundaryPointsTo2D(PlaneSurface3 plane,List<Point3> boundaryPoints
+    ) {
+        java.util.List<be.doebi.aerismill.tessellation.polygon.Point2> projectedPoints = new java.util.ArrayList<>();
+
+        if (boundaryPoints == null || boundaryPoints.isEmpty()) {
+            return projectedPoints;
+        }
+
+        for (var point : boundaryPoints) {
+            projectedPoints.add(planeProjector.project(point, plane));
+        }
+
+        return projectedPoints;
+    }
+
+    PolygonLoop2 buildOuterPolygonLoop( List<Point2> projectedBoundaryPoints    ) {
+        if (projectedBoundaryPoints == null) {
+            throw new IllegalArgumentException("Projected boundary points must not be null.");
+        }
+        return new PolygonLoop2(projectedBoundaryPoints);
+    }
+
+    PolygonWithHoles2 buildPolygonWithNoHoles(PolygonLoop2 outerLoop) {
+        if (outerLoop == null) {
+            throw new IllegalArgumentException("Outer polygon loop must not be null.");
+        }
+        return new PolygonWithHoles2(outerLoop, List.of());
     }
 
 

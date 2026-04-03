@@ -11,8 +11,10 @@ import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
 import be.doebi.aerismill.tessellation.polygon.Point2;
 import be.doebi.aerismill.tessellation.polygon.PolygonLoop2;
 import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
+import be.doebi.aerismill.tessellation.polygon.PolygonWithHoles2;
 import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
+import be.doebi.aerismill.tessellation.projection.RecordingPlaneProjector;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -361,28 +363,31 @@ class PlanarFaceTessellatorTest {
         assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(0));
         assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(1));
     }
-    /*
-    private static final class RecordingEdgeDiscretizer implements EdgeDiscretizer {
-        private final List<OrientedEdgeGeom> recordedEdges = new ArrayList<>();
-        private final List<GeometryTolerance> recordedTolerances = new ArrayList<>();
 
-        @Override
-        public List<Point3> discretize(OrientedEdgeGeom edge, GeometryTolerance tolerance) {
-            recordedEdges.add(edge);
-            recordedTolerances.add(tolerance);
-            return List.of();
-        }
+    @Test
+    void flattenDiscretizedEdgePointLists_shouldFlattenPointListsInOrder() {
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
 
-        List<OrientedEdgeGeom> recordedEdges() {
-            return recordedEdges;
-        }
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
 
-        List<GeometryTolerance> recordedTolerances() {
-            return recordedTolerances;
-        }
+        List<List<Point3>> discretizedEdgePointLists = List.of(
+                List.of(p1, p2),
+                List.of(),
+                List.of(p3)
+        );
+
+        List<Point3> result = tessellator.flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
+
+        assertEquals(List.of(p1, p2, p3), result);
     }
 
-     */
     private static final class RecordingEdgeDiscretizer implements EdgeDiscretizer {
         private final List<OrientedEdgeGeom> recordedEdges = new ArrayList<>();
         private final List<GeometryTolerance> recordedTolerances = new ArrayList<>();
@@ -407,5 +412,79 @@ class PlanarFaceTessellatorTest {
             return recordedTolerances;
         }
     }
+
+    @Test
+    void projectBoundaryPointsTo2D_shouldProjectAllBoundaryPointsInOrder() {
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+
+        Point2 q1 = new Point2(10.0, 20.0);
+        Point2 q2 = new Point2(30.0, 40.0);
+
+        PlaneSurface3 plane = new PlaneSurface3(null);
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(p1, q1);
+        planeProjector.stubResult(p2, q2);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                planeProjector,
+                null
+        );
+
+        java.util.List<Point2> result = tessellator.projectBoundaryPointsTo2D(
+                plane,
+                java.util.List.of(p1, p2)
+        );
+
+        assertEquals(java.util.List.of(q1, q2), result);
+        assertEquals(java.util.List.of(p1, p2), planeProjector.recordedPoints());
+        assertEquals(2, planeProjector.recordedPlanes().size());
+        assertSame(plane, planeProjector.recordedPlanes().get(0));
+        assertSame(plane, planeProjector.recordedPlanes().get(1));
+    }
+
+    @Test
+    void buildOuterPolygonLoop_shouldWrapProjectedBoundaryPointsInOrder() {
+        Point2 p1 = new Point2(1.0, 2.0);
+        Point2 p2 = new Point2(3.0, 4.0);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        PolygonLoop2 result = tessellator.buildOuterPolygonLoop(List.of(p1, p2));
+
+        assertNotNull(result);
+        assertEquals(List.of(p1, p2), result.points());
+    }
+
+    @Test
+    void buildPolygonWithNoHoles_shouldWrapOuterLoopWithEmptyHoles() {
+        Point2 p1 = new Point2(1.0, 2.0);
+        Point2 p2 = new Point2(3.0, 4.0);
+
+        PolygonLoop2 outerLoop = new PolygonLoop2(List.of(p1, p2));
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        PolygonWithHoles2 result = tessellator.buildPolygonWithNoHoles(outerLoop);
+
+        assertNotNull(result);
+        assertSame(outerLoop, result.outer());
+        assertNotNull(result.holes());
+        assertTrue(result.holes().isEmpty());
+    }
+
 }
 
