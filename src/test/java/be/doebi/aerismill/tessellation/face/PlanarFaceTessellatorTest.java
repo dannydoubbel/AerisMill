@@ -842,5 +842,43 @@ class PlanarFaceTessellatorTest {
         assertTrue(polygonTriangulator.recordedPolygon().holes().isEmpty());
     }
 
+    @Test
+    void validateBoundaryHasAtLeastThreePoints_shouldThrow_whenBoundaryHasFewerThanThreePoints() {
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.validateBoundaryHasAtLeastThreePoints(List.of(p1, p2))
+        );
+
+        assertEquals("Boundary must contain at least three points for triangulation.", ex.getMessage());
+    }
+
+    @Test
+    void validateBoundaryHasAtLeastThreePoints_shouldNotThrow_whenBoundaryHasThreePoints() {
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        assertDoesNotThrow(() ->
+                tessellator.validateBoundaryHasAtLeastThreePoints(List.of(p1, p2, p3))
+        );
+    }
+
 }
 

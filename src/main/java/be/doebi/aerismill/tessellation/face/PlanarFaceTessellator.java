@@ -56,6 +56,9 @@ public class PlanarFaceTessellator implements FaceTessellator {
         var boundaryPoints = flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
         var cleanedBoundaryPoints = collapseConsecutiveDuplicateBoundaryPoints(boundaryPoints);
         var openBoundaryPoints = removeClosingDuplicateBoundaryPoint(cleanedBoundaryPoints);
+
+        validateBoundaryHasAtLeastThreePoints(openBoundaryPoints);
+
         var projectedBoundaryPoints = projectBoundaryPointsTo2D((PlaneSurface3) face.surface(), openBoundaryPoints);
         var polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
         var polygon = buildPolygonWithNoHoles(polygonLoop);
@@ -199,6 +202,12 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         return result;
+    }
+
+    void validateBoundaryHasAtLeastThreePoints(List<Point3> boundaryPoints) {
+        if (boundaryPoints == null || boundaryPoints.size() < 3) {
+            throw new IllegalArgumentException("Boundary must contain at least three points for triangulation.");
+        }
     }
 
 
