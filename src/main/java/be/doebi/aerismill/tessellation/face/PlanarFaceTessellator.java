@@ -55,12 +55,15 @@ public class PlanarFaceTessellator implements FaceTessellator {
         var discretizedEdgePointLists = collectDiscretizedEdgePoints(outerBound);
         var boundaryPoints = flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
         var cleanedBoundaryPoints = collapseConsecutiveDuplicateBoundaryPoints(boundaryPoints);
-        var projectedBoundaryPoints = projectBoundaryPointsTo2D((PlaneSurface3) face.surface(), cleanedBoundaryPoints);
+        var openBoundaryPoints = removeClosingDuplicateBoundaryPoint(cleanedBoundaryPoints);
+        var projectedBoundaryPoints = projectBoundaryPointsTo2D((PlaneSurface3) face.surface(), openBoundaryPoints);
         var polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
         var polygon = buildPolygonWithNoHoles(polygonLoop);
         var triangles = triangulatePolygon(polygon);
 
-        return buildFaceMeshPatch(cleanedBoundaryPoints, triangles);
+        return buildFaceMeshPatch(openBoundaryPoints, triangles);
+
+
     }
 
     public List<Point3> collapseConsecutiveDuplicateBoundaryPoints(List<Point3> boundaryPoints) {
@@ -172,6 +175,30 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         return new FaceMeshPatch(boundaryPoints, triangleIndices);
+    }
+
+    List<Point3> removeClosingDuplicateBoundaryPoint(List<Point3> boundaryPoints) {
+        List<Point3> result = new ArrayList<>();
+
+        if (boundaryPoints == null || boundaryPoints.isEmpty()) {
+            return result;
+        }
+
+        if (boundaryPoints.size() == 1) {
+            result.addAll(boundaryPoints);
+            return result;
+        }
+
+        result.addAll(boundaryPoints);
+
+        Point3 first = result.getFirst();
+        Point3 last = result.getLast();
+
+        if (first != null && first.equals(last)) {
+            result.removeLast();
+        }
+
+        return result;
     }
 
 

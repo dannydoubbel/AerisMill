@@ -746,5 +746,101 @@ class PlanarFaceTessellatorTest {
         assertTrue(polygonTriangulator.recordedPolygon().holes().isEmpty());
     }
 
+    @Test
+    void removeClosingDuplicateBoundaryPoint_shouldRemoveLastPoint_whenItEqualsFirst() {
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        List<Point3> result = tessellator.removeClosingDuplicateBoundaryPoint(
+                List.of(p1, p2, p3, p1)
+        );
+
+        assertEquals(List.of(p1, p2, p3), result);
+    }
+
+    @Test
+    void removeClosingDuplicateBoundaryPoint_shouldKeepLastPoint_whenItDiffersFromFirst() {
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        List<Point3> result = tessellator.removeClosingDuplicateBoundaryPoint(
+                List.of(p1, p2, p3)
+        );
+
+        assertEquals(List.of(p1, p2, p3), result);
+    }
+
+    @Test
+    void tessellate_shouldRemoveClosingDuplicateBoundaryPoint_beforeBuildingMeshPatch() {
+        OrientedEdgeGeom firstEdge = new OrientedEdgeGeom("#oe1", null, true);
+        OrientedEdgeGeom secondEdge = new OrientedEdgeGeom("#oe2", null, true);
+
+        LoopGeom firstBound = new LoopGeom("#l1", List.of(firstEdge, secondEdge));
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(firstBound),
+                true
+        );
+
+        Point3 p1 = new Point3(1.0, 0.0, 0.0);
+        Point3 p2 = new Point3(2.0, 0.0, 0.0);
+        Point3 p3 = new Point3(3.0, 0.0, 0.0);
+
+        Point2 q1 = new Point2(10.0, 20.0);
+        Point2 q2 = new Point2(30.0, 40.0);
+        Point2 q3 = new Point2(50.0, 60.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(firstEdge, List.of(p1, p2));
+        edgeDiscretizer.stubResult(secondEdge, List.of(p3, p1));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(p1, q1);
+        planeProjector.stubResult(p2, q2);
+        planeProjector.stubResult(p3, q3);
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+        int[] triangle = new int[]{0, 1, 2};
+        polygonTriangulator.stubResult(List.of(triangle));
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                null
+        );
+
+        FaceMeshPatch result = tessellator.tessellate(face);
+
+        assertNotNull(result);
+        assertEquals(List.of(p1, p2, p3), result.vertices());
+        assertEquals(1, result.triangles().size());
+        assertSame(triangle, result.triangles().get(0));
+
+        assertEquals(List.of(firstEdge, secondEdge), edgeDiscretizer.recordedEdges());
+        assertEquals(List.of(p1, p2, p3), planeProjector.recordedPoints());
+
+        assertNotNull(polygonTriangulator.recordedPolygon());
+        assertEquals(List.of(q1, q2, q3), polygonTriangulator.recordedPolygon().outer().points());
+        assertTrue(polygonTriangulator.recordedPolygon().holes().isEmpty());
+    }
+
 }
 
