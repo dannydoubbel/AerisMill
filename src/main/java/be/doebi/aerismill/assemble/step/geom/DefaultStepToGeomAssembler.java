@@ -1,7 +1,9 @@
 package be.doebi.aerismill.assemble.step.geom;
 
 import be.doebi.aerismill.eval.step.topology.SolidGeomEvaluator;
+import be.doebi.aerismill.eval.step.topology.SolidWithVoidsGeomEvaluator;
 import be.doebi.aerismill.model.geom.topology.SolidGeom;
+import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
 import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.model.step.topology.BrepWithVoids;
@@ -15,13 +17,23 @@ import java.util.List;
 public class DefaultStepToGeomAssembler implements StepToGeomAssembler {
 
     private final SolidGeomEvaluator solidGeomEvaluator;
+    private final SolidWithVoidsGeomEvaluator solidWithVoidsGeomEvaluator;
     private final TopologyValidationService topologyValidationService;
 
     public DefaultStepToGeomAssembler(
             SolidGeomEvaluator solidGeomEvaluator,
             TopologyValidationService topologyValidationService
     ) {
+        this(solidGeomEvaluator, null, topologyValidationService);
+    }
+
+    public DefaultStepToGeomAssembler(
+            SolidGeomEvaluator solidGeomEvaluator,
+            SolidWithVoidsGeomEvaluator solidWithVoidsGeomEvaluator,
+            TopologyValidationService topologyValidationService
+    ) {
         this.solidGeomEvaluator = solidGeomEvaluator;
+        this.solidWithVoidsGeomEvaluator = solidWithVoidsGeomEvaluator;
         this.topologyValidationService = topologyValidationService;
     }
 
@@ -47,12 +59,16 @@ public class DefaultStepToGeomAssembler implements StepToGeomAssembler {
             }
 
             if (entity instanceof BrepWithVoids brepWithVoids) {
-                issues.add(new AssemblyIssue(
-                        brepWithVoids.getId(),
-                        AssemblyIssueSeverity.INFO,
-                        AssemblyIssueCode.UNSUPPORTED_ROOT_TYPE,
-                        "BREP_WITH_VOIDS is not yet supported by the assembler"
-                ));
+                if (solidWithVoidsGeomEvaluator == null) {
+                    issues.add(new AssemblyIssue(
+                            brepWithVoids.getId(),
+                            AssemblyIssueSeverity.INFO,
+                            AssemblyIssueCode.UNSUPPORTED_ROOT_TYPE,
+                            "BREP_WITH_VOIDS is not yet supported by the assembler"
+                    ));
+                } else {
+                    assembleBrepWithVoids(brepWithVoids, solids, issues);
+                }
             }
         }
 
@@ -98,6 +114,42 @@ public class DefaultStepToGeomAssembler implements StepToGeomAssembler {
                     AssemblyIssueSeverity.ERROR,
                     AssemblyIssueCode.EVALUATION_FAILED,
                     "Failed to assemble MANIFOLD_SOLID_BREP: " + e.getMessage()
+            ));
+        }
+    }
+
+    private void assembleBrepWithVoids(
+            BrepWithVoids brepWithVoids,
+            List<SolidAssemblyResult> solids,
+            List<AssemblyIssue> issues
+    ) {
+        try {
+            SolidWithVoidsGeom solidWithVoids = solidWithVoidsGeomEvaluator.evaluateSolid(brepWithVoids);
+            ValidationReport validationReport = topologyValidationService.validateSolid(
+                    new SolidGeom(brepWithVoids.getId(), solidWithVoids.outerShell())
+            );
+
+            solids.add(new SolidAssemblyResult(
+                    brepWithVoids.getId(),
+                    solidWithVoids,
+                    validationReport
+            ));
+
+            if (validationReport.errorCount() > 0) {
+                issues.add(new AssemblyIssue(
+                        brepWithVoids.getId(),
+                        AssemblyIssueSeverity.WARNING,
+                        AssemblyIssueCode.VALIDATION_FAILED,
+                        "Assembled solid has topology validation errors"
+                ));
+            }
+
+        } catch (Exception e) {
+            issues.add(new AssemblyIssue(
+                    brepWithVoids.getId(),
+                    AssemblyIssueSeverity.ERROR,
+                    AssemblyIssueCode.EVALUATION_FAILED,
+                    "Failed to assemble BREP_WITH_VOIDS: " + e.getMessage()
             ));
         }
     }

@@ -4,8 +4,10 @@ import be.doebi.aerismill.eval.step.context.StepEvaluationCache;
 import be.doebi.aerismill.eval.step.context.StepEvaluationContext;
 import be.doebi.aerismill.model.geom.topology.ShellGeom;
 import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
+import be.doebi.aerismill.model.step.base.StepEntity;
 import be.doebi.aerismill.model.step.topology.BrepWithVoids;
 import be.doebi.aerismill.model.step.topology.ClosedShell;
+import be.doebi.aerismill.model.step.topology.OrientedClosedShell;
 
 import java.util.List;
 import java.util.Objects;
@@ -33,14 +35,18 @@ public final class DefaultSolidWithVoidsGeomEvaluator implements SolidWithVoidsG
             return solidWithVoidsGeom;
         }
 
-        ClosedShell outer = Objects.requireNonNull(
-                brepWithVoids.getOuter(),
-                "brepWithVoids outer must not be null"
-        );
+        ClosedShell outer = brepWithVoids.getOuter();
+        if (outer == null) {
+            outer = requireClosedShellLike(
+                    brepWithVoids.getOuterRef(),
+                    brepWithVoids.getId(),
+                    "outer shell"
+            );
+        }
 
         List<ClosedShell> voids = brepWithVoids.getVoids();
         if (voids == null) {
-            voids = List.of();
+            voids = requireClosedShellLikes(brepWithVoids.getVoidRefs(), brepWithVoids.getId());
         }
 
         ShellGeom outerShell = shellGeomEvaluator.evaluateShell(outer);
@@ -56,5 +62,39 @@ public final class DefaultSolidWithVoidsGeomEvaluator implements SolidWithVoidsG
 
         cache.putTopology(brepWithVoids.getId(), result);
         return result;
+    }
+
+    private List<ClosedShell> requireClosedShellLikes(List<String> refs, String ownerId) {
+        if (refs == null || refs.isEmpty()) {
+            return List.of();
+        }
+
+        return refs.stream()
+                .map(ref -> requireClosedShellLike(ref, ownerId, "void shell"))
+                .toList();
+    }
+
+    private ClosedShell requireClosedShellLike(String ref, String ownerId, String role) {
+        if (ref == null) {
+            throw new IllegalStateException(
+                    "Entity " + ownerId + " has no " + role + " reference"
+            );
+        }
+
+        StepEntity entity = context.getStepModel().resolveEntity(ref, StepEntity.class);
+        if (entity instanceof ClosedShell closedShell) {
+            return closedShell;
+        }
+
+        if (entity instanceof OrientedClosedShell orientedClosedShell) {
+            ClosedShell resolved = orientedClosedShell.getClosedShell();
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+
+        throw new IllegalStateException(
+                "Entity " + ownerId + " expected CLOSED_SHELL or ORIENTED_CLOSED_SHELL ref " + ref
+        );
     }
 }

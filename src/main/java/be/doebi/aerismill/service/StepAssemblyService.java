@@ -16,6 +16,7 @@ import be.doebi.aerismill.eval.step.topology.DefaultLoopGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.DefaultOrientedEdgeGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.DefaultShellGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.DefaultSolidGeomEvaluator;
+import be.doebi.aerismill.eval.step.topology.DefaultSolidWithVoidsGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.DefaultVertexGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.EdgeGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.FaceGeomEvaluator;
@@ -23,6 +24,7 @@ import be.doebi.aerismill.eval.step.topology.LoopGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.OrientedEdgeGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.ShellGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.SolidGeomEvaluator;
+import be.doebi.aerismill.eval.step.topology.SolidWithVoidsGeomEvaluator;
 import be.doebi.aerismill.eval.step.topology.VertexGeomEvaluator;
 import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.validate.geom.topology.DefaultFaceGeomValidator;
@@ -73,6 +75,10 @@ public class StepAssemblyService {
                 context,
                 shellGeomEvaluator
         );
+        SolidWithVoidsGeomEvaluator solidWithVoidsGeomEvaluator = new DefaultSolidWithVoidsGeomEvaluator(
+                context,
+                shellGeomEvaluator
+        );
 
         TopologyValidationService topologyValidationService = new DefaultTopologyValidationService(
                 new DefaultLoopGeomValidator(),
@@ -83,6 +89,7 @@ public class StepAssemblyService {
 
         return new DefaultStepToGeomAssembler(
                 solidGeomEvaluator,
+                solidWithVoidsGeomEvaluator,
                 topologyValidationService
         );
     }

@@ -1,6 +1,7 @@
 package be.doebi.aerismill.assemble.step.geom;
 
 import be.doebi.aerismill.model.geom.topology.SolidGeom;
+import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
 import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.model.step.topology.BrepWithVoids;
 import be.doebi.aerismill.model.step.topology.ManifoldSolidBrep;
@@ -75,7 +76,7 @@ class DefaultStepToGeomAssemblerTest {
         }
 
         @Test
-        void assemble_brepWithVoids_reportsUnsupportedRootType() {
+        void assemble_brepWithVoids_reportsUnsupportedRootType_whenNoEvaluatorProvided() {
             StepModel stepModel = new StepModel();
             stepModel.addEntity(new BrepWithVoids(
                     "#10",
@@ -115,6 +116,47 @@ class DefaultStepToGeomAssemblerTest {
 
             assertNull(noSupportedRoots.stepId());
             assertEquals(AssemblyIssueSeverity.INFO, noSupportedRoots.severity());
+        }
+
+        @Test
+        void assemble_brepWithVoids_addsSolidAssemblyResult() {
+            StepModel stepModel = new StepModel();
+            BrepWithVoids brep = new BrepWithVoids(
+                    "#110",
+                    "( 'solid', #210, ( #310 ) )",
+                    "solid",
+                    "#210",
+                    List.of("#310")
+            );
+            stepModel.addEntity(brep);
+
+            SolidWithVoidsGeom expectedSolid = new SolidWithVoidsGeom(
+                    "#110",
+                    new ShellGeom("#210", List.of()),
+                    List.of(new ShellGeom("#310", List.of()))
+            );
+
+            DefaultStepToGeomAssembler assembler = new DefaultStepToGeomAssembler(
+                    manifoldSolidBrep -> {
+                        fail("Manifold solid evaluator should not be called");
+                        return null;
+                    },
+                    brepWithVoids -> expectedSolid,
+                    new NoOpTopologyValidationService()
+            );
+
+            AssemblyResult result = assembler.assemble(stepModel);
+
+            assertNotNull(result);
+            assertEquals(1, result.solids().size());
+            assertEquals(0, result.issues().size());
+
+            SolidAssemblyResult solidResult = result.solids().getFirst();
+            assertEquals("#110", solidResult.stepId());
+            assertNull(solidResult.solid());
+            assertSame(expectedSolid, solidResult.solidWithVoids());
+            assertNotNull(solidResult.validationReport());
+            assertEquals(0, solidResult.validationReport().errorCount());
         }
 
         @Test
@@ -259,6 +301,117 @@ class DefaultStepToGeomAssemblerTest {
 
             assertNull(noSupportedRoots.stepId());
             assertEquals(AssemblyIssueSeverity.INFO, noSupportedRoots.severity());
+        }
+
+        @Test
+        void assemble_brepWithVoids_whenEvaluatorThrows_addsEvaluationFailedIssue() {
+            StepModel stepModel = new StepModel();
+            BrepWithVoids brep = new BrepWithVoids(
+                    "#111",
+                    "( 'solid', #211, ( #311 ) )",
+                    "solid",
+                    "#211",
+                    List.of("#311")
+            );
+            stepModel.addEntity(brep);
+
+            DefaultStepToGeomAssembler assembler = new DefaultStepToGeomAssembler(
+                    manifoldSolidBrep -> {
+                        fail("Manifold solid evaluator should not be called");
+                        return null;
+                    },
+                    brepWithVoids -> {
+                        throw new IllegalStateException("boom");
+                    },
+                    new NoOpTopologyValidationService()
+            );
+
+            AssemblyResult result = assembler.assemble(stepModel);
+
+            assertNotNull(result);
+            assertEquals(0, result.solids().size());
+            assertEquals(2, result.issues().size());
+
+            AssemblyIssue evalFailed = result.issues().stream()
+                    .filter(issue -> issue.code() == AssemblyIssueCode.EVALUATION_FAILED)
+                    .findFirst()
+                    .orElseThrow();
+
+            assertEquals("#111", evalFailed.stepId());
+            assertEquals(AssemblyIssueSeverity.ERROR, evalFailed.severity());
+            assertEquals("Failed to assemble BREP_WITH_VOIDS: boom", evalFailed.message());
+
+            AssemblyIssue noSupportedRoots = result.issues().stream()
+                    .filter(issue -> issue.code() == AssemblyIssueCode.NO_SUPPORTED_ROOTS_FOUND)
+                    .findFirst()
+                    .orElseThrow();
+
+            assertNull(noSupportedRoots.stepId());
+            assertEquals(AssemblyIssueSeverity.INFO, noSupportedRoots.severity());
+        }
+
+        @Test
+        void assemble_brepWithVoids_withValidationErrors_addsValidationFailedIssue() {
+            StepModel stepModel = new StepModel();
+            BrepWithVoids brep = new BrepWithVoids(
+                    "#112",
+                    "( 'solid', #212, ( #312 ) )",
+                    "solid",
+                    "#212",
+                    List.of("#312")
+            );
+            stepModel.addEntity(brep);
+
+            SolidWithVoidsGeom expectedSolid = new SolidWithVoidsGeom(
+                    "#112",
+                    new ShellGeom("#212", List.of()),
+                    List.of(new ShellGeom("#312", List.of()))
+            );
+
+            DefaultStepToGeomAssembler assembler = new DefaultStepToGeomAssembler(
+                    manifoldSolidBrep -> {
+                        fail("Manifold solid evaluator should not be called");
+                        return null;
+                    },
+                    brepWithVoids -> expectedSolid,
+                    new TopologyValidationService() {
+                        @Override
+                        public ValidationReport validateLoop(be.doebi.aerismill.model.geom.topology.LoopGeom loopGeom) {
+                            return emptyReport();
+                        }
+
+                        @Override
+                        public ValidationReport validateFace(be.doebi.aerismill.model.geom.topology.FaceGeom faceGeom) {
+                            return emptyReport();
+                        }
+
+                        @Override
+                        public ValidationReport validateShell(be.doebi.aerismill.model.geom.topology.ShellGeom shellGeom) {
+                            return emptyReport();
+                        }
+
+                        @Override
+                        public ValidationReport validateSolid(be.doebi.aerismill.model.geom.topology.SolidGeom solidGeom) {
+                            return reportWithError();
+                        }
+                    }
+            );
+
+            AssemblyResult result = assembler.assemble(stepModel);
+
+            assertNotNull(result);
+            assertEquals(1, result.solids().size());
+            assertEquals(1, result.issues().size());
+
+            SolidAssemblyResult solidResult = result.solids().getFirst();
+            assertNull(solidResult.solid());
+            assertSame(expectedSolid, solidResult.solidWithVoids());
+
+            AssemblyIssue issue = result.issues().getFirst();
+            assertEquals("#112", issue.stepId());
+            assertEquals(AssemblyIssueSeverity.WARNING, issue.severity());
+            assertEquals(AssemblyIssueCode.VALIDATION_FAILED, issue.code());
+            assertEquals("Assembled solid has topology validation errors", issue.message());
         }
 
         private static ValidationReport emptyReport() {
