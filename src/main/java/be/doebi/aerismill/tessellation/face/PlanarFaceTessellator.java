@@ -12,6 +12,7 @@ import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
 import be.doebi.aerismill.tessellation.polygon.PolygonWithHoles2;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class PlanarFaceTessellator implements FaceTessellator {
@@ -51,34 +52,39 @@ public class PlanarFaceTessellator implements FaceTessellator {
             throw new IllegalArgumentException("Face bound must contain at least one edge.");
         }
 
-        /*
-        boolean foundNonNullEdge = false;
-
-        for (var edge : outerBound.edges()) {
-            if (edge != null) {
-                edgeDiscretizer.discretize(edge, tolerance);
-                foundNonNullEdge = true;
-            }
-        }
-
-        if (!foundNonNullEdge) {
-            throw new IllegalArgumentException("Face bound must contain at least one non-null edge.");
-        }
-         */
-
-
-
         var discretizedEdgePointLists = collectDiscretizedEdgePoints(outerBound);
         var boundaryPoints = flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
-        var projectedBoundaryPoints = projectBoundaryPointsTo2D((PlaneSurface3) face.surface(), boundaryPoints);
+        var cleanedBoundaryPoints = collapseConsecutiveDuplicateBoundaryPoints(boundaryPoints);
+        var projectedBoundaryPoints = projectBoundaryPointsTo2D((PlaneSurface3) face.surface(), cleanedBoundaryPoints);
         var polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
         var polygon = buildPolygonWithNoHoles(polygonLoop);
         var triangles = triangulatePolygon(polygon);
 
-        //return new FaceMeshPatch(List.of(), List.of());
-        return buildFaceMeshPatch(boundaryPoints, triangles);
+        return buildFaceMeshPatch(cleanedBoundaryPoints, triangles);
     }
 
+    public List<Point3> collapseConsecutiveDuplicateBoundaryPoints(List<Point3> boundaryPoints) {
+        List<Point3> collapsed = new ArrayList<>();
+
+        if (boundaryPoints == null || boundaryPoints.isEmpty()) {
+            return collapsed;
+        }
+
+        Point3 previous = null;
+
+        for (Point3 point : boundaryPoints) {
+            if (point == null) {
+                continue;
+            }
+
+            if (!point.equals(previous)) {
+                collapsed.add(point);
+                previous = point;
+            }
+        }
+
+        return collapsed;
+    }
 
 
     List<List<Point3>> collectDiscretizedEdgePoints(LoopGeom outerBound) {
