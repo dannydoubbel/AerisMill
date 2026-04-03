@@ -20,9 +20,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class PlanarFaceTessellatorTest {
-
     @Test
-    void tessellate_planarFace_returnsEmptyPatchForNow() {
+    void tessellate_faceWithoutBounds_throws() {
         PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
                 stubEdgeDiscretizer(),
                 stubPolygonTriangulator(),
@@ -37,13 +36,12 @@ class PlanarFaceTessellatorTest {
                 true
         );
 
-        FaceMeshPatch result = tessellator.tessellate(face);
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.tessellate(face)
+        );
 
-        assertNotNull(result);
-        assertNotNull(result.vertices());
-        assertNotNull(result.triangles());
-        assertTrue(result.vertices().isEmpty());
-        assertTrue(result.triangles().isEmpty());
+        assertEquals("Face must have at least one bound.", ex.getMessage());
     }
 
     @Test
@@ -104,7 +102,6 @@ class PlanarFaceTessellatorTest {
     }
 
 
-
     private EdgeDiscretizer stubEdgeDiscretizer() {
         return (edge, tolerance) -> List.of();
     }
@@ -133,7 +130,7 @@ class PlanarFaceTessellatorTest {
     }
 
     @Test
-    void tessellate_planarFaceWithSingleBound_returnsEmptyPatchForNow() {
+    void tessellate_planarFaceWithSingleEmptyBound_throws() {
         PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
                 stubEdgeDiscretizer(),
                 stubPolygonTriangulator(),
@@ -153,13 +150,12 @@ class PlanarFaceTessellatorTest {
                 true
         );
 
-        FaceMeshPatch result = tessellator.tessellate(face);
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.tessellate(face)
+        );
 
-        assertNotNull(result);
-        assertNotNull(result.vertices());
-        assertNotNull(result.triangles());
-        assertTrue(result.vertices().isEmpty());
-        assertTrue(result.triangles().isEmpty());
+        assertEquals("Face bound must contain at least one edge.", ex.getMessage());
     }
 
     @Test
@@ -226,7 +222,6 @@ class PlanarFaceTessellatorTest {
     }
 
 
-
     @Test
     void tessellate_planarFaceWithBoundContainingOnlyNullEdges_throwsIllegalArgumentException() {
         PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
@@ -257,7 +252,58 @@ class PlanarFaceTessellatorTest {
     }
 
     @Test
-    void tessellate_planarFaceWithSingleBoundAndOneNonNullDummyEdge_returnsEmptyPatchForNow() {
+    void tessellate_shouldDiscretizeFirstNonNullEdgeOfFirstBound_andStillReturnEmptyPatch() {
+        OrientedEdgeGeom firstEdge = new OrientedEdgeGeom("#oe1", null, true);
+        OrientedEdgeGeom secondEdge = new OrientedEdgeGeom("#oe2", null, true);
+
+        LoopGeom firstBound = new LoopGeom("#l1", List.of(firstEdge, secondEdge));
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(firstBound),
+                true
+        );
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        GeometryTolerance tolerance = null; // replace with a real instance if easy
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                null,
+                null,
+                tolerance
+        );
+
+        FaceMeshPatch result = tessellator.tessellate(face);
+
+        assertSame(firstEdge, edgeDiscretizer.recordedEdge());
+        assertSame(tolerance, edgeDiscretizer.recordedTolerance());
+        assertNotNull(result);
+    }
+
+
+    private static final class RecordingEdgeDiscretizer implements EdgeDiscretizer {
+        private OrientedEdgeGeom recordedEdge;
+        private GeometryTolerance recordedTolerance;
+
+        @Override
+        public List<Point3> discretize(OrientedEdgeGeom edge, GeometryTolerance tolerance) {
+            this.recordedEdge = edge;
+            this.recordedTolerance = tolerance;
+            return List.of();
+        }
+
+        OrientedEdgeGeom recordedEdge() {
+            return recordedEdge;
+        }
+
+        GeometryTolerance recordedTolerance() {
+            return recordedTolerance;
+        }
+    }
+
+    @Test
+    void tessellate_validPlanarFace_returnsEmptyPatchForNow() {
         PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
                 stubEdgeDiscretizer(),
                 stubPolygonTriangulator(),
@@ -265,15 +311,11 @@ class PlanarFaceTessellatorTest {
                 GeometryTolerance.defaults()
         );
 
-        OrientedEdgeGeom dummyEdge = new OrientedEdgeGeom(
-                "#oe1",
-                null,
-                true
-        );
+        OrientedEdgeGeom edge = new OrientedEdgeGeom("#oe1", null, true);
 
         LoopGeom loop = new LoopGeom(
                 "#loop1",
-                List.of(dummyEdge)
+                List.of(edge)
         );
 
         FaceGeom face = new FaceGeom(
@@ -291,5 +333,5 @@ class PlanarFaceTessellatorTest {
         assertTrue(result.vertices().isEmpty());
         assertTrue(result.triangles().isEmpty());
     }
-
 }
+

@@ -38,17 +38,19 @@ public class PlanarFaceTessellator implements FaceTessellator {
         if (face.bounds().size() > 1) {
             throw new IllegalArgumentException("Only single-bound planar faces are supported for now.");
         }
+
         LoopGeom outerBound = face.bounds().getFirst();
 
         if (outerBound.edges() == null || outerBound.edges().isEmpty()) {
             throw new IllegalArgumentException("Face bound must contain at least one edge.");
         }
 
+        var firstNonNullEdge = outerBound.edges().stream()
+                .filter(java.util.Objects::nonNull)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Face bound must contain at least one non-null edge."));
 
-        boolean hasNonNullEdge = outerBound.edges().stream().anyMatch(java.util.Objects::nonNull);
-        if (!hasNonNullEdge) {
-            throw new IllegalArgumentException("Face bound must contain at least one non-null edge.");
-        }
+        edgeDiscretizer.discretize(firstNonNullEdge, tolerance);
 
         return new FaceMeshPatch(java.util.List.of(), java.util.List.of());
     }
