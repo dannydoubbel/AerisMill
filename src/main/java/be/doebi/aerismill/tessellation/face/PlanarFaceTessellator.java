@@ -45,6 +45,8 @@ public class PlanarFaceTessellator implements FaceTessellator {
 
         List<PreparedLoop> preparedLoops = prepareProjectedPolygonLoops(face.bounds(), plane);
         PolygonWithHoles2 polygon = buildPolygonWithHoles(preparedLoops);
+        validateHoleRelationships(polygon);
+
         List<int[]> triangles = triangulatePolygon(polygon);
 
         List<Point3> boundaryPoints = collectPreparedBoundaryPoints(preparedLoops);
@@ -383,20 +385,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return preparedLoops;
     }
 
-    PolygonWithHoles2 buildPolygonWithHoles(List<PreparedLoop> preparedLoops) {
-        if (preparedLoops == null || preparedLoops.isEmpty()) {
-            throw new IllegalArgumentException("Prepared loops must contain at least one loop.");
-        }
 
-        PolygonLoop2 outerLoop = preparedLoops.getFirst().polygonLoop();
-        List<PolygonLoop2> holeLoops = new ArrayList<>();
-
-        for (int i = 1; i < preparedLoops.size(); i++) {
-            holeLoops.add(preparedLoops.get(i).polygonLoop());
-        }
-
-        return new PolygonWithHoles2(outerLoop, holeLoops);
-    }
 
     List<Point3> collectPreparedBoundaryPoints(List<PreparedLoop> preparedLoops) {
         List<Point3> boundaryPoints = new ArrayList<>();
@@ -430,5 +419,147 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         return projectedPoints;
+    }
+
+    PolygonWithHoles2 buildPolygonWithHoles(List<PreparedLoop> preparedLoops) {
+        if (preparedLoops == null || preparedLoops.isEmpty()) {
+            throw new IllegalArgumentException("Prepared loops must contain at least one loop.");
+        }
+
+        PolygonLoop2 outerLoop = preparedLoops.getFirst().polygonLoop();
+        List<PolygonLoop2> holes = new ArrayList<>();
+
+        for (int i = 1; i < preparedLoops.size(); i++) {
+            holes.add(preparedLoops.get(i).polygonLoop());
+        }
+
+        return new PolygonWithHoles2(outerLoop, holes);
+    }
+
+    void validateHoleRelationships(PolygonWithHoles2 polygon) {
+        if (polygon == null) {
+            throw new IllegalArgumentException("Polygon must not be null.");
+        }
+        if (polygon.outer() == null) {
+            throw new IllegalArgumentException("Polygon outer loop must not be null.");
+        }
+        if (polygon.holes() == null) {
+            throw new IllegalArgumentException("Polygon holes must not be null.");
+        }
+
+        PolygonLoop2 outer = polygon.outer();
+        List<PolygonLoop2> holes = polygon.holes();
+
+        for (PolygonLoop2 hole : holes) {
+            validateLoopsDoNotIntersect(outer, hole, "Hole loop must not intersect outer loop.");
+            validateHoleInsideOuter(outer, hole);
+        }
+
+        for (int i = 0; i < holes.size(); i++) {
+            for (int j = i + 1; j < holes.size(); j++) {
+                validateLoopsDoNotIntersect(
+                        holes.get(i),
+                        holes.get(j),
+                        "Hole loops must not intersect each other."
+                );
+            }
+        }
+    }
+
+    void validateHoleInsideOuter(PolygonLoop2 outer, PolygonLoop2 hole) {
+        if (outer == null) {
+            throw new IllegalArgumentException("Outer loop must not be null.");
+        }
+        if (hole == null) {
+            throw new IllegalArgumentException("Hole loop must not be null.");
+        }
+        if (outer.points() == null) {
+            throw new IllegalArgumentException("Outer loop points must not be null.");
+        }
+        if (hole.points() == null) {
+            throw new IllegalArgumentException("Hole loop points must not be null.");
+        }
+        if (hole.points().isEmpty()) {
+            throw new IllegalArgumentException("Hole loop points must not be empty.");
+        }
+
+        for (Point2 holePoint : hole.points()) {
+            if (!isPointStrictlyInsidePolygon(holePoint, outer)) {
+                throw new IllegalArgumentException("Hole loop must lie inside outer loop.");
+            }
+        }
+    }
+
+    void validateLoopsDoNotIntersect(PolygonLoop2 first, PolygonLoop2 second, String message) {
+        if (first == null || second == null) {
+            throw new IllegalArgumentException("Polygon loops must not be null.");
+        }
+        if (first.points() == null || second.points() == null) {
+            throw new IllegalArgumentException("Polygon loop points must not be null.");
+        }
+
+        List<Point2> firstPoints = first.points();
+        List<Point2> secondPoints = second.points();
+
+        int firstSegmentCount = firstPoints.size();
+        int secondSegmentCount = secondPoints.size();
+
+        for (int i = 0; i < firstSegmentCount; i++) {
+            Point2 a1 = firstPoints.get(i);
+            Point2 a2 = firstPoints.get((i + 1) % firstSegmentCount);
+
+            for (int j = 0; j < secondSegmentCount; j++) {
+                Point2 b1 = secondPoints.get(j);
+                Point2 b2 = secondPoints.get((j + 1) % secondSegmentCount);
+
+                if (segmentsIntersect(a1, a2, b1, b2)) {
+                    throw new IllegalArgumentException(message);
+                }
+            }
+        }
+    }
+
+    boolean isPointStrictlyInsidePolygon(Point2 point, PolygonLoop2 polygonLoop) {
+        if (point == null) {
+            throw new IllegalArgumentException("Point must not be null.");
+        }
+        if (polygonLoop == null) {
+            throw new IllegalArgumentException("Polygon loop must not be null.");
+        }
+        if (polygonLoop.points() == null) {
+            throw new IllegalArgumentException("Polygon loop points must not be null.");
+        }
+
+        List<Point2> points = polygonLoop.points();
+        int count = points.size();
+
+        if (count < 3) {
+            return false;
+        }
+
+        for (int i = 0, j = count - 1; i < count; j = i++) {
+            Point2 a = points.get(j);
+            Point2 b = points.get(i);
+
+            if (orientation(a, b, point) == 0.0 && onSegment(a, point, b)) {
+                return false;
+            }
+        }
+
+        boolean inside = false;
+
+        for (int i = 0, j = count - 1; i < count; j = i++) {
+            Point2 pi = points.get(i);
+            Point2 pj = points.get(j);
+
+            boolean intersects = ((pi.y() > point.y()) != (pj.y() > point.y())) &&
+                    (point.x() < (pj.x() - pi.x()) * (point.y() - pi.y()) / (pj.y() - pi.y()) + pi.x());
+
+            if (intersects) {
+                inside = !inside;
+            }
+        }
+
+        return inside;
     }
 }
