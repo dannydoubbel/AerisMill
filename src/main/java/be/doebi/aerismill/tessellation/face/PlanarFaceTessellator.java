@@ -63,6 +63,10 @@ public class PlanarFaceTessellator implements FaceTessellator {
         var polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
         var polygon = buildPolygonWithNoHoles(polygonLoop);
         var triangles = triangulatePolygon(polygon);
+        validateTrianglesNotEmpty(triangles);
+        validateTriangleIndices(openBoundaryPoints, triangles);
+
+
 
         return buildFaceMeshPatch(openBoundaryPoints, triangles);
 
@@ -207,6 +211,35 @@ public class PlanarFaceTessellator implements FaceTessellator {
     void validateBoundaryHasAtLeastThreePoints(List<Point3> boundaryPoints) {
         if (boundaryPoints == null || boundaryPoints.size() < 3) {
             throw new IllegalArgumentException("Boundary must contain at least three points for triangulation.");
+        }
+    }
+
+    void validateTrianglesNotEmpty(List<int[]> triangleIndices) {
+        if (triangleIndices == null || triangleIndices.isEmpty()) {
+            throw new IllegalArgumentException("Triangulation must produce at least one triangle.");
+        }
+    }
+
+    void validateTriangleIndices(List<Point3> boundaryPoints, List<int[]> triangleIndices) {
+        if (boundaryPoints == null) {
+            throw new IllegalArgumentException("Boundary points must not be null.");
+        }
+        if (triangleIndices == null) {
+            throw new IllegalArgumentException("Triangle indices must not be null.");
+        }
+
+        int vertexCount = boundaryPoints.size();
+
+        for (int[] triangle : triangleIndices) {
+            if (triangle == null || triangle.length != 3) {
+                throw new IllegalArgumentException("Each triangle must contain exactly three vertex indices.");
+            }
+
+            for (int index : triangle) {
+                if (index < 0 || index >= vertexCount) {
+                    throw new IllegalArgumentException("Triangle index out of bounds for boundary vertices.");
+                }
+            }
         }
     }
 
