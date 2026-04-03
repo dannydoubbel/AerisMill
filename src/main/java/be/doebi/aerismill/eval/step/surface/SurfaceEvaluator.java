@@ -1,19 +1,12 @@
 package be.doebi.aerismill.eval.step.surface;
 
-import be.doebi.aerismill.model.geom.surface.ConicalSurface3;
-import be.doebi.aerismill.model.geom.surface.CylindricalSurface3;
-import be.doebi.aerismill.model.geom.surface.PlaneSurface3;
-import be.doebi.aerismill.model.geom.surface.Surface3;
+import be.doebi.aerismill.model.geom.surface.*;
 import be.doebi.aerismill.model.step.geometry.ConicalSurface;
 import be.doebi.aerismill.model.step.geometry.CylindricalSurface;
 import be.doebi.aerismill.model.step.geometry.Plane;
-import be.doebi.aerismill.model.geom.surface.BSplineSurface3;
 import be.doebi.aerismill.model.step.geometry.BSplineSurfaceWithKnots;
-import be.doebi.aerismill.model.geom.surface.SphericalSurface3;
 import be.doebi.aerismill.model.step.geometry.SphericalSurface;
-import be.doebi.aerismill.model.geom.surface.ToroidalSurface3;
 import be.doebi.aerismill.model.step.geometry.ToroidalSurface;
-import be.doebi.aerismill.model.geom.surface.SurfaceOfRevolution3;
 import be.doebi.aerismill.model.step.geometry.SurfaceOfRevolution;
 
 
