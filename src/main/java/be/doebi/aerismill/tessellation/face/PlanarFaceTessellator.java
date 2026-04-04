@@ -457,12 +457,37 @@ public class PlanarFaceTessellator implements FaceTessellator {
 
         for (int i = 0; i < holes.size(); i++) {
             for (int j = i + 1; j < holes.size(); j++) {
+                PolygonLoop2 firstHole = holes.get(i);
+                PolygonLoop2 secondHole = holes.get(j);
+
                 validateLoopsDoNotIntersect(
-                        holes.get(i),
-                        holes.get(j),
+                        firstHole,
+                        secondHole,
                         "Hole loops must not intersect each other."
                 );
+
+                validateHolesDoNotContainEachOther(firstHole, secondHole);
             }
+        }
+    }
+
+    void validateHolesDoNotContainEachOther(PolygonLoop2 first, PolygonLoop2 second) {
+        if (first == null || second == null) {
+            throw new IllegalArgumentException("Polygon loops must not be null.");
+        }
+        if (first.points() == null || second.points() == null) {
+            throw new IllegalArgumentException("Polygon loop points must not be null.");
+        }
+        if (first.points().isEmpty() || second.points().isEmpty()) {
+            throw new IllegalArgumentException("Polygon loop points must not be empty.");
+        }
+
+        Point2 firstSample = first.points().getFirst();
+        Point2 secondSample = second.points().getFirst();
+
+        if (isPointStrictlyInsidePolygon(firstSample, second) ||
+                isPointStrictlyInsidePolygon(secondSample, first)) {
+            throw new IllegalArgumentException("Hole loops must not contain each other.");
         }
     }
 

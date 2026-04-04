@@ -2466,5 +2466,308 @@ class PlanarFaceTessellatorTest {
         assertEquals(List.of(o1, o2, o3, o4, h11, h12, h13, h14, h21, h22, h23, h24), planeProjector.recordedPoints());
         assertNull(polygonTriangulator.recordedPolygon());
     }
+    /*  */
+    @Test
+    void isPointStrictlyInsidePolygon_returnsTrue_forInteriorPoint() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 polygon = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(4.0, 0.0),
+                new Point2(4.0, 4.0),
+                new Point2(0.0, 4.0)
+        ));
+
+        assertTrue(tessellator.isPointStrictlyInsidePolygon(new Point2(2.0, 2.0), polygon));
+    }
+
+    @Test
+    void isPointStrictlyInsidePolygon_returnsFalse_forPointOnEdge() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 polygon = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(4.0, 0.0),
+                new Point2(4.0, 4.0),
+                new Point2(0.0, 4.0)
+        ));
+
+        assertFalse(tessellator.isPointStrictlyInsidePolygon(new Point2(2.0, 0.0), polygon));
+    }
+
+    @Test
+    void isPointStrictlyInsidePolygon_returnsFalse_forPointOnVertex() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 polygon = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(4.0, 0.0),
+                new Point2(4.0, 4.0),
+                new Point2(0.0, 4.0)
+        ));
+
+        assertFalse(tessellator.isPointStrictlyInsidePolygon(new Point2(0.0, 0.0), polygon));
+    }
+
+    @Test
+    void validateHoleInsideOuter_doesNotThrow_whenHoleIsStrictlyInside() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 outer = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(6.0, 0.0),
+                new Point2(6.0, 6.0),
+                new Point2(0.0, 6.0)
+        ));
+
+        PolygonLoop2 hole = new PolygonLoop2(List.of(
+                new Point2(1.0, 1.0),
+                new Point2(2.0, 1.0),
+                new Point2(2.0, 2.0),
+                new Point2(1.0, 2.0)
+        ));
+
+        assertDoesNotThrow(() -> tessellator.validateHoleInsideOuter(outer, hole));
+    }
+
+    @Test
+    void validateHoleInsideOuter_throws_whenHoleTouchesOuterEdge() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 outer = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(6.0, 0.0),
+                new Point2(6.0, 6.0),
+                new Point2(0.0, 6.0)
+        ));
+
+        PolygonLoop2 hole = new PolygonLoop2(List.of(
+                new Point2(1.0, 0.0),
+                new Point2(2.0, 0.0),
+                new Point2(2.0, 1.0),
+                new Point2(1.0, 1.0)
+        ));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.validateHoleInsideOuter(outer, hole)
+        );
+
+        assertEquals("Hole loop must lie inside outer loop.", ex.getMessage());
+    }
+
+    @Test
+    void validateLoopsDoNotIntersect_doesNotThrow_forDisjointLoops() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 first = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(2.0, 0.0),
+                new Point2(2.0, 2.0),
+                new Point2(0.0, 2.0)
+        ));
+
+        PolygonLoop2 second = new PolygonLoop2(List.of(
+                new Point2(3.0, 3.0),
+                new Point2(4.0, 3.0),
+                new Point2(4.0, 4.0),
+                new Point2(3.0, 4.0)
+        ));
+
+        assertDoesNotThrow(() ->
+                tessellator.validateLoopsDoNotIntersect(first, second, "boom")
+        );
+    }
+
+    @Test
+    void validateLoopsDoNotIntersect_throws_whenLoopsTouchAtVertex() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 first = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(2.0, 0.0),
+                new Point2(2.0, 2.0),
+                new Point2(0.0, 2.0)
+        ));
+
+        PolygonLoop2 second = new PolygonLoop2(List.of(
+                new Point2(2.0, 2.0),
+                new Point2(3.0, 2.0),
+                new Point2(3.0, 3.0),
+                new Point2(2.0, 3.0)
+        ));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.validateLoopsDoNotIntersect(first, second, "touch")
+        );
+
+        assertEquals("touch", ex.getMessage());
+    }
+    /*      */
+    @Test
+    void validateHoleRelationships_throws_whenOneHoleIsNestedInsideAnother() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+
+        PolygonLoop2 outer = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(10.0, 0.0),
+                new Point2(10.0, 10.0),
+                new Point2(0.0, 10.0)
+        ));
+
+        PolygonLoop2 hole1 = new PolygonLoop2(List.of(
+                new Point2(2.0, 2.0),
+                new Point2(8.0, 2.0),
+                new Point2(8.0, 8.0),
+                new Point2(2.0, 8.0)
+        ));
+
+        PolygonLoop2 hole2 = new PolygonLoop2(List.of(
+                new Point2(4.0, 4.0),
+                new Point2(5.0, 4.0),
+                new Point2(5.0, 5.0),
+                new Point2(4.0, 5.0)
+        ));
+
+        PolygonWithHoles2 polygon = new PolygonWithHoles2(outer, List.of(hole1, hole2));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.validateHoleRelationships(polygon)
+        );
+
+        assertEquals("Hole loops must not contain each other.", ex.getMessage());
+    }
+
+    /*  */
+    @Test
+    void validateHoleRelationships_throws_whenOneHoleIsNestedInsideAnotherB() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                null,
+                null,
+                null,
+                null
+        );
+
+        PolygonLoop2 outer = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(10.0, 0.0),
+                new Point2(10.0, 10.0),
+                new Point2(0.0, 10.0)
+        ));
+
+        PolygonLoop2 hole1 = new PolygonLoop2(List.of(
+                new Point2(2.0, 2.0),
+                new Point2(8.0, 2.0),
+                new Point2(8.0, 8.0),
+                new Point2(2.0, 8.0)
+        ));
+
+        PolygonLoop2 hole2 = new PolygonLoop2(List.of(
+                new Point2(4.0, 4.0),
+                new Point2(5.0, 4.0),
+                new Point2(5.0, 5.0),
+                new Point2(4.0, 5.0)
+        ));
+
+        PolygonWithHoles2 polygon = new PolygonWithHoles2(outer, List.of(hole1, hole2));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.validateHoleRelationships(polygon)
+        );
+
+        assertEquals("Hole loops must not contain each other.", ex.getMessage());
+    }
+
+    @Test
+    void tessellate_planarFaceWithNestedHoles_throwsIllegalArgumentException() {
+        OrientedEdgeGeom outerEdge = new OrientedEdgeGeom("#oeOuter", null, true);
+        OrientedEdgeGeom hole1Edge = new OrientedEdgeGeom("#oeHole1", null, true);
+        OrientedEdgeGeom hole2Edge = new OrientedEdgeGeom("#oeHole2", null, true);
+
+        LoopGeom outerBound = new LoopGeom("#outer", List.of(outerEdge));
+        LoopGeom hole1Bound = new LoopGeom("#hole1", List.of(hole1Edge));
+        LoopGeom hole2Bound = new LoopGeom("#hole2", List.of(hole2Edge));
+
+        FaceGeom face = new FaceGeom(
+                "#f1",
+                new PlaneSurface3(null),
+                List.of(outerBound, hole1Bound, hole2Bound),
+                true
+        );
+
+        Point3 o1 = new Point3(0.0, 0.0, 0.0);
+        Point3 o2 = new Point3(10.0, 0.0, 0.0);
+        Point3 o3 = new Point3(10.0, 10.0, 0.0);
+        Point3 o4 = new Point3(0.0, 10.0, 0.0);
+
+        Point3 h11 = new Point3(2.0, 2.0, 0.0);
+        Point3 h12 = new Point3(8.0, 2.0, 0.0);
+        Point3 h13 = new Point3(8.0, 8.0, 0.0);
+        Point3 h14 = new Point3(2.0, 8.0, 0.0);
+
+        Point3 h21 = new Point3(4.0, 4.0, 0.0);
+        Point3 h22 = new Point3(5.0, 4.0, 0.0);
+        Point3 h23 = new Point3(5.0, 5.0, 0.0);
+        Point3 h24 = new Point3(4.0, 5.0, 0.0);
+
+        Point2 qO1 = new Point2(0.0, 0.0);
+        Point2 qO2 = new Point2(10.0, 0.0);
+        Point2 qO3 = new Point2(10.0, 10.0);
+        Point2 qO4 = new Point2(0.0, 10.0);
+
+        Point2 qH11 = new Point2(2.0, 2.0);
+        Point2 qH12 = new Point2(8.0, 2.0);
+        Point2 qH13 = new Point2(8.0, 8.0);
+        Point2 qH14 = new Point2(2.0, 8.0);
+
+        Point2 qH21 = new Point2(4.0, 4.0);
+        Point2 qH22 = new Point2(5.0, 4.0);
+        Point2 qH23 = new Point2(5.0, 5.0);
+        Point2 qH24 = new Point2(4.0, 5.0);
+
+        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
+        edgeDiscretizer.stubResult(outerEdge, List.of(o1, o2, o3, o4));
+        edgeDiscretizer.stubResult(hole1Edge, List.of(h11, h12, h13, h14));
+        edgeDiscretizer.stubResult(hole2Edge, List.of(h21, h22, h23, h24));
+
+        RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
+        planeProjector.stubResult(o1, qO1);
+        planeProjector.stubResult(o2, qO2);
+        planeProjector.stubResult(o3, qO3);
+        planeProjector.stubResult(o4, qO4);
+        planeProjector.stubResult(h11, qH11);
+        planeProjector.stubResult(h12, qH12);
+        planeProjector.stubResult(h13, qH13);
+        planeProjector.stubResult(h14, qH14);
+        planeProjector.stubResult(h21, qH21);
+        planeProjector.stubResult(h22, qH22);
+        planeProjector.stubResult(h23, qH23);
+        planeProjector.stubResult(h24, qH24);
+
+        RecordingPolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                null
+        );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.tessellate(face)
+        );
+
+        assertEquals("Hole loops must not contain each other.", ex.getMessage());
+        assertEquals(List.of(outerEdge, hole1Edge, hole2Edge), edgeDiscretizer.recordedEdges());
+        assertEquals(
+                List.of(o1, o2, o3, o4, h11, h12, h13, h14, h21, h22, h23, h24),
+                planeProjector.recordedPoints()
+        );
+        assertNull(polygonTriangulator.recordedPolygon());
+    }
 }
 
