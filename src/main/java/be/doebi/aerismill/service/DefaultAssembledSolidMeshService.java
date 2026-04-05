@@ -33,9 +33,7 @@ public class DefaultAssembledSolidMeshService implements AssembledSolidMeshServi
         throw new IllegalArgumentException("Unsupported assembled solid payload: " + geom);
     }
 
-    private Object extractGeomPayload(Object assembledSolidResult) {
-        // adapt this to your actual assembled result type
-        // e.g. return ((AssembledSolidResult) assembledSolidResult).solid();
-        throw new UnsupportedOperationException("Implement extraction against actual assembled result type");
+    private Object extractGeomPayload(AssembledSolidResult assembledSolidResult) {
+        return assembledSolidResult.solid();
     }
 }
