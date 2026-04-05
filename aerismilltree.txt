@@ -1,12 +1,19 @@
-Folder PATH listing for volume Data
-Volume serial number is 3F61-12FE
-Y:.
+Folder PATH listing
+Volume serial number is 346B-1568
+C:.
++---.idea
+¦   +---dictionaries
++---.mvn
+¦   +---wrapper
 +---src
 ¦   +---main
 ¦   ¦   +---java
 ¦   ¦   ¦   +---be
 ¦   ¦   ¦       +---doebi
 ¦   ¦   ¦           +---aerismill
+¦   ¦   ¦               +---assemble
+¦   ¦   ¦               ¦   +---step
+¦   ¦   ¦               ¦       +---geom
 ¦   ¦   ¦               +---eval
 ¦   ¦   ¦               ¦   +---step
 ¦   ¦   ¦               ¦       +---context
@@ -26,7 +33,9 @@ Y:.
 ¦   ¦   ¦               ¦   ¦   +---math
 ¦   ¦   ¦               ¦   ¦   +---representation
 ¦   ¦   ¦               ¦   ¦   +---surface
+¦   ¦   ¦               ¦   ¦   +---tolerance
 ¦   ¦   ¦               ¦   ¦   +---topology
+¦   ¦   ¦               ¦   +---mesh
 ¦   ¦   ¦               ¦   +---step
 ¦   ¦   ¦               ¦       +---admin
 ¦   ¦   ¦               ¦       +---base
@@ -46,11 +55,19 @@ Y:.
 ¦   ¦   ¦               ¦       +---representation
 ¦   ¦   ¦               ¦       +---topology
 ¦   ¦   ¦               +---report
-¦   ¦   ¦               ¦   +---gcode
 ¦   ¦   ¦               ¦   +---step
-¦   ¦   ¦               ¦   +---stl
 ¦   ¦   ¦               +---service
+¦   ¦   ¦               +---tessellation
+¦   ¦   ¦               ¦   +---curve
+¦   ¦   ¦               ¦   +---face
+¦   ¦   ¦               ¦   +---polygon
+¦   ¦   ¦               ¦   +---projection
+¦   ¦   ¦               ¦   +---shell
+¦   ¦   ¦               ¦   +---solid
 ¦   ¦   ¦               +---ui
+¦   ¦   ¦               +---validate
+¦   ¦   ¦               ¦   +---geom
+¦   ¦   ¦               ¦       +---topology
 ¦   ¦   ¦               +---validation
 ¦   ¦   ¦                   +---step
 ¦   ¦   +---resources
@@ -64,6 +81,9 @@ Y:.
 ¦       ¦   +---be
 ¦       ¦       +---doebi
 ¦       ¦           +---aerismill
+¦       ¦               +---assemble
+¦       ¦               ¦   +---step
+¦       ¦               ¦       +---geom
 ¦       ¦               +---eval
 ¦       ¦               ¦   +---step
 ¦       ¦               ¦       +---curve
@@ -76,7 +96,16 @@ Y:.
 ¦       ¦               ¦       +---geometry
 ¦       ¦               ¦       +---topology
 ¦       ¦               +---report
-¦       ¦                   +---step
+¦       ¦               ¦   +---step
+¦       ¦               +---service
+¦       ¦               +---tessellation
+¦       ¦               ¦   +---curve
+¦       ¦               ¦   +---face
+¦       ¦               ¦   +---shell
+¦       ¦               ¦   +---solid
+¦       ¦               +---validate
+¦       ¦                   +---geom
+¦       ¦                       +---topology
 ¦       +---resources
 ¦           +---step
 +---target
@@ -84,6 +113,9 @@ Y:.
     ¦   +---be
     ¦       +---doebi
     ¦           +---aerismill
+    ¦               +---assemble
+    ¦               ¦   +---step
+    ¦               ¦       +---geom
     ¦               +---eval
     ¦               ¦   +---step
     ¦               ¦       +---context
@@ -103,7 +135,9 @@ Y:.
     ¦               ¦   ¦   +---math
     ¦               ¦   ¦   +---representation
     ¦               ¦   ¦   +---surface
+    ¦               ¦   ¦   +---tolerance
     ¦               ¦   ¦   +---topology
+    ¦               ¦   +---mesh
     ¦               ¦   +---step
     ¦               ¦       +---admin
     ¦               ¦       +---base
@@ -126,7 +160,17 @@ Y:.
     ¦               ¦   +---step
     ¦               +---service
     ¦               +---STEP FILE EXAMPLES
+    ¦               +---tessellation
+    ¦               ¦   +---curve
+    ¦               ¦   +---face
+    ¦               ¦   +---polygon
+    ¦               ¦   +---projection
+    ¦               ¦   +---shell
+    ¦               ¦   +---solid
     ¦               +---ui
+    ¦               +---validate
+    ¦               ¦   +---geom
+    ¦               ¦       +---topology
     ¦               +---validation
     ¦                   +---step
     +---generated-sources
@@ -137,6 +181,9 @@ Y:.
         +---be
         ¦   +---doebi
         ¦       +---aerismill
+        ¦           +---assemble
+        ¦           ¦   +---step
+        ¦           ¦       +---geom
         ¦           +---eval
         ¦           ¦   +---step
         ¦           ¦       +---curve
@@ -149,5 +196,13 @@ Y:.
         ¦           ¦       +---geometry
         ¦           ¦       +---topology
         ¦           +---report
-        ¦               +---step
+        ¦           ¦   +---step
+        ¦           +---tessellation
+        ¦           ¦   +---curve
+        ¦           ¦   +---face
+        ¦           ¦   +---shell
+        ¦           ¦   +---solid
+        ¦           +---validate
+        ¦               +---geom
+        ¦                   +---topology
         +---step
