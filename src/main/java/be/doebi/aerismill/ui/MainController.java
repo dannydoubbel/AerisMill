@@ -3,7 +3,10 @@ package be.doebi.aerismill.ui;
 import be.doebi.aerismill.assemble.step.geom.AssemblyIssue;
 import be.doebi.aerismill.assemble.step.geom.AssemblyResult;
 import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
-import be.doebi.aerismill.assemble.step.geom.StepToGeomAssembler;
+import be.doebi.aerismill.fx.viewer.MeshViewerPane;
+import be.doebi.aerismill.io.stl.AsciiStlReader;
+import be.doebi.aerismill.model.mesh.Mesh;
+import be.doebi.aerismill.model.mesh.MeshBounds;
 import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.service.StepAssemblyService;
 import be.doebi.aerismill.service.StepImportService;
@@ -13,8 +16,10 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.io.File;
 import java.util.Objects;
@@ -23,7 +28,7 @@ import java.util.prefs.Preferences;
 
 public class MainController {
 
-    private static final String PREF_LAST_STEP_DIR = "lastStepDirectory";
+    private static final String PREF_LAST_OPEN_DIR = "lastStepDirectory";
     private static final String ABOUT_TEXT = """
             AerisMill is a CNC-focused engineering application designed to import STEP geometry, build an internal geometric and topological memory model, and eventually generate machining toolpaths. The project emphasizes clear architecture, validation, and pragmatic engineering evolution. This text is temporary and can be refined later.
             """;
@@ -31,6 +36,9 @@ public class MainController {
     private final Preferences prefs = Preferences.userNodeForPackage(getClass());
     private final StepImportService stepImportService = new StepImportService();
     private final StepAssemblyService stepAssemblyService = new StepAssemblyService();
+
+    private final MeshViewerPane meshViewerPane = new MeshViewerPane();
+    private final AsciiStlReader asciiStlReader = new AsciiStlReader();
 
     private File currentFile;
     private Object currentStepFile; // temporary, until your real model type exists
@@ -54,12 +62,17 @@ public class MainController {
     @FXML
     private TextField textManualSerialSend;
 
+    @FXML
+    private StackPane mainWorkArea;
+
 
     @FXML
     public void initialize() {
         AppConsole.setConsoleConsumer(message -> {
             consoleOutput.appendText(message + System.lineSeparator());
         });
+        mainWorkArea.getChildren().add(meshViewerPane);
+
 
         setupManualSerialSendField();
 
@@ -101,7 +114,7 @@ public class MainController {
 
     @FXML
     private void onOpenStepFile(ActionEvent event) {
-        if (!ensureReadyToOpenStepFile()) {
+        if (!ensureReadyToOpenFile()) {
             return;
         }
 
@@ -125,7 +138,7 @@ public class MainController {
         }
     }
 
-    private boolean ensureReadyToOpenStepFile() {
+    private boolean ensureReadyToOpenFile() {
         return !hasLoadedFile() || confirmCloseCurrentFileAndContinueOpening();
     }
 
@@ -166,8 +179,77 @@ public class MainController {
         return fileChooser;
     }
 
+    @FXML
+    private void onOpenAsciiStlFile(ActionEvent event) {
+        if (!ensureReadyToOpenFile()) {
+            return;
+        }
+
+        File selectedFile = chooseAsciiStlFile();
+        if (selectedFile == null) {
+            return;
+        }
+
+        rememberLastDirectory(selectedFile);
+
+        try {
+            Mesh mesh = asciiStlReader.read(selectedFile.toPath());
+            meshViewerPane.setMesh(mesh);
+            applyLoadedAsciiStlFile(selectedFile, mesh);
+
+        } catch (Exception ex) {
+            handleOpenAsciiStlFileFailure(selectedFile, ex);
+        }
+    }
+
+    private void applyLoadedAsciiStlFile(File selectedFile, Mesh mesh) {
+        currentFile = selectedFile;
+        currentStepFile = null;
+
+        MeshBounds bounds = mesh.bounds();
+
+        getStage().setTitle("AerisMill - " + selectedFile.getName());
+        infoField.setText(
+                selectedFile.getAbsolutePath()
+                        + "   |   v: " + mesh.vertexCount()
+                        + "   |   t: " + mesh.triangleCount()
+                        + "   |   size: "
+                        + bounds.sizeX() + " x "
+                        + bounds.sizeY() + " x "
+                        + bounds.sizeZ()
+        );
+
+        log(selectedFile.getName() + " loaded successfully.");
+        log("ASCII STL vertices: " + mesh.vertexCount());
+        log("ASCII STL triangles: " + mesh.triangleCount());
+    }
+
+    private void handleOpenAsciiStlFileFailure(File selectedFile, Exception ex) {
+        log("Failed to load " + selectedFile.getName());
+        showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
+        ex.printStackTrace();
+    }
+
+    private File chooseAsciiStlFile() {
+        FileChooser fileChooser = createAsciiStlFileChooser();
+        return fileChooser.showOpenDialog(getStage());
+    }
+
+    private FileChooser createAsciiStlFileChooser() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open ASCII STL");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("ASCII STL Files", "*.stl"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+
+        applyLastUsedDirectory(fileChooser);
+        return fileChooser;
+    }
+
+
     private void applyLastUsedDirectory(FileChooser fileChooser) {
-        String lastDirPath = prefs.get(PREF_LAST_STEP_DIR, null);
+        String lastDirPath = prefs.get(PREF_LAST_OPEN_DIR, null);
         if (lastDirPath == null) {
             return;
         }
@@ -181,9 +263,11 @@ public class MainController {
     private void rememberLastDirectory(File selectedFile) {
         File parentDir = selectedFile.getParentFile();
         if (parentDir != null && parentDir.exists()) {
-            prefs.put(PREF_LAST_STEP_DIR, parentDir.getAbsolutePath());
+            prefs.put(PREF_LAST_OPEN_DIR, parentDir.getAbsolutePath());
         }
     }
+
+
 
     private void applyLoadedStepFile(File selectedFile, StepModel loadedModel) {
         currentFile = selectedFile;
@@ -220,6 +304,7 @@ public class MainController {
         }
 
         closeCurrentFile();
+
     }
     @FXML
     private void onExitApplication(ActionEvent event) {
@@ -342,9 +427,11 @@ public class MainController {
         currentFile = null;
         currentStepFile = null;
 
+        meshViewerPane.clear();
         clearInfoPath();
         log("Closed file: " + closedPath);
         getStage().setTitle("AerisMill");
+
         return true;
     }
 
@@ -410,4 +497,6 @@ public class MainController {
                     + " | " + issue.message());
         }
     }
+
+
 }
