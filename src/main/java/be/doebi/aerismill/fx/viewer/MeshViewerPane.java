@@ -3,6 +3,9 @@ package be.doebi.aerismill.fx.viewer;
 import be.doebi.aerismill.model.geom.math.Point3;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshBounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.AmbientLight;
 import javafx.scene.Group;
 import javafx.scene.PointLight;
@@ -35,6 +38,7 @@ public class MeshViewerPane extends StackPane {
     private final SubScene subScene;
     private final MeshViewFactory meshViewFactory;
 
+
     private double anchorX;
     private double anchorY;
     private double anchorAngleX;
@@ -43,6 +47,13 @@ public class MeshViewerPane extends StackPane {
     private double cameraDistance = 500.0;
     private double minCameraDistance = 1.0;
     private double maxCameraDistance = 1_000_000.0;
+
+    private double anchorPanTranslateX;
+    private double anchorPanTranslateY;
+
+    private final Label overlayLabel = new Label();
+
+    private final Group panGroup = new Group();
 
     public MeshViewerPane() {
         this(new MeshViewFactory());
@@ -54,10 +65,12 @@ public class MeshViewerPane extends StackPane {
         modelPivot.getTransforms().addAll(rotateX, rotateY);
         modelPivot.getChildren().add(modelContent);
 
+        panGroup.getChildren().add(modelPivot);
+
         cameraHolder.getChildren().addAll(camera, headLight);
 
         sceneRoot.getChildren().addAll(worldRoot, cameraHolder);
-        worldRoot.getChildren().addAll(modelPivot, ambientLight);
+        worldRoot.getChildren().addAll(panGroup, ambientLight);
 
         subScene = new SubScene(
                 sceneRoot,
@@ -74,6 +87,20 @@ public class MeshViewerPane extends StackPane {
 
         getChildren().add(subScene);
 
+        overlayLabel.setMouseTransparent(true);
+        overlayLabel.setStyle("""
+        -fx-background-color: rgba(20,20,20,0.75);
+        -fx-text-fill: white;
+        -fx-padding: 8 10 8 10;
+        -fx-background-radius: 6;
+        -fx-font-family: Consolas;
+        -fx-font-size: 12px;
+        """);
+
+        getChildren().add(overlayLabel);
+        StackPane.setAlignment(overlayLabel, Pos.TOP_LEFT);
+        StackPane.setMargin(overlayLabel, new Insets(10));
+
         configureCamera();
         configureMouseControls();
     }
@@ -86,11 +113,31 @@ public class MeshViewerPane extends StackPane {
 
         resetView();
         fitToMesh(mesh.bounds());
+        updateOverlay(mesh);
+    }
+
+    private void updateOverlay(Mesh mesh) {
+        MeshBounds bounds = mesh.bounds();
+
+        overlayLabel.setText(
+                "Vertices : " + mesh.vertexCount() + System.lineSeparator() +
+                        "Triangles: " + mesh.triangleCount() + System.lineSeparator() +
+                        "Size     : " + format(bounds.sizeX()) + " x "
+                        + format(bounds.sizeY()) + " x "
+                        + format(bounds.sizeZ()) + System.lineSeparator() +
+                        "Diagonal : " + format(bounds.diagonal())
+        );
+    }
+
+    private String format(double value) {
+        return String.format(java.util.Locale.US, "%.3f", value);
     }
 
     public void resetView() {
         rotateX.setAngle(-20);
         rotateY.setAngle(-20);
+        panGroup.setTranslateX(0);
+        panGroup.setTranslateY(0);
     }
 
     private void configureCamera() {
@@ -101,26 +148,30 @@ public class MeshViewerPane extends StackPane {
 
     private void configureMouseControls() {
         subScene.setOnMousePressed(event -> {
-            if (event.getButton() != MouseButton.PRIMARY) {
-                return;
-            }
-
             anchorX = event.getSceneX();
             anchorY = event.getSceneY();
+
             anchorAngleX = rotateX.getAngle();
             anchorAngleY = rotateY.getAngle();
+
+            anchorPanTranslateX = panGroup.getTranslateX();
+            anchorPanTranslateY = panGroup.getTranslateY();
         });
 
         subScene.setOnMouseDragged(event -> {
-            if (!event.isPrimaryButtonDown()) {
-                return;
-            }
-
             double deltaX = event.getSceneX() - anchorX;
             double deltaY = event.getSceneY() - anchorY;
 
-            rotateY.setAngle(anchorAngleY + deltaX * 0.5);
-            rotateX.setAngle(anchorAngleX - deltaY * 0.5);
+            if (event.isMiddleButtonDown()) {
+                panGroup.setTranslateX(anchorPanTranslateX + deltaX);
+                panGroup.setTranslateY(anchorPanTranslateY + deltaY);
+                return;
+            }
+
+            if (event.isPrimaryButtonDown()) {
+                rotateY.setAngle(anchorAngleY + deltaX * 0.5);
+                rotateX.setAngle(anchorAngleX - deltaY * 0.5);
+            }
         });
 
         subScene.setOnScroll(event -> {
@@ -167,6 +218,7 @@ public class MeshViewerPane extends StackPane {
         modelContent.setTranslateX(0);
         modelContent.setTranslateY(0);
         modelContent.setTranslateZ(0);
+        overlayLabel.setText("");
         resetView();
     }
 
