@@ -5,6 +5,7 @@ import be.doebi.aerismill.assemble.step.geom.AssemblyResult;
 import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
 import be.doebi.aerismill.fx.viewer.MeshViewerPane;
 import be.doebi.aerismill.io.stl.AsciiStlReader;
+import be.doebi.aerismill.io.stl.BinaryStlReader;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshBounds;
 import be.doebi.aerismill.model.step.base.StepModel;
@@ -39,6 +40,7 @@ public class MainController {
 
     private final MeshViewerPane meshViewerPane = new MeshViewerPane();
     private final AsciiStlReader asciiStlReader = new AsciiStlReader();
+    private final BinaryStlReader binaryStlReader = new BinaryStlReader();
 
     private File currentFile;
     private Object currentStepFile; // temporary, until your real model type exists
@@ -246,6 +248,76 @@ public class MainController {
         applyLastUsedDirectory(fileChooser);
         return fileChooser;
     }
+
+    private File chooseBinaryStlFile() {
+        FileChooser fileChooser = createBinaryStlFileChooser();
+        return fileChooser.showOpenDialog(getStage());
+    }
+
+    private FileChooser createBinaryStlFileChooser() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Open Binary STL");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("Binary STL Files", "*.stl"),
+                new FileChooser.ExtensionFilter("All Files", "*.*")
+        );
+
+        applyLastUsedDirectory(fileChooser);
+        return fileChooser;
+    }
+
+    @FXML
+    private void onOpenBinaryStlFile(ActionEvent event) {
+        if (!ensureReadyToOpenFile()) {
+            return;
+        }
+
+        File selectedFile = chooseBinaryStlFile();
+        if (selectedFile == null) {
+            return;
+        }
+
+        rememberLastDirectory(selectedFile);
+
+        try {
+            Mesh mesh = binaryStlReader.read(selectedFile.toPath());
+            meshViewerPane.setMesh(mesh);
+            applyLoadedBinaryStlFile(selectedFile, mesh);
+
+        } catch (Exception ex) {
+            handleOpenBinaryStlFileFailure(selectedFile, ex);
+        }
+    }
+
+    private void applyLoadedBinaryStlFile(File selectedFile, Mesh mesh) {
+        currentFile = selectedFile;
+        currentStepFile = null;
+
+        MeshBounds bounds = mesh.bounds();
+
+        getStage().setTitle("AerisMill - " + selectedFile.getName());
+        infoField.setText(
+                selectedFile.getAbsolutePath()
+                        + "   |   v: " + mesh.vertexCount()
+                        + "   |   t: " + mesh.triangleCount()
+                        + "   |   size: "
+                        + bounds.sizeX() + " x "
+                        + bounds.sizeY() + " x "
+                        + bounds.sizeZ()
+        );
+
+        log(selectedFile.getName() + " loaded successfully.");
+        log("Binary STL vertices: " + mesh.vertexCount());
+        log("Binary STL triangles: " + mesh.triangleCount());
+    }
+
+    private void handleOpenBinaryStlFileFailure(File selectedFile, Exception ex) {
+        log("Failed to load " + selectedFile.getName());
+        showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
+        ex.printStackTrace();
+    }
+
+
 
 
     private void applyLastUsedDirectory(FileChooser fileChooser) {

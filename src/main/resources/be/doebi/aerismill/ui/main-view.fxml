@@ -31,6 +31,7 @@
                     <items>
                         <MenuItem text="Open STEP..." onAction="#onOpenStepFile"/>
                         <MenuItem text="Open STL (ASCII)..." onAction="#onOpenAsciiStlFile"/>
+                        <MenuItem text="Open STL (Binary)..." onAction="#onOpenBinaryStlFile"/>
                         <MenuItem text="Close File" onAction="#onCloseFile"/>
                         <SeparatorMenuItem />
                         <MenuItem text="Exit" onAction="#onExitApplication"/>
