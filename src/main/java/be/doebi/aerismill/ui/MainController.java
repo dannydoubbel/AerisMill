@@ -239,7 +239,7 @@ public class MainController {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open ASCII STL");
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("ASCII STL Files", "*.stl"),
+                new FileChooser.ExtensionFilter("ASCII STL Files", "*.ast"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
         );
 
