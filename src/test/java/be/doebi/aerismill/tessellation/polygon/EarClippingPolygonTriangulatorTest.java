@@ -152,4 +152,63 @@ class EarClippingPolygonTriangulatorTest {
         assertNotEquals(triangle[0], triangle[2]);
         assertNotEquals(triangle[1], triangle[2]);
     }
+
+    @Test
+    void triangulate_singleHoleSquare_returnsTriangles() {
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+
+        PolygonWithHoles2 polygon = new PolygonWithHoles2(
+                new PolygonLoop2(List.of(
+                        p(0, 0),
+                        p(6, 0),
+                        p(6, 6),
+                        p(0, 6)
+                )),
+                List.of(
+                        new PolygonLoop2(List.of(
+                                p(2, 2),
+                                p(2, 4),
+                                p(4, 4),
+                                p(4, 2)
+                        ))
+                )
+        );
+
+        List<int[]> triangles = triangulator.triangulate(polygon);
+
+        assertEquals(8, triangles.size());
+        assertAllTrianglesReferenceDistinctVertices(triangles);
+
+        for (int[] triangle : triangles) {
+            for (int index : triangle) {
+                assertTrue(index >= 0 && index < 8);
+            }
+        }
+    }
+
+    @Test
+    void triangulate_rejectsMultipleHoles() {
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+
+        PolygonWithHoles2 polygon = new PolygonWithHoles2(
+                new PolygonLoop2(List.of(
+                        p(0, 0), p(8, 0), p(8, 8), p(0, 8)
+                )),
+                List.of(
+                        new PolygonLoop2(List.of(
+                                p(1, 1), p(1, 2), p(2, 2), p(2, 1)
+                        )),
+                        new PolygonLoop2(List.of(
+                                p(5, 5), p(5, 6), p(6, 6), p(6, 5)
+                        ))
+                )
+        );
+
+        UnsupportedOperationException ex = assertThrows(
+                UnsupportedOperationException.class,
+                () -> triangulator.triangulate(polygon)
+        );
+
+        assertEquals("Multiple polygon holes are not supported yet.", ex.getMessage());
+    }
 }
