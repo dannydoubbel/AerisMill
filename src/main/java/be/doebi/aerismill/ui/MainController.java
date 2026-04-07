@@ -15,11 +15,13 @@ import be.doebi.aerismill.tessellation.curve.DefaultEdgeDiscretizer;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
 import be.doebi.aerismill.tessellation.face.FaceTessellator;
 import be.doebi.aerismill.tessellation.face.PlanarFaceTessellator;
+import be.doebi.aerismill.tessellation.polygon.EarClippingPolygonTriangulator;
 import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
 import be.doebi.aerismill.tessellation.polygon.RecordingPolygonTriangulator;
 import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
 import be.doebi.aerismill.tessellation.shell.DefaultShellTessellator;
+import be.doebi.aerismill.tessellation.shell.PreviewShellTessellator;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
 import be.doebi.aerismill.tessellation.solid.SolidTessellator;
@@ -600,6 +602,10 @@ public class MainController {
         System.out.println("assembled solids: " + assemblyResult.solids().size());
         System.out.println("issues: " + assemblyResult.issues().size());
 
+        if (assemblyResult.solids().size() > 1) {
+            log("Preview note: multiple solids detected; trying solids in order until one can be previewed.");
+        }
+
         for (SolidAssemblyResult solid : assemblyResult.solids()) {
             System.out.println("solid " + solid.stepId()
                     + " | validation errors=" + solid.validationReport().errorCount()
@@ -632,7 +638,8 @@ public class MainController {
 
         // Use your real concrete triangulator here.
         // If RecordingPolygonTriangulator is currently your only concrete implementation, it can do for now.
-        PolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+        // PolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+        PolygonTriangulator polygonTriangulator = new EarClippingPolygonTriangulator();
 
         FaceTessellator faceTessellator = new PlanarFaceTessellator(
                 edgeDiscretizer,
@@ -641,9 +648,11 @@ public class MainController {
                 tolerance
         );
 
-        ShellTessellator shellTessellator = new DefaultShellTessellator(faceTessellator);
+        ShellTessellator shellTessellator = new PreviewShellTessellator(faceTessellator);
         return new DefaultSolidTessellator(shellTessellator);
     }
+
+
 
     private void handlePreviewMeshFailure(File selectedFile, Exception e) {
         log("Preview mesh generation failed for " + selectedFile.getName());

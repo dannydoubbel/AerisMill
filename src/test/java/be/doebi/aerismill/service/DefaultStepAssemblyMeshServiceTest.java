@@ -10,7 +10,10 @@ import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.validate.geom.topology.ValidationReport;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -88,31 +91,6 @@ class DefaultStepAssemblyMeshServiceTest {
     }
 
     @Test
-    void generateMesh_multipleSolids_throwsUnsupportedOperationException() {
-        StubAssembledSolidMeshService assembledSolidMeshService =
-                new StubAssembledSolidMeshService(mesh());
-
-        DefaultStepAssemblyMeshService service =
-                new DefaultStepAssemblyMeshService(assembledSolidMeshService);
-
-        AssemblyResult assemblyResult = assemblyResult(
-                List.of(
-                        solidAssemblyResult("#1", solidGeom("#solid1")),
-                        solidAssemblyResult("#2", solidGeom("#solid2"))
-                )
-        );
-
-        UnsupportedOperationException ex = assertThrows(
-                UnsupportedOperationException.class,
-                () -> service.generateMesh(assemblyResult)
-        );
-
-        assertEquals("Multiple assembled solids are not supported yet", ex.getMessage());
-        assertEquals(0, assembledSolidMeshService.callCount());
-        assertNull(assembledSolidMeshService.lastInput());
-    }
-
-    @Test
     void generateMesh_nullInput_throwsNullPointerException() {
         StubAssembledSolidMeshService assembledSolidMeshService =
                 new StubAssembledSolidMeshService(mesh());
@@ -150,7 +128,108 @@ class DefaultStepAssemblyMeshServiceTest {
         assertSame(solidWithVoids, assembledSolidMeshService.lastInput().solid());
     }
 
+    @Test
+    void generateMesh_multipleSolids_returnsFirstPreviewableSolidMesh() {
+        Mesh expected = mesh();
 
+        StubAssembledSolidMeshService assembledSolidMeshService = new StubAssembledSolidMeshService();
+        assembledSolidMeshService.willThrow(
+                "#1",
+                new IllegalArgumentException(
+                        "No previewable faces found in shell. First reason: Face #100: only planar faces are supported for now."
+                )
+        );
+        assembledSolidMeshService.willReturn("#2", expected);
+
+        DefaultStepAssemblyMeshService service =
+                new DefaultStepAssemblyMeshService(assembledSolidMeshService);
+
+        AssemblyResult assemblyResult = assemblyResult(
+                List.of(
+                        solidAssemblyResult("#1", solidGeom("#solid1")),
+                        solidAssemblyResult("#2", solidGeom("#solid2"))
+                )
+        );
+
+        Mesh result = service.generateMesh(assemblyResult);
+
+        assertSame(expected, result);
+    }
+
+    @Test
+    void generateMesh_multipleSolids_skipsFailingFirstSolid() {
+        Mesh expected = mesh();
+
+        StubAssembledSolidMeshService assembledSolidMeshService = new StubAssembledSolidMeshService();
+        assembledSolidMeshService.willThrow(
+                "#1",
+                new IllegalArgumentException(
+                        "No previewable faces found in shell. First reason: Face #100: only planar faces are supported for now."
+                )
+        );
+        assembledSolidMeshService.willReturn("#2", expected);
+
+        DefaultStepAssemblyMeshService service =
+                new DefaultStepAssemblyMeshService(assembledSolidMeshService);
+
+        SolidGeom firstSolid = solidGeom("#solid1");
+        SolidGeom secondSolid = solidGeom("#solid2");
+
+        AssemblyResult assemblyResult = assemblyResult(
+                List.of(
+                        solidAssemblyResult("#1", firstSolid),
+                        solidAssemblyResult("#2", secondSolid)
+                )
+        );
+
+        service.generateMesh(assemblyResult);
+
+        assertEquals(2, assembledSolidMeshService.callCount());
+        assertEquals(2, assembledSolidMeshService.inputs().size());
+
+        assertEquals("#1", assembledSolidMeshService.inputs().get(0).stepId());
+        assertSame(firstSolid, assembledSolidMeshService.inputs().get(0).solid());
+
+        assertEquals("#2", assembledSolidMeshService.inputs().get(1).stepId());
+        assertSame(secondSolid, assembledSolidMeshService.inputs().get(1).solid());
+    }
+
+    @Test
+    void generateMesh_multipleSolids_throwsWhenNoSolidIsPreviewable() {
+        StubAssembledSolidMeshService assembledSolidMeshService = new StubAssembledSolidMeshService();
+        assembledSolidMeshService.willThrow(
+                "#1",
+                new IllegalArgumentException(
+                        "No previewable faces found in shell. First reason: Face #100: only planar faces are supported for now."
+                )
+        );
+        assembledSolidMeshService.willThrow(
+                "#2",
+                new UnsupportedOperationException("SolidWithVoidsGeom is not supported yet")
+        );
+
+        DefaultStepAssemblyMeshService service =
+                new DefaultStepAssemblyMeshService(assembledSolidMeshService);
+
+        AssemblyResult assemblyResult = assemblyResult(
+                List.of(
+                        solidAssemblyResult("#1", solidGeom("#solid1")),
+                        solidAssemblyResult("#2", solidGeom("#solid2"))
+                )
+        );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.generateMesh(assemblyResult)
+        );
+
+        assertEquals(
+                "No previewable solids found in assembly. First reason: Solid #1: No previewable faces found in shell. First reason: Face #100: only planar faces are supported for now.",
+                ex.getMessage()
+        );
+
+        assertEquals(2, assembledSolidMeshService.callCount());
+    }
 
     private AssemblyResult assemblyResult(List<SolidAssemblyResult> solids) {
         return new AssemblyResult(solids, List.of());
@@ -160,41 +239,12 @@ class DefaultStepAssemblyMeshServiceTest {
         return new SolidAssemblyResult(stepId, solid, new ValidationReport());
     }
 
-    private SolidGeom solidGeom(String stepId) {
-        return new SolidGeom(stepId, new ShellGeom(stepId + "_outer", List.of()));
-    }
-
-    private Mesh mesh() {
-        return new Mesh(List.of(), List.of());
-    }
-
-    private static final class StubAssembledSolidMeshService implements AssembledSolidMeshService {
-        private final Mesh meshToReturn;
-        private int callCount;
-        private AssembledSolidResult lastInput;
-
-        private StubAssembledSolidMeshService(Mesh meshToReturn) {
-            this.meshToReturn = meshToReturn;
-        }
-
-        @Override
-        public Mesh generateMesh(AssembledSolidResult assembledSolidResult) {
-            callCount++;
-            lastInput = assembledSolidResult;
-            return meshToReturn;
-        }
-
-        private int callCount() {
-            return callCount;
-        }
-
-        private AssembledSolidResult lastInput() {
-            return lastInput;
-        }
-    }
-
     private SolidAssemblyResult solidWithVoidsAssemblyResult(String stepId, SolidWithVoidsGeom solidWithVoids) {
         return new SolidAssemblyResult(stepId, solidWithVoids, new ValidationReport());
+    }
+
+    private SolidGeom solidGeom(String stepId) {
+        return new SolidGeom(stepId, new ShellGeom(stepId + "_outer", List.of()));
     }
 
     private SolidWithVoidsGeom solidWithVoidsGeom(String stepId) {
@@ -203,5 +253,62 @@ class DefaultStepAssemblyMeshServiceTest {
                 new ShellGeom(stepId + "_outer", List.of()),
                 List.of(new ShellGeom(stepId + "_void1", List.of()))
         );
+    }
+
+    private Mesh mesh() {
+        return new Mesh(List.of(), List.of());
+    }
+
+    private static final class StubAssembledSolidMeshService implements AssembledSolidMeshService {
+        private final Mesh defaultMeshToReturn;
+        private final List<AssembledSolidResult> inputs = new ArrayList<>();
+        private final Map<String, Object> responsesByStepId = new HashMap<>();
+
+        private StubAssembledSolidMeshService() {
+            this.defaultMeshToReturn = null;
+        }
+
+        private StubAssembledSolidMeshService(Mesh defaultMeshToReturn) {
+            this.defaultMeshToReturn = defaultMeshToReturn;
+        }
+
+        @Override
+        public Mesh generateMesh(AssembledSolidResult assembledSolidResult) {
+            inputs.add(assembledSolidResult);
+
+            Object response = responsesByStepId.get(assembledSolidResult.stepId());
+
+            if (response instanceof Mesh mesh) {
+                return mesh;
+            }
+            if (response instanceof RuntimeException ex) {
+                throw ex;
+            }
+            if (defaultMeshToReturn != null) {
+                return defaultMeshToReturn;
+            }
+
+            throw new IllegalStateException("No stubbed response for stepId " + assembledSolidResult.stepId());
+        }
+
+        void willReturn(String stepId, Mesh mesh) {
+            responsesByStepId.put(stepId, mesh);
+        }
+
+        void willThrow(String stepId, RuntimeException ex) {
+            responsesByStepId.put(stepId, ex);
+        }
+
+        int callCount() {
+            return inputs.size();
+        }
+
+        AssembledSolidResult lastInput() {
+            return inputs.isEmpty() ? null : inputs.get(inputs.size() - 1);
+        }
+
+        List<AssembledSolidResult> inputs() {
+            return inputs;
+        }
     }
 }

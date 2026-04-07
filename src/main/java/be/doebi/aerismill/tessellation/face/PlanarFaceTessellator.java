@@ -37,13 +37,13 @@ public class PlanarFaceTessellator implements FaceTessellator {
     @Override
     public FaceMeshPatch tessellate(FaceGeom face) {
         if (!(face.surface() instanceof PlaneSurface3 plane)) {
-            throw new IllegalArgumentException("Only planar faces are supported for now.");
+            throw new IllegalArgumentException(faceLabel(face) + ": only planar faces are supported for now.");
         }
         if (face.bounds() == null || face.bounds().isEmpty()) {
-            throw new IllegalArgumentException("Face must have at least one bound.");
+            throw new IllegalArgumentException(faceLabel(face) + ": face must have at least one bound.");
         }
 
-        List<PreparedLoop> preparedLoops = prepareProjectedPolygonLoops(face.bounds(), plane);
+        List<PreparedLoop> preparedLoops = prepareProjectedPolygonLoops(face, plane);
         PolygonWithHoles2 polygon = buildPolygonWithHoles(preparedLoops);
         validateHoleRelationships(polygon);
 
@@ -52,7 +52,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
         List<Point3> boundaryPoints = collectPreparedBoundaryPoints(preparedLoops);
         List<Point2> projectedBoundaryPoints = collectPreparedProjectedPoints(preparedLoops);
 
-        validateTrianglesNotEmpty(triangles);
+        validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
         validateTriangleIndices(boundaryPoints, triangles);
         validateTrianglesAreNonDegenerate(triangles);
         validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
@@ -83,15 +83,17 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return collapsed;
     }
 
-    List<List<Point3>> collectDiscretizedEdgePoints(LoopGeom outerBound) {
-        if (outerBound.edges() == null || outerBound.edges().isEmpty()) {
-            throw new IllegalArgumentException("Face bound must contain at least one edge.");
+    List<List<Point3>> collectDiscretizedEdgePoints(LoopGeom bound, FaceGeom face, int boundIndex) {
+        if (bound.edges() == null || bound.edges().isEmpty()) {
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex) + ": face bound must contain at least one edge."
+            );
         }
 
         List<List<Point3>> discretizedEdges = new ArrayList<>();
         boolean foundNonNullEdge = false;
 
-        for (var edge : outerBound.edges()) {
+        for (var edge : bound.edges()) {
             if (edge != null) {
                 discretizedEdges.add(edgeDiscretizer.discretize(edge, tolerance));
                 foundNonNullEdge = true;
@@ -99,7 +101,9 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         if (!foundNonNullEdge) {
-            throw new IllegalArgumentException("Face bound must contain at least one non-null edge.");
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex) + ": face bound must contain at least one non-null edge."
+            );
         }
 
         return discretizedEdges;
@@ -121,7 +125,12 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return flattened;
     }
 
-    List<Point2> projectBoundaryPointsTo2D(PlaneSurface3 plane, List<Point3> boundaryPoints) {
+    List<Point2> projectBoundaryPointsTo2D(
+            PlaneSurface3 plane,
+            List<Point3> boundaryPoints,
+            FaceGeom face,
+            int boundIndex
+    ) {
         List<Point2> projectedPoints = new ArrayList<>();
 
         if (boundaryPoints == null || boundaryPoints.isEmpty()) {
@@ -131,7 +140,9 @@ public class PlanarFaceTessellator implements FaceTessellator {
         for (var point : boundaryPoints) {
             Point2 projected = planeProjector.project(point, plane);
             if (projected == null) {
-                throw new IllegalArgumentException("Projected boundary points must not contain null points.");
+                throw new IllegalArgumentException(
+                        faceBoundLabel(face, boundIndex) + ": projected boundary points must not contain null points."
+                );
             }
             projectedPoints.add(projected);
         }
@@ -195,15 +206,43 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return result;
     }
 
-    void validateBoundaryHasAtLeastThreePoints(List<Point3> boundaryPoints) {
-        if (boundaryPoints == null || boundaryPoints.size() < 3) {
-            throw new IllegalArgumentException("Boundary must contain at least three points for triangulation.");
+    void validateBoundaryHasAtLeastThreePoints(
+            List<Point3> boundaryPoints,
+            FaceGeom face,
+            int boundIndex,
+            int rawPointCount,
+            int collapsedPointCount
+    ) {
+        int openPointCount = boundaryPoints == null ? 0 : boundaryPoints.size();
+
+        if (openPointCount < 3) {
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex)
+                            + ": boundary has only " + openPointCount
+                            + " point(s) after cleanup; at least 3 required for triangulation"
+                            + " (raw=" + rawPointCount
+                            + ", collapsed=" + collapsedPointCount
+                            + ", open=" + openPointCount + ")."
+            );
         }
     }
 
-    void validateTrianglesNotEmpty(List<int[]> triangleIndices) {
+    void validateTrianglesNotEmpty(
+            List<int[]> triangleIndices,
+            FaceGeom face,
+            List<PreparedLoop> preparedLoops,
+            List<Point3> boundaryPoints
+    ) {
         if (triangleIndices == null || triangleIndices.isEmpty()) {
-            throw new IllegalArgumentException("Triangulation must produce at least one triangle.");
+            int loopCount = preparedLoops == null ? 0 : preparedLoops.size();
+            int boundaryPointCount = boundaryPoints == null ? 0 : boundaryPoints.size();
+
+            throw new IllegalArgumentException(
+                    faceLabel(face)
+                            + ": triangulation produced no triangles"
+                            + " (prepared loops=" + loopCount
+                            + ", total boundary points=" + boundaryPointCount + ")."
+            );
         }
     }
 
@@ -273,12 +312,17 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
     }
 
-    void validateProjectedBoundaryIsSimple(PolygonLoop2 outerLoop) {
+
+    void validateProjectedBoundaryIsSimple(PolygonLoop2 outerLoop, FaceGeom face, int boundIndex) {
         if (outerLoop == null) {
-            throw new IllegalArgumentException("Projected boundary loop must not be null.");
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex) + ": projected boundary loop must not be null."
+            );
         }
         if (outerLoop.points() == null) {
-            throw new IllegalArgumentException("Projected boundary loop points must not be null.");
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex) + ": projected boundary loop points must not be null."
+            );
         }
 
         List<Point2> points = outerLoop.points();
@@ -306,7 +350,9 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 Point2 b2 = points.get((j + 1) % segmentCount);
 
                 if (segmentsIntersect(a1, a2, b1, b2)) {
-                    throw new IllegalArgumentException("Projected boundary must not self-intersect.");
+                    throw new IllegalArgumentException(
+                            faceBoundLabel(face, boundIndex) + ": projected boundary must not self-intersect."
+                    );
                 }
             }
         }
@@ -356,30 +402,49 @@ public class PlanarFaceTessellator implements FaceTessellator {
             PolygonLoop2 polygonLoop
     ) {}
 
-    PreparedLoop prepareProjectedPolygonLoop(LoopGeom loop, PlaneSurface3 plane) {
-        List<List<Point3>> discretizedEdgePointLists = collectDiscretizedEdgePoints(loop);
+    PreparedLoop prepareProjectedPolygonLoop(FaceGeom face, LoopGeom loop, PlaneSurface3 plane, int boundIndex) {
+        List<List<Point3>> discretizedEdgePointLists = collectDiscretizedEdgePoints(loop, face, boundIndex);
+
         List<Point3> boundaryPoints = flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
+        int rawPointCount = boundaryPoints.size();
+
         List<Point3> cleanedBoundaryPoints = collapseConsecutiveDuplicateBoundaryPoints(boundaryPoints);
+        int collapsedPointCount = cleanedBoundaryPoints.size();
+
         List<Point3> openBoundaryPoints = removeClosingDuplicateBoundaryPoint(cleanedBoundaryPoints);
 
-        validateBoundaryHasAtLeastThreePoints(openBoundaryPoints);
+        validateBoundaryHasAtLeastThreePoints(
+                openBoundaryPoints,
+                face,
+                boundIndex,
+                rawPointCount,
+                collapsedPointCount
+        );
 
-        List<Point2> projectedBoundaryPoints = projectBoundaryPointsTo2D(plane, openBoundaryPoints);
+        List<Point2> projectedBoundaryPoints = projectBoundaryPointsTo2D(
+                plane,
+                openBoundaryPoints,
+                face,
+                boundIndex
+        );
+
         PolygonLoop2 polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
-        validateProjectedBoundaryIsSimple(polygonLoop);
+        validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
 
         return new PreparedLoop(openBoundaryPoints, polygonLoop);
     }
 
-    List<PreparedLoop> prepareProjectedPolygonLoops(List<LoopGeom> bounds, PlaneSurface3 plane) {
+    List<PreparedLoop> prepareProjectedPolygonLoops(FaceGeom face, PlaneSurface3 plane) {
+        List<LoopGeom> bounds = face.bounds();
+
         if (bounds == null || bounds.isEmpty()) {
-            throw new IllegalArgumentException("Face must have at least one bound.");
+            throw new IllegalArgumentException(faceLabel(face) + ": face must have at least one bound.");
         }
 
         List<PreparedLoop> preparedLoops = new ArrayList<>();
 
-        for (LoopGeom bound : bounds) {
-            preparedLoops.add(prepareProjectedPolygonLoop(bound, plane));
+        for (int i = 0; i < bounds.size(); i++) {
+            preparedLoops.add(prepareProjectedPolygonLoop(face, bounds.get(i), plane, i));
         }
 
         return preparedLoops;
@@ -586,5 +651,16 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         return inside;
+    }
+
+    private String faceLabel(FaceGeom face) {
+        if (face == null || face.stepId() == null || face.stepId().isBlank()) {
+            return "Face <unknown>";
+        }
+        return "Face " + face.stepId();
+    }
+
+    private String faceBoundLabel(FaceGeom face, int boundIndex) {
+        return faceLabel(face) + ", bound " + (boundIndex + 1);
     }
 }
