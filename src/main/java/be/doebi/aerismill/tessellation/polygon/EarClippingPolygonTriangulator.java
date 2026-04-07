@@ -27,40 +27,35 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         }
 
         if (polygon.holes().isEmpty()) {
-            return triangulateSimplePolygon(outerPoints, buildNormalizedOuterIndices(outerPoints));
+            return triangulateSimplePolygon(
+                    outerPoints,
+                    buildNormalizedOuterIndices(outerPoints)
+            );
         }
 
-        if (polygon.holes().size() > 1) {
-            throw new UnsupportedOperationException("Multiple polygon holes are not supported yet.");
+        for (PolygonLoop2 hole : polygon.holes()) {
+            if (hole == null) {
+                throw new IllegalArgumentException("Polygon hole loop must not be null.");
+            }
+            if (hole.points() == null) {
+                throw new IllegalArgumentException("Polygon hole loop points must not be null.");
+            }
+            if (hole.points().size() < 3) {
+                throw new IllegalArgumentException("Polygon hole loop must contain at least three points.");
+            }
         }
 
-        PolygonLoop2 hole = polygon.holes().getFirst();
-        if (hole == null) {
-            throw new IllegalArgumentException("Polygon hole loop must not be null.");
-        }
-        if (hole.points() == null) {
-            throw new IllegalArgumentException("Polygon hole loop points must not be null.");
-        }
-        if (hole.points().size() < 3) {
-            throw new IllegalArgumentException("Polygon hole loop must contain at least three points.");
-        }
+        PolygonLoop2 mergedOuter = mergeHolesIntoOuter(polygon.outer(), polygon.holes());
 
-        List<Point2> allPoints = new ArrayList<>();
-        allPoints.addAll(outerPoints);
-        allPoints.addAll(hole.points());
+        List<Point2> mergedPoints = mergedOuter.points();
 
-        List<Integer> outerIndices = buildNormalizedOuterIndices(outerPoints);
-        List<Integer> holeIndices = buildNormalizedHoleIndices(hole.points(), outerPoints.size());
+        /*
+        return triangulateSimplePolygon(
+                mergedPoints,
+                buildNormalizedOuterIndices(mergedPoints)
+        );*/
 
-        List<Integer> bridgedPolygon = bridgeSingleHoleIntoOuterLoop(
-                allPoints,
-                outerPoints,
-                hole.points(),
-                outerIndices,
-                holeIndices
-        );
-
-        return triangulateSimplePolygon(allPoints, bridgedPolygon);
+        return triangulateSimpleLoop(mergedOuter);
     }
 
     List<int[]> triangulateSimplePolygon(List<Point2> points, List<Integer> polygonIndices) {
@@ -145,8 +140,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         int holeBridgeIndex = holeIndices.get(holeBridgePosition);
         Point2 holeBridgePoint = allPoints.get(holeBridgeIndex);
 
-        int chosenOuterPosition = -1;
-        double bestDistanceSquared = Double.POSITIVE_INFINITY;
+        List<OuterBridgeCandidate> candidates = new ArrayList<>();
 
         for (int outerPosition = 0; outerPosition < outerIndices.size(); outerPosition++) {
             int outerIndex = outerIndices.get(outerPosition);
@@ -167,38 +161,127 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
             }
 
             double distanceSquared = squaredDistance(holeBridgePoint, outerPoint);
-            if (distanceSquared < bestDistanceSquared) {
-                bestDistanceSquared = distanceSquared;
-                chosenOuterPosition = outerPosition;
+            candidates.add(new OuterBridgeCandidate(outerPosition, distanceSquared));
+        }
+
+        candidates.sort(java.util.Comparator.comparingDouble(OuterBridgeCandidate::distanceSquared));
+
+        for (OuterBridgeCandidate candidate : candidates) {
+            List<Integer> merged = buildBridgedPolygonIndices(
+                    outerIndices,
+                    holeIndices,
+                    candidate.outerPosition(),
+                    holeBridgePosition
+            );
+
+            if (isSimpleMergedLoop(allPoints, merged, candidate.outerPosition(), holeIndices.size())) {
+                return merged;
             }
         }
 
-        if (chosenOuterPosition < 0) {
-            throw new IllegalArgumentException("Failed to bridge polygon hole into outer loop.");
+        throw new IllegalArgumentException(
+                "Failed to bridge polygon hole into outer loop without creating self-intersection."
+        );
+    }
+
+    boolean isSimpleMergedLoop(
+            List<Point2> allPoints,
+            List<Integer> mergedIndices,
+            int outerBridgePosition,
+            int holeSize
+    ) {
+        int edgeCount = mergedIndices.size();
+        if (edgeCount < 3) {
+            return false;
         }
 
-        List<Integer> merged = new ArrayList<>();
+        int firstBridgeEdgePosition = outerBridgePosition;
+        int secondBridgeEdgePosition = outerBridgePosition + holeSize + 1;
 
-        for (int i = 0; i <= chosenOuterPosition; i++) {
-            merged.add(outerIndices.get(i));
+        for (int i = 0; i < edgeCount; i++) {
+            int iNext = (i + 1) % edgeCount;
+
+            int aIndex = mergedIndices.get(i);
+            int bIndex = mergedIndices.get(iNext);
+
+            Point2 a = allPoints.get(aIndex);
+            Point2 b = allPoints.get(bIndex);
+
+            for (int j = i + 1; j < edgeCount; j++) {
+                int jNext = (j + 1) % edgeCount;
+
+                if (edgesAreAdjacent(i, iNext, j, jNext)) {
+                    continue;
+                }
+
+                if (isDuplicateBridgeEdgePair(
+                        i,
+                        j,
+                        firstBridgeEdgePosition,
+                        secondBridgeEdgePosition
+                )) {
+                    continue;
+                }
+
+                int cIndex = mergedIndices.get(j);
+                int dIndex = mergedIndices.get(jNext);
+
+                if (sharesEndpoint(aIndex, bIndex, cIndex, dIndex)) {
+                    continue;
+                }
+
+                Point2 c = allPoints.get(cIndex);
+                Point2 d = allPoints.get(dIndex);
+
+                if (segmentsIntersectInclusive(a, b, c, d)) {
+                    return false;
+                }
+            }
         }
 
-        merged.add(holeBridgeIndex);
+        return true;
+    }
 
-        int holeSize = holeIndices.size();
-        for (int step = 1; step < holeSize; step++) {
-            int holeIndex = holeIndices.get((holeBridgePosition + step) % holeSize);
-            merged.add(holeIndex);
+    private boolean edgesAreAdjacent(int i, int iNext, int j, int jNext) {
+        return i == j || i == jNext || iNext == j || iNext == jNext;
+    }
+
+    private boolean isDuplicateBridgeEdgePair(
+            int edgeA,
+            int edgeB,
+            int firstBridgeEdgePosition,
+            int secondBridgeEdgePosition
+    ) {
+        return (edgeA == firstBridgeEdgePosition && edgeB == secondBridgeEdgePosition)
+                || (edgeA == secondBridgeEdgePosition && edgeB == firstBridgeEdgePosition);
+    }
+
+    private boolean segmentsIntersectInclusive(Point2 a, Point2 b, Point2 c, Point2 d) {
+        double o1 = orientation(a, b, c);
+        double o2 = orientation(a, b, d);
+        double o3 = orientation(c, d, a);
+        double o4 = orientation(c, d, b);
+
+        if (hasOppositeSigns(o1, o2) && hasOppositeSigns(o3, o4)) {
+            return true;
         }
 
-        merged.add(holeBridgeIndex);
-        merged.add(outerIndices.get(chosenOuterPosition));
+        return isZero(o1) && onSegment(a, c, b)
+                || isZero(o2) && onSegment(a, d, b)
+                || isZero(o3) && onSegment(c, a, d)
+                || isZero(o4) && onSegment(c, b, d);
+    }
 
-        for (int i = chosenOuterPosition + 1; i < outerIndices.size(); i++) {
-            merged.add(outerIndices.get(i));
-        }
+    private boolean hasOppositeSigns(double a, double b) {
+        return (a > 0.0 && b < 0.0) || (a < 0.0 && b > 0.0);
+    }
 
-        return merged;
+    private boolean isZero(double value) {
+        return Math.abs(value) < 1.0e-12;
+    }
+
+    private boolean sharesEndpoint(int a, int b, int c, int d) {
+        return a == c || a == d || b == c || b == d;
     }
 
     int findRightmostVertexPosition(List<Point2> allPoints, List<Integer> indices) {
@@ -422,4 +505,133 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
     boolean isSamePoint(Point2 a, Point2 b) {
         return a.x() == b.x() && a.y() == b.y();
     }
+
+    private PolygonLoop2 mergeHolesIntoOuter(PolygonLoop2 outer, List<PolygonLoop2> holes) {
+        PolygonLoop2 merged = outer;
+
+        for (PolygonLoop2 hole : holes) {
+            merged = mergeSingleHole(merged, hole);
+        }
+
+        return merged;
+    }
+
+    private PolygonLoop2 mergeSingleHole(PolygonLoop2 outer, PolygonLoop2 hole) {
+        List<Point2> outerPoints = outer.points();
+        List<Point2> holePoints = hole.points();
+
+        if (outerPoints == null || outerPoints.isEmpty()) {
+            throw new IllegalArgumentException("Outer loop must not be empty");
+        }
+        if (holePoints == null || holePoints.isEmpty()) {
+            throw new IllegalArgumentException("Hole loop must not be empty");
+        }
+
+        List<Point2> allPoints = new ArrayList<>(outerPoints.size() + holePoints.size());
+        allPoints.addAll(outerPoints);
+        allPoints.addAll(holePoints);
+
+        List<Integer> outerIndices = new ArrayList<>(outerPoints.size());
+        for (int i = 0; i < outerPoints.size(); i++) {
+            outerIndices.add(i);
+        }
+
+        List<Integer> holeIndices = buildNormalizedHoleIndices(holePoints, outerPoints.size());
+
+        List<Integer> mergedIndices = bridgeSingleHoleIntoOuterLoop(
+                allPoints,
+                outerPoints,
+                holePoints,
+                outerIndices,
+                holeIndices
+        );
+
+        List<Point2> mergedPoints = new ArrayList<>(mergedIndices.size());
+        for (Integer index : mergedIndices) {
+            mergedPoints.add(allPoints.get(index));
+        }
+
+        return new PolygonLoop2(mergedPoints);
+    }
+
+    private List<int[]> triangulateSimpleLoop(PolygonLoop2 loop) {
+        List<Point2> points = loop.points();
+        return triangulateSimplePolygon(points, buildNormalizedOuterIndices(points));
+    }
+
+    List<Integer> buildBridgedPolygonIndices(
+            List<Integer> outerIndices,
+            List<Integer> holeIndices,
+            int outerBridgePosition,
+            int holeBridgePosition
+    ) {
+        if (outerIndices == null || outerIndices.isEmpty()) {
+            throw new IllegalArgumentException("Outer indices must not be null or empty.");
+        }
+        if (holeIndices == null || holeIndices.isEmpty()) {
+            throw new IllegalArgumentException("Hole indices must not be null or empty.");
+        }
+        if (outerBridgePosition < 0 || outerBridgePosition >= outerIndices.size()) {
+            throw new IllegalArgumentException("Outer bridge position is out of range.");
+        }
+        if (holeBridgePosition < 0 || holeBridgePosition >= holeIndices.size()) {
+            throw new IllegalArgumentException("Hole bridge position is out of range.");
+        }
+
+        int outerSize = outerIndices.size();
+        int holeSize = holeIndices.size();
+
+        List<Integer> merged = new ArrayList<>(outerSize + holeSize + 2);
+
+        // Outer loop up to and including the chosen outer bridge vertex.
+        for (int i = 0; i <= outerBridgePosition; i++) {
+            merged.add(outerIndices.get(i));
+        }
+
+        // Walk the hole starting at the chosen hole bridge vertex.
+        for (int i = 0; i < holeSize; i++) {
+            int holeIndex = (holeBridgePosition + i) % holeSize;
+            merged.add(holeIndices.get(holeIndex));
+        }
+
+        // Repeat the hole bridge vertex to close the hole walk at the bridge.
+        merged.add(holeIndices.get(holeBridgePosition));
+
+        // Repeat the outer bridge vertex to return to the outer loop.
+        merged.add(outerIndices.get(outerBridgePosition));
+
+        // Continue the rest of the outer loop.
+        for (int i = outerBridgePosition + 1; i < outerSize; i++) {
+            merged.add(outerIndices.get(i));
+        }
+
+        return merged;
+    }
+
+    private PolygonLoop2 toLoop(List<Point2> allPoints, List<Integer> indices) {
+        if (allPoints == null) {
+            throw new IllegalArgumentException("All points must not be null.");
+        }
+        if (indices == null || indices.isEmpty()) {
+            throw new IllegalArgumentException("Indices must not be null or empty.");
+        }
+
+        List<Point2> points = new ArrayList<>(indices.size());
+        for (Integer index : indices) {
+            if (index == null) {
+                throw new IllegalArgumentException("Loop index must not be null.");
+            }
+            if (index < 0 || index >= allPoints.size()) {
+                throw new IllegalArgumentException("Loop index out of bounds: " + index);
+            }
+            points.add(allPoints.get(index));
+        }
+
+        return new PolygonLoop2(points);
+    }
+
+    private record OuterBridgeCandidate(
+            int outerPosition,
+            double distanceSquared
+    ) {}
 }

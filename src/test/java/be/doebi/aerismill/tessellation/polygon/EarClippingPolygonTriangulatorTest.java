@@ -2,6 +2,7 @@ package be.doebi.aerismill.tessellation.polygon;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,6 +129,23 @@ class EarClippingPolygonTriangulatorTest {
         assertEquals("Polygon outer loop must contain at least three points.", ex.getMessage());
     }
 
+    @Test
+    void buildBridgedPolygonIndices_repeatsBridgeVerticesInExpectedOrder() {
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+
+        List<Integer> outer = List.of(0, 1, 2, 3);
+        List<Integer> hole = List.of(4, 5, 6);
+
+        List<Integer> result = triangulator.buildBridgedPolygonIndices(
+                outer,
+                hole,
+                1,
+                0
+        );
+
+        assertEquals(List.of(0, 1, 4, 5, 6, 4, 1, 2, 3), result);
+    }
+
     private PolygonWithHoles2 polygon(Point2... points) {
         return new PolygonWithHoles2(
                 new PolygonLoop2(List.of(points)),
@@ -211,4 +229,138 @@ class EarClippingPolygonTriangulatorTest {
 
         assertEquals("Multiple polygon holes are not supported yet.", ex.getMessage());
     }
+
+    @Test
+    void bridgeSingleHoleIntoOuterLoop_triesAlternateVisibleBridgeWhenNearestCreatesSelfIntersection() {
+        ScriptedEarClippingPolygonTriangulator triangulator =
+                new ScriptedEarClippingPolygonTriangulator(
+                        java.util.Set.of(0, 1),
+                        java.util.Set.of(1)
+                );
+
+        List<Point2> outerPoints = bridgeTestOuterPoints();
+        List<Point2> holePoints = bridgeTestHolePoints();
+        List<Point2> allPoints = bridgeTestAllPoints();
+
+        List<Integer> outerIndices = List.of(0, 1, 2, 3);
+        List<Integer> holeIndices = List.of(4, 5, 6);
+
+        List<Integer> result = triangulator.bridgeSingleHoleIntoOuterLoop(
+                allPoints,
+                outerPoints,
+                holePoints,
+                outerIndices,
+                holeIndices
+        );
+
+        assertEquals(List.of(0, 1, 4, 5, 6, 4, 1, 2, 3), result);
+        assertEquals(List.of(0, 1), triangulator.attemptedOuterPositions());
+    }
+
+    @Test
+    void bridgeSingleHoleIntoOuterLoop_throwsWhenNoValidNonSelfIntersectingBridgeExists() {
+        ScriptedEarClippingPolygonTriangulator triangulator =
+                new ScriptedEarClippingPolygonTriangulator(
+                        java.util.Set.of(0, 1),
+                        java.util.Set.of()
+                );
+
+        List<Point2> outerPoints = bridgeTestOuterPoints();
+        List<Point2> holePoints = bridgeTestHolePoints();
+        List<Point2> allPoints = bridgeTestAllPoints();
+
+        List<Integer> outerIndices = List.of(0, 1, 2, 3);
+        List<Integer> holeIndices = List.of(4, 5, 6);
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> triangulator.bridgeSingleHoleIntoOuterLoop(
+                        allPoints,
+                        outerPoints,
+                        holePoints,
+                        outerIndices,
+                        holeIndices
+                )
+        );
+
+        assertEquals(
+                "Failed to bridge polygon hole into outer loop without creating self-intersection.",
+                ex.getMessage()
+        );
+        assertEquals(List.of(0, 1), triangulator.attemptedOuterPositions());
+    }
+
+
+
+    private static final class ScriptedEarClippingPolygonTriangulator extends EarClippingPolygonTriangulator {
+
+        private final java.util.Set<Integer> visibleOuterPositions;
+        private final java.util.Set<Integer> validOuterPositions;
+        private final java.util.List<Integer> attemptedOuterPositions = new java.util.ArrayList<>();
+
+        private ScriptedEarClippingPolygonTriangulator(
+                java.util.Set<Integer> visibleOuterPositions,
+                java.util.Set<Integer> validOuterPositions
+        ) {
+            this.visibleOuterPositions = visibleOuterPositions;
+            this.validOuterPositions = validOuterPositions;
+        }
+
+        java.util.List<Integer> attemptedOuterPositions() {
+            return attemptedOuterPositions;
+        }
+
+        @Override
+        boolean isBridgeVisible(
+                Point2 holeBridgePoint,
+                Point2 outerPoint,
+                int outerIndex,
+                int holeBridgeIndex,
+                List<Integer> outerIndices,
+                List<Integer> holeIndices,
+                List<Point2> allPoints,
+                List<Point2> outerPoints,
+                List<Point2> holePoints
+        ) {
+            int outerPosition = outerIndices.indexOf(outerIndex);
+            return visibleOuterPositions.contains(outerPosition);
+        }
+
+        @Override
+        boolean isSimpleMergedLoop(
+                List<Point2> allPoints,
+                List<Integer> mergedIndices,
+                int outerBridgePosition,
+                int holeSize
+        ) {
+            attemptedOuterPositions.add(outerBridgePosition);
+            return validOuterPositions.contains(outerBridgePosition);
+        }
+    }
+
+    private List<Point2> bridgeTestOuterPoints() {
+        return List.of(
+                new Point2(6.0, 5.0),  // outer position 0 -> nearest
+                new Point2(8.0, 5.0),  // outer position 1 -> second nearest
+                new Point2(0.0, 10.0),
+                new Point2(0.0, 0.0)
+        );
+    }
+
+    private List<Point2> bridgeTestHolePoints() {
+        return List.of(
+                new Point2(5.0, 5.0),  // rightmost hole vertex -> hole bridge
+                new Point2(4.0, 6.0),
+                new Point2(3.0, 4.0)
+        );
+    }
+
+    private List<Point2> bridgeTestAllPoints() {
+        List<Point2> all = new ArrayList<>();
+        all.addAll(bridgeTestOuterPoints());
+        all.addAll(bridgeTestHolePoints());
+        return all;
+    }
+
+
 }

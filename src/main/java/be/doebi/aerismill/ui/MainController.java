@@ -57,18 +57,14 @@ public class MainController {
 
     private final StepAssemblyMeshService stepAssemblyMeshService = createStepAssemblyMeshService();
 
+
+
     private StepAssemblyMeshService createStepAssemblyMeshService() {
         return new DefaultStepAssemblyMeshService(
-                new DefaultAssembledSolidMeshService(createSolidTessellator())
+                new DefaultAssembledSolidMeshService(createSolidTessellator()),
+                this::log
         );
     }
-
-    /*
-    private final StepModelMeshService stepModelMeshService = new DefaultStepModelMeshService(
-            stepAssemblyService,
-            stepAssemblyMeshService
-    );
-    */
 
 
 
@@ -603,7 +599,7 @@ public class MainController {
         System.out.println("issues: " + assemblyResult.issues().size());
 
         if (assemblyResult.solids().size() > 1) {
-            log("Preview note: multiple solids detected; trying solids in order until one can be previewed.");
+            log("Preview note: multiple solids detected; evaluating all solids and selecting the best previewable candidate.");
         }
 
         for (SolidAssemblyResult solid : assemblyResult.solids()) {
