@@ -5,6 +5,7 @@ import be.doebi.aerismill.assemble.step.geom.AssemblyResult;
 import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
 import be.doebi.aerismill.model.geom.topology.ShellGeom;
 import be.doebi.aerismill.model.geom.topology.SolidGeom;
+import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.validate.geom.topology.ValidationReport;
 import org.junit.jupiter.api.Test;
@@ -127,6 +128,30 @@ class DefaultStepAssemblyMeshServiceTest {
         assertEquals("assemblyResult must not be null", ex.getMessage());
     }
 
+    @Test
+    void generateMesh_singleSolidWithVoids_delegatesToAssembledSolidMeshService() {
+        Mesh expected = mesh();
+        StubAssembledSolidMeshService assembledSolidMeshService =
+                new StubAssembledSolidMeshService(expected);
+
+        DefaultStepAssemblyMeshService service =
+                new DefaultStepAssemblyMeshService(assembledSolidMeshService);
+
+        SolidWithVoidsGeom solidWithVoids = solidWithVoidsGeom("#solid1");
+        AssemblyResult assemblyResult = assemblyResult(
+                List.of(solidWithVoidsAssemblyResult("#1", solidWithVoids))
+        );
+
+        service.generateMesh(assemblyResult);
+
+        assertEquals(1, assembledSolidMeshService.callCount());
+        assertNotNull(assembledSolidMeshService.lastInput());
+        assertEquals("#1", assembledSolidMeshService.lastInput().stepId());
+        assertSame(solidWithVoids, assembledSolidMeshService.lastInput().solid());
+    }
+
+
+
     private AssemblyResult assemblyResult(List<SolidAssemblyResult> solids) {
         return new AssemblyResult(solids, List.of());
     }
@@ -166,5 +191,17 @@ class DefaultStepAssemblyMeshServiceTest {
         private AssembledSolidResult lastInput() {
             return lastInput;
         }
+    }
+
+    private SolidAssemblyResult solidWithVoidsAssemblyResult(String stepId, SolidWithVoidsGeom solidWithVoids) {
+        return new SolidAssemblyResult(stepId, solidWithVoids, new ValidationReport());
+    }
+
+    private SolidWithVoidsGeom solidWithVoidsGeom(String stepId) {
+        return new SolidWithVoidsGeom(
+                stepId,
+                new ShellGeom(stepId + "_outer", List.of()),
+                List.of(new ShellGeom(stepId + "_void1", List.of()))
+        );
     }
 }
