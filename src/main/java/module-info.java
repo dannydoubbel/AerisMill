@@ -7,4 +7,6 @@ module be.doebi.aerismill {
     opens be.doebi.aerismill.ui to javafx.fxml;
     exports be.doebi.aerismill.ui;
     exports be.doebi.aerismill.service;
+    exports be.doebi.aerismill.assemble.step.geom;
+    exports be.doebi.aerismill.model.mesh;
 }
