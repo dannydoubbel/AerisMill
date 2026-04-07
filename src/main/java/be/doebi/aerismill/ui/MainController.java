@@ -6,12 +6,23 @@ import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
 import be.doebi.aerismill.fx.viewer.MeshViewerPane;
 import be.doebi.aerismill.io.stl.AsciiStlReader;
 import be.doebi.aerismill.io.stl.BinaryStlReader;
+import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshBounds;
 import be.doebi.aerismill.model.step.base.StepModel;
-import be.doebi.aerismill.service.StepAssemblyService;
-import be.doebi.aerismill.service.StepImportService;
-import be.doebi.aerismill.service.UIStateService;
+import be.doebi.aerismill.service.*;
+import be.doebi.aerismill.tessellation.curve.DefaultEdgeDiscretizer;
+import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
+import be.doebi.aerismill.tessellation.face.FaceTessellator;
+import be.doebi.aerismill.tessellation.face.PlanarFaceTessellator;
+import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
+import be.doebi.aerismill.tessellation.polygon.RecordingPolygonTriangulator;
+import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
+import be.doebi.aerismill.tessellation.projection.PlaneProjector;
+import be.doebi.aerismill.tessellation.shell.DefaultShellTessellator;
+import be.doebi.aerismill.tessellation.shell.ShellTessellator;
+import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
+import be.doebi.aerismill.tessellation.solid.SolidTessellator;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -37,6 +48,33 @@ public class MainController {
     private final Preferences prefs = Preferences.userNodeForPackage(getClass());
     private final StepImportService stepImportService = new StepImportService();
     private final StepAssemblyService stepAssemblyService = new StepAssemblyService();
+
+
+
+
+
+    private final StepAssemblyMeshService stepAssemblyMeshService = createStepAssemblyMeshService();
+
+    private StepAssemblyMeshService createStepAssemblyMeshService() {
+        return new DefaultStepAssemblyMeshService(
+                new DefaultAssembledSolidMeshService(createSolidTessellator())
+        );
+    }
+
+    /*
+    private final StepModelMeshService stepModelMeshService = new DefaultStepModelMeshService(
+            stepAssemblyService,
+            stepAssemblyMeshService
+    );
+    */
+
+
+
+
+
+
+
+
 
     private final MeshViewerPane meshViewerPane = new MeshViewerPane();
     private final AsciiStlReader asciiStlReader = new AsciiStlReader();
@@ -129,11 +167,17 @@ public class MainController {
 
         try {
             StepModel loadedModel = stepImportService.open(selectedFile);
-
             AssemblyResult assemblyResult = stepAssemblyService.assemble(loadedModel);
 
             applyLoadedStepFile(selectedFile, loadedModel);
             applyAssemblyResult(assemblyResult);
+
+            try {
+                Mesh mesh = stepAssemblyMeshService.generateMesh(assemblyResult);
+                applyGeneratedMesh(mesh);
+            } catch (Exception meshException) {
+                handlePreviewMeshFailure(selectedFile, meshException);
+            }
 
         } catch (Exception e) {
             handleOpenStepFileFailure(selectedFile, e);
@@ -568,6 +612,50 @@ public class MainController {
                     + " | " + issue.stepId()
                     + " | " + issue.message());
         }
+    }
+
+    private void applyGeneratedMesh(Mesh mesh) {
+        log("Mesh generated successfully.");
+        log("Mesh vertices: " + mesh.vertices().size());
+        log("Mesh triangles: " + mesh.triangles().size());
+
+        System.out.println("MESH RESULT");
+        System.out.println("vertices: " + mesh.vertices().size());
+        System.out.println("triangles: " + mesh.triangles().size());
+    }
+
+    private SolidTessellator createSolidTessellator() {
+        GeometryTolerance tolerance = GeometryTolerance.defaults();
+
+        EdgeDiscretizer edgeDiscretizer = new DefaultEdgeDiscretizer(/* adjust to your actual ctor */);
+        PlaneProjector planeProjector = new DefaultPlaneProjector();
+
+        // Use your real concrete triangulator here.
+        // If RecordingPolygonTriangulator is currently your only concrete implementation, it can do for now.
+        PolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
+
+        FaceTessellator faceTessellator = new PlanarFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                planeProjector,
+                tolerance
+        );
+
+        ShellTessellator shellTessellator = new DefaultShellTessellator(faceTessellator);
+        return new DefaultSolidTessellator(shellTessellator);
+    }
+
+    private void handlePreviewMeshFailure(File selectedFile, Exception e) {
+        log("Preview mesh generation failed for " + selectedFile.getName());
+        log("Reason: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+
+        showWarning(
+                "Preview mesh unavailable",
+                "The STEP file was loaded and assembled, but preview mesh generation is not supported for this file yet.\n\n"
+                        + "Reason: " + e.getMessage()
+        );
+
+        meshViewerPane.clear();
     }
 
 
