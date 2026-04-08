@@ -1,7 +1,10 @@
 package be.doebi.aerismill.model.step.geometry;
 
-import be.doebi.aerismill.model.step.GeometricEntity;
-import be.doebi.aerismill.model.step.base.*;
+import be.doebi.aerismill.model.step.base.ResolvableStepEntity;
+import be.doebi.aerismill.model.step.base.StepEntity;
+import be.doebi.aerismill.model.step.base.StepEntityType;
+import be.doebi.aerismill.model.step.base.StepLogical;
+import be.doebi.aerismill.model.step.base.StepModel;
 
 import java.util.List;
 
