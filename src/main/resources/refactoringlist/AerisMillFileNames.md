@@ -52,7 +52,7 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 - [x] `src/main/java/be/doebi/aerismill/assemble/step/geom/AssemblyIssueCode.java`
 - [x] `src/main/java/be/doebi/aerismill/assemble/step/geom/AssemblyIssueSeverity.java`
 - [x] `src/main/java/be/doebi/aerismill/assemble/step/geom/AssemblyResult.java`
-- [!] `src/main/java/be/doebi/aerismill/assemble/step/geom/DefaultStepToGeomAssembler.java`
+- [!!] `src/main/java/be/doebi/aerismill/assemble/step/geom/DefaultStepToGeomAssembler.java`
 - [x] `src/main/java/be/doebi/aerismill/assemble/step/geom/SolidAssemblyResult.java`
 - [x] `src/main/java/be/doebi/aerismill/assemble/step/geom/StepToGeomAssembler.java`
 
@@ -64,34 +64,34 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 ## src/main/java/be/doebi/aerismill/eval/step/curve
 
 - [x] `src/main/java/be/doebi/aerismill/eval/step/curve/CurveEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/curve/DefaultCurveEvaluator.java`
+- [!I] `src/main/java/be/doebi/aerismill/eval/step/curve/DefaultCurveEvaluator.java`
 
 ## src/main/java/be/doebi/aerismill/eval/step/placement
 
-- [!] `src/main/java/be/doebi/aerismill/eval/step/placement/DefaultPlacementEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/placement/DefaultPlacementEvaluator.java`
 - [x] `src/main/java/be/doebi/aerismill/eval/step/placement/PlacementEvaluator.java`
 
 ## src/main/java/be/doebi/aerismill/eval/step/representation
 
 - [x] `src/main/java/be/doebi/aerismill/eval/step/representation/AdvancedBrepShapeRepresentationEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/representation/DefaultAdvancedBrepShapeRepresentationEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/representation/DefaultAdvancedBrepShapeRepresentationEvaluator.java`
 
 ## src/main/java/be/doebi/aerismill/eval/step/surface
 
-- [!] `src/main/java/be/doebi/aerismill/eval/step/surface/DefaultSurfaceEvaluator.java`
+- [!I] `src/main/java/be/doebi/aerismill/eval/step/surface/DefaultSurfaceEvaluator.java`
 - [x] `src/main/java/be/doebi/aerismill/eval/step/surface/SurfaceEvaluator.java`
 
 ## src/main/java/be/doebi/aerismill/eval/step/topology
 
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultEdgeGeomEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultFaceGeomEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultLoopGeomEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultManifoldSolidBrepEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultOrientedEdgeGeomEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultShellGeomEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultSolidGeomEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultSolidWithVoidsGeomEvaluator.java`
-- [!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultVertexGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultEdgeGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultFaceGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultLoopGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultManifoldSolidBrepEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultOrientedEdgeGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultShellGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultSolidGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultSolidWithVoidsGeomEvaluator.java`
+- [!!] `src/main/java/be/doebi/aerismill/eval/step/topology/DefaultVertexGeomEvaluator.java`
 - [x] `src/main/java/be/doebi/aerismill/eval/step/topology/EdgeGeomEvaluator.java`
 - [x] `src/main/java/be/doebi/aerismill/eval/step/topology/FaceGeomEvaluator.java`
 - [x] `src/main/java/be/doebi/aerismill/eval/step/topology/LoopGeomEvaluator.java`
@@ -120,27 +120,27 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/io/stl
 
-- [!] `src/main/java/be/doebi/aerismill/io/stl/AsciiStlReader.java`
-- [!] `src/main/java/be/doebi/aerismill/io/stl/BinaryStlReader.java`
+- [!!] `src/main/java/be/doebi/aerismill/io/stl/AsciiStlReader.java`
+- [!!] `src/main/java/be/doebi/aerismill/io/stl/BinaryStlReader.java`
 
 ## src/main/java/be/doebi/aerismill/machine
 
-- [!] `src/main/java/be/doebi/aerismill/machine/GrblStatusParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/machine/GrblStatusParser.java`
 - [x] `src/main/java/be/doebi/aerismill/machine/MachineStatus.java`
 
 ## src/main/java/be/doebi/aerismill/machine/connection
 
 - [x] `src/main/java/be/doebi/aerismill/machine/connection/BaudRate.java`
-- [!] `src/main/java/be/doebi/aerismill/machine/connection/SerialConnection.java`
+- [!!] `src/main/java/be/doebi/aerismill/machine/connection/SerialConnection.java`
 
 ## src/main/java/be/doebi/aerismill/machine/grbl
 
-- [!] `src/main/java/be/doebi/aerismill/machine/grbl/GrblClient.java`
+- [!!] `src/main/java/be/doebi/aerismill/machine/grbl/GrblClient.java`
 
 ## src/main/java/be/doebi/aerismill/model/geom/curve
 
 - [x] `src/main/java/be/doebi/aerismill/model/geom/curve/BoundedCurve3.java`
-- [!] `src/main/java/be/doebi/aerismill/model/geom/curve/BSplineCurve3.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/geom/curve/BSplineCurve3.java`
 - [x] `src/main/java/be/doebi/aerismill/model/geom/curve/CircleCurve3.java`
 - [x] `src/main/java/be/doebi/aerismill/model/geom/curve/Curve3.java`
 - [x] `src/main/java/be/doebi/aerismill/model/geom/curve/EllipseCurve3.java`
@@ -160,7 +160,7 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/model/geom/surface
 
-- [!] `src/main/java/be/doebi/aerismill/model/geom/surface/BSplineSurface3.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/geom/surface/BSplineSurface3.java`
 - [x] `src/main/java/be/doebi/aerismill/model/geom/surface/ConicalSurface3.java`
 - [x] `src/main/java/be/doebi/aerismill/model/geom/surface/CylindricalSurface3.java`
 - [x] `src/main/java/be/doebi/aerismill/model/geom/surface/PlaneSurface3.java`
@@ -229,11 +229,11 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/model/step/base
 
-- [!] `src/main/java/be/doebi/aerismill/model/step/base/ResolvableStepEntity.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/base/ResolvableStepEntity.java`
 - [x] `src/main/java/be/doebi/aerismill/model/step/base/StepEntity.java`
 - [x] `src/main/java/be/doebi/aerismill/model/step/base/StepEntityType.java`
 - [x] `src/main/java/be/doebi/aerismill/model/step/base/StepLogical.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/base/StepModel.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/base/StepModel.java`
 
 ## src/main/java/be/doebi/aerismill/model/step/core
 
@@ -248,22 +248,22 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/model/step/geometry
 
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Axis1Placement.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Axis2Placement3D.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/BSplineCurveWithKnots.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/BSplineSurfaceWithKnots.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/CartesianPoint.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Circle.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/ConicalSurface.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/CylindricalSurface.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Direction.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Ellipse.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Line.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Plane.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/SphericalSurface.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/SurfaceOfRevolution.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/ToroidalSurface.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/geometry/Vector.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Axis1Placement.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Axis2Placement3D.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/BSplineCurveWithKnots.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/BSplineSurfaceWithKnots.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/CartesianPoint.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Circle.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/ConicalSurface.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/CylindricalSurface.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Direction.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Ellipse.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Line.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Plane.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/SphericalSurface.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/SurfaceOfRevolution.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/ToroidalSurface.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/geometry/Vector.java`
 
 ## src/main/java/be/doebi/aerismill/model/step/presentation
 
@@ -285,7 +285,7 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/model/step/representation
 
-- [!] `src/main/java/be/doebi/aerismill/model/step/representation/AdvancedBrepShapeRepresentation.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/representation/AdvancedBrepShapeRepresentation.java`
 - [x] `src/main/java/be/doebi/aerismill/model/step/representation/ShapeRepresentation.java`
 
 ## src/main/java/be/doebi/aerismill/model/step/resolve
@@ -297,77 +297,77 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/model/step/topology
 
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/AdvancedFace.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/BrepWithVoids.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/ClosedShell.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/EdgeCurve.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/EdgeLoop.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/FaceBound.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/FaceOuterBound.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/ManifoldSolidBrep.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/OrientedClosedShell.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/OrientedEdge.java`
-- [!] `src/main/java/be/doebi/aerismill/model/step/topology/VertexPoint.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/AdvancedFace.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/BrepWithVoids.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/ClosedShell.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/EdgeCurve.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/EdgeLoop.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/FaceBound.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/FaceOuterBound.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/ManifoldSolidBrep.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/OrientedClosedShell.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/OrientedEdge.java`
+- [!!] `src/main/java/be/doebi/aerismill/model/step/topology/VertexPoint.java`
 
 ## src/main/java/be/doebi/aerismill/parser/step
 
-- [!] `src/main/java/be/doebi/aerismill/parser/step/ComplexEntityInterpreter.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/ComplexEntityParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/EntityParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/EntityParserRegistry.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/StepParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/StepParserUtils.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/ComplexEntityInterpreter.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/ComplexEntityParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/EntityParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/EntityParserRegistry.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/StepParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/StepParserUtils.java`
 
 ## src/main/java/be/doebi/aerismill/parser/step/admin
 
-- [!] `src/main/java/be/doebi/aerismill/parser/step/admin/AdministrativeStepEntityParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/admin/AdministrativeStepEntityParser.java`
 
 ## src/main/java/be/doebi/aerismill/parser/step/definition
 
-- [!] `src/main/java/be/doebi/aerismill/parser/step/definition/ProductDefinitionShapeParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/definition/ShapeDefinitionRepresentationParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/definition/ProductDefinitionShapeParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/definition/ShapeDefinitionRepresentationParser.java`
 
 ## src/main/java/be/doebi/aerismill/parser/step/geometry
 
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/Axis1PlacementParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/Axis2Placement3DParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/BSplineCurveWithKnotsParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/BSplineSurfaceWithKnotsParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/CartesianPointParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/CircleParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/ConicalSurfaceParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/CylindricalSurfaceParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/DirectionParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/EllipseParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/LineParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/PlaneParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/SphericalSurfaceParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/SurfaceOfRevolutionParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/ToroidalSurfaceParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/geometry/VectorParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/Axis1PlacementParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/Axis2Placement3DParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/BSplineCurveWithKnotsParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/BSplineSurfaceWithKnotsParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/CartesianPointParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/CircleParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/ConicalSurfaceParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/CylindricalSurfaceParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/DirectionParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/EllipseParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/LineParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/PlaneParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/SphericalSurfaceParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/SurfaceOfRevolutionParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/ToroidalSurfaceParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/geometry/VectorParser.java`
 
 ## src/main/java/be/doebi/aerismill/parser/step/presentation
 
-- [!] `src/main/java/be/doebi/aerismill/parser/step/presentation/PresentationStepEntityParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/presentation/PresentationStepEntityParser.java`
 
 ## src/main/java/be/doebi/aerismill/parser/step/representation
 
-- [!] `src/main/java/be/doebi/aerismill/parser/step/representation/AdvancedBrepShapeRepresentationParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/representation/ShapeRepresentationParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/representation/AdvancedBrepShapeRepresentationParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/representation/ShapeRepresentationParser.java`
 
 ## src/main/java/be/doebi/aerismill/parser/step/topology
 
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/AdvancedFaceParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/BrepWithVoidsParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/ClosedShellParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/EdgeCurveParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/EdgeLoopParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/FaceBoundParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/FaceOuterBoundParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/ManifoldSolidBrepParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/OrientedClosedShellParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/OrientedEdgeParser.java`
-- [!] `src/main/java/be/doebi/aerismill/parser/step/topology/VertexPointParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/AdvancedFaceParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/BrepWithVoidsParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/ClosedShellParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/EdgeCurveParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/EdgeLoopParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/FaceBoundParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/FaceOuterBoundParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/ManifoldSolidBrepParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/OrientedClosedShellParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/OrientedEdgeParser.java`
+- [!!] `src/main/java/be/doebi/aerismill/parser/step/topology/VertexPointParser.java`
 
 ## src/main/java/be/doebi/aerismill/report/step
 
@@ -376,32 +376,32 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 ## src/main/java/be/doebi/aerismill/service
 
 - [x] `src/main/java/be/doebi/aerismill/service/AssembledSolidMeshService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/DefaultAssembledSolidMeshService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/DefaultStepAssemblyMeshService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/DefaultStepModelMeshService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/DroPollingService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/MachineControlService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/DefaultAssembledSolidMeshService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/DefaultStepAssemblyMeshService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/DefaultStepModelMeshService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/DroPollingService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/MachineControlService.java`
 - [x] `src/main/java/be/doebi/aerismill/service/StepAssemblyMeshService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/StepAssemblyService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/StepImportService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/StepAssemblyService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/StepImportService.java`
 - [x] `src/main/java/be/doebi/aerismill/service/StepModelMeshService.java`
-- [!] `src/main/java/be/doebi/aerismill/service/UIStateService.java`
+- [!!] `src/main/java/be/doebi/aerismill/service/UIStateService.java`
 
 ## src/main/java/be/doebi/aerismill/tessellation/curve
 
 - [x] `src/main/java/be/doebi/aerismill/tessellation/curve/CurveDiscretizer.java`
-- [!] `src/main/java/be/doebi/aerismill/tessellation/curve/DefaultEdgeDiscretizer.java`
+- [!!] `src/main/java/be/doebi/aerismill/tessellation/curve/DefaultEdgeDiscretizer.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/curve/EdgeDiscretizer.java`
 
 ## src/main/java/be/doebi/aerismill/tessellation/face
 
 - [x] `src/main/java/be/doebi/aerismill/tessellation/face/FaceMeshPatch.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/face/FaceTessellator.java`
-- [!] `src/main/java/be/doebi/aerismill/tessellation/face/PlanarFaceTessellator.java`
+- [!!] `src/main/java/be/doebi/aerismill/tessellation/face/PlanarFaceTessellator.java`
 
 ## src/main/java/be/doebi/aerismill/tessellation/polygon
 
-- [!] `src/main/java/be/doebi/aerismill/tessellation/polygon/EarClippingPolygonTriangulator.java`
+- [!!] `src/main/java/be/doebi/aerismill/tessellation/polygon/EarClippingPolygonTriangulator.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/polygon/Point2.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/polygon/PolygonLoop2.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/polygon/PolygonTriangulator.java`
@@ -410,19 +410,19 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/tessellation/projection
 
-- [!] `src/main/java/be/doebi/aerismill/tessellation/projection/DefaultPlaneProjector.java`
+- [!!] `src/main/java/be/doebi/aerismill/tessellation/projection/DefaultPlaneProjector.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/projection/PlaneProjector.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/projection/RecordingPlaneProjector.java`
 
 ## src/main/java/be/doebi/aerismill/tessellation/shell
 
-- [!] `src/main/java/be/doebi/aerismill/tessellation/shell/DefaultShellTessellator.java`
-- [!] `src/main/java/be/doebi/aerismill/tessellation/shell/PreviewShellTessellator.java`
+- [!!] `src/main/java/be/doebi/aerismill/tessellation/shell/DefaultShellTessellator.java`
+- [!!] `src/main/java/be/doebi/aerismill/tessellation/shell/PreviewShellTessellator.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/shell/ShellTessellator.java`
 
 ## src/main/java/be/doebi/aerismill/tessellation/solid
 
-- [!] `src/main/java/be/doebi/aerismill/tessellation/solid/DefaultSolidTessellator.java`
+- [!!] `src/main/java/be/doebi/aerismill/tessellation/solid/DefaultSolidTessellator.java`
 - [x] `src/main/java/be/doebi/aerismill/tessellation/solid/SolidTessellator.java`
 
 ## src/main/java/be/doebi/aerismill/ui
@@ -435,15 +435,15 @@ Semantic-safe cleanup manifest for the IntelliJ ChatGPT assistant.
 
 ## src/main/java/be/doebi/aerismill/validate/geom/topology
 
-- [!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultFaceGeomValidator.java`
-- [!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultLoopGeomValidator.java`
-- [!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultShellGeomValidator.java`
-- [!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultSolidGeomValidator.java`
-- [!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultTopologyValidationService.java`
+- [!!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultFaceGeomValidator.java`
+- [!!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultLoopGeomValidator.java`
+- [!!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultShellGeomValidator.java`
+- [!!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultSolidGeomValidator.java`
+- [!!] `src/main/java/be/doebi/aerismill/validate/geom/topology/DefaultTopologyValidationService.java`
 - [x] `src/main/java/be/doebi/aerismill/validate/geom/topology/FaceGeomValidator.java`
 - [x] `src/main/java/be/doebi/aerismill/validate/geom/topology/GeomTolerance.java`
-- [!] `src/main/java/be/doebi/aerismill/validate/geom/topology/LoopGeomValidator.java`
-- [!] `src/main/java/be/doebi/aerismill/validate/geom/topology/Point3Tolerance.java`
+- [!!] `src/main/java/be/doebi/aerismill/validate/geom/topology/LoopGeomValidator.java`
+- [!!] `src/main/java/be/doebi/aerismill/validate/geom/topology/Point3Tolerance.java`
 - [x] `src/main/java/be/doebi/aerismill/validate/geom/topology/ShellGeomValidator.java`
 - [x] `src/main/java/be/doebi/aerismill/validate/geom/topology/SolidGeomValidator.java`
 - [x] `src/main/java/be/doebi/aerismill/validate/geom/topology/TopologyValidationService.java`
