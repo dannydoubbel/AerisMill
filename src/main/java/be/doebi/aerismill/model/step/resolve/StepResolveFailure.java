@@ -1,6 +1,5 @@
 package be.doebi.aerismill.model.step.resolve;
 
-
 import be.doebi.aerismill.model.step.base.StepEntityType;
 
 public record StepResolveFailure(
@@ -9,5 +8,4 @@ public record StepResolveFailure(
         StepEntityType entityType,
         String exceptionType,
         String message
-) {
-}
+) {}

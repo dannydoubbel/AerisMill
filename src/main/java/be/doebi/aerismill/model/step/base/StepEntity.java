@@ -1,6 +1,5 @@
 package be.doebi.aerismill.model.step.base;
 
-
 public class StepEntity {
     private final String id;
     private final StepEntityType type;

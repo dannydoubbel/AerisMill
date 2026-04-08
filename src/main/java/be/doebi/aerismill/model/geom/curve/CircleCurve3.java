@@ -1,7 +1,5 @@
 package be.doebi.aerismill.model.geom.curve;
 
-
-
 import be.doebi.aerismill.model.geom.math.Frame3;
 import be.doebi.aerismill.model.geom.math.Point3;
 import be.doebi.aerismill.model.geom.math.Vec3;

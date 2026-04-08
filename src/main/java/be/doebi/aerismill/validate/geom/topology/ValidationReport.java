@@ -59,11 +59,7 @@ public final class ValidationReport {
         messages.addAll(other.messages());
     }
 
-
-
     public boolean isEmpty() {
         return messages.isEmpty();
     }
-
-
 }

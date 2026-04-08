@@ -15,9 +15,23 @@ public class MachineStatus {
         this.machineA = machineA;
     }
 
-    public String getState() { return state; }
-    public double getMachineX() { return machineX; }
-    public double getMachineY() { return machineY; }
-    public double getMachineZ() { return machineZ; }
-    public double getMachineA() { return machineA; }
+    public String getState() {
+        return state;
+    }
+
+    public double getMachineX() {
+        return machineX;
+    }
+
+    public double getMachineY() {
+        return machineY;
+    }
+
+    public double getMachineZ() {
+        return machineZ;
+    }
+
+    public double getMachineA() {
+        return machineA;
+    }
 }

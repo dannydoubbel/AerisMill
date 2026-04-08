@@ -13,6 +13,7 @@ public record EdgeGeom(
     public Point3 startPoint() {
         return edgeStart.position();
     }
+
     public Point3 endPoint() {
         return edgeEnd.position();
     }

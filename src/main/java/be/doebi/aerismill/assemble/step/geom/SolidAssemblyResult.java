@@ -4,7 +4,6 @@ import be.doebi.aerismill.model.geom.topology.SolidGeom;
 import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
 import be.doebi.aerismill.validate.geom.topology.ValidationReport;
 
-
 public record SolidAssemblyResult(
         String stepId,
         SolidGeom solid,
