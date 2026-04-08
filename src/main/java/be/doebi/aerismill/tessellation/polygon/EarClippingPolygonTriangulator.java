@@ -2,6 +2,7 @@ package be.doebi.aerismill.tessellation.polygon;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class EarClippingPolygonTriangulator implements PolygonTriangulator {
@@ -46,14 +47,6 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         }
 
         PolygonLoop2 mergedOuter = mergeHolesIntoOuter(polygon.outer(), polygon.holes());
-
-        List<Point2> mergedPoints = mergedOuter.points();
-
-        /*
-        return triangulateSimplePolygon(
-                mergedPoints,
-                buildNormalizedOuterIndices(mergedPoints)
-        );*/
 
         return triangulateSimpleLoop(mergedOuter);
     }
@@ -140,6 +133,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         int holeBridgeIndex = holeIndices.get(holeBridgePosition);
         Point2 holeBridgePoint = allPoints.get(holeBridgeIndex);
 
+
         List<OuterBridgeCandidate> candidates = new ArrayList<>();
 
         for (int outerPosition = 0; outerPosition < outerIndices.size(); outerPosition++) {
@@ -160,11 +154,24 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                 continue;
             }
 
+            boolean rightSide = outerPoint.x() >= holeBridgePoint.x();
+            double verticalPenalty = bridgeVerticalPenalty(holeBridgePoint, outerPoint);
             double distanceSquared = squaredDistance(holeBridgePoint, outerPoint);
-            candidates.add(new OuterBridgeCandidate(outerPosition, distanceSquared));
+
+            candidates.add(new OuterBridgeCandidate(
+                    outerPosition,
+                    rightSide,
+                    verticalPenalty,
+                    distanceSquared
+            ));
         }
 
-        candidates.sort(java.util.Comparator.comparingDouble(OuterBridgeCandidate::distanceSquared));
+        candidates.sort(
+                Comparator
+                        .comparing((OuterBridgeCandidate candidate) -> !candidate.rightSide())
+                        .thenComparingDouble(OuterBridgeCandidate::verticalPenalty)
+                        .thenComparingDouble(OuterBridgeCandidate::distanceSquared)
+        );
 
         for (OuterBridgeCandidate candidate : candidates) {
             List<Integer> merged = buildBridgedPolygonIndices(
@@ -178,7 +185,6 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                 return merged;
             }
         }
-
         throw new IllegalArgumentException(
                 "Failed to bridge polygon hole into outer loop without creating self-intersection."
         );
@@ -630,8 +636,14 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         return new PolygonLoop2(points);
     }
 
+    private double bridgeVerticalPenalty(Point2 holeBridgePoint, Point2 outerPoint) {
+        return Math.abs(outerPoint.y() - holeBridgePoint.y());
+    }
+
     private record OuterBridgeCandidate(
             int outerPosition,
+            boolean rightSide,
+            double verticalPenalty,
             double distanceSquared
     ) {}
 }

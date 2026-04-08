@@ -44,7 +44,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Face must have at least one bound.", ex.getMessage());
+
+        assertTrue(ex.getMessage().contains("face must have at least one bound"));
     }
 
     @Test
@@ -68,7 +69,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Only planar faces are supported for now.", exception.getMessage());
+
+        assertTrue(exception.getMessage().contains("only planar faces are supported for now"));
     }
 
     @Test
@@ -92,7 +94,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Face must have at least one bound.", exception.getMessage());
+
+        assertTrue(exception.getMessage().contains("face must have at least one bound"));
     }
 
 
@@ -158,7 +161,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Face bound must contain at least one edge.", ex.getMessage());
+
+        assertTrue(ex.getMessage().contains("face bound must contain at least one edge"));
     }
 
 
@@ -189,7 +193,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Face bound must contain at least one edge.", exception.getMessage());
+
+        assertTrue(exception.getMessage().contains("face bound must contain at least one edge"));
     }
 
 
@@ -219,11 +224,12 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Face bound must contain at least one non-null edge.", exception.getMessage());
+
+        assertTrue(exception.getMessage().contains("face bound must contain at least one non-null edge"));
     }
 
     @Test
-    void tessellate_shouldDiscretizeAllNonNullEdgesOfFirstBound_andStillReturnEmptyPatch() {
+    void collectDiscretizedEdgePoints_shouldDiscretizeAllNonNullEdgesOfFirstBound() {
         OrientedEdgeGeom firstEdge = new OrientedEdgeGeom("#oe1", null, true);
         OrientedEdgeGeom secondEdge = new OrientedEdgeGeom("#oe2", null, true);
 
@@ -236,7 +242,7 @@ class PlanarFaceTessellatorTest {
         );
 
         RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
-        GeometryTolerance tolerance = null; // replace with real instance later if useful
+        GeometryTolerance tolerance = null; // replace later if useful
 
         PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
                 edgeDiscretizer,
@@ -245,91 +251,19 @@ class PlanarFaceTessellatorTest {
                 tolerance
         );
 
-        FaceMeshPatch result = tessellator.tessellate(face);
+        List<List<Point3>> result = tessellator.collectDiscretizedEdgePoints(firstBound, face, 0);
 
         assertNotNull(result);
-        assertNotNull(result.vertices());
-        assertNotNull(result.triangles());
-        assertTrue(result.vertices().isEmpty());
-        assertTrue(result.triangles().isEmpty());
+        assertEquals(2, result.size());
 
-        assertEquals(List.of(firstEdge, secondEdge), edgeDiscretizer.recordedEdges());
-        assertEquals(2, edgeDiscretizer.recordedTolerances().size());
-        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(1));
-
-        assertEquals(2, edgeDiscretizer.recordedTolerances().size());
-        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(0));
-        assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(1));
-    }
-
-
-    @Test
-    void tessellate_validPlanarFace_returnsEmptyPatchForNow() {
-        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
-                stubEdgeDiscretizer(),
-                stubPolygonTriangulator(),
-                stubPlaneProjector(),
-                GeometryTolerance.defaults()
-        );
-
-        OrientedEdgeGeom edge = new OrientedEdgeGeom("#oe1", null, true);
-
-        LoopGeom loop = new LoopGeom(
-                "#loop1",
-                List.of(edge)
-        );
-
-        FaceGeom face = new FaceGeom(
-                "#1",
-                new PlaneSurface3(null),
-                List.of(loop),
-                true
-        );
-
-        FaceMeshPatch result = tessellator.tessellate(face);
-
-        assertNotNull(result);
-        assertNotNull(result.vertices());
-        assertNotNull(result.triangles());
-        assertTrue(result.vertices().isEmpty());
-        assertTrue(result.triangles().isEmpty());
-
-
-    }
-/*
-    @Test
-    void collectDiscretizedEdgePoints_shouldCollectReturnedPointListsForAllNonNullEdgesInOrder() {
-        OrientedEdgeGeom firstEdge = new OrientedEdgeGeom("#oe1", null, true);
-        OrientedEdgeGeom secondEdge = new OrientedEdgeGeom("#oe2", null, true);
-
-        LoopGeom firstBound = new LoopGeom("#l1", List.of(firstEdge, secondEdge));
-
-        Point3 p1 = new Point3(1.0, 0.0, 0.0);
-        Point3 p2 = new Point3(2.0, 0.0, 0.0);
-        Point3 p3 = new Point3(3.0, 0.0, 0.0);
-
-        RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
-        edgeDiscretizer.stubResult(firstEdge, List.of(p1, p2));
-        edgeDiscretizer.stubResult(secondEdge, List.of(p3));
-
-        GeometryTolerance tolerance = null;
-
-        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
-                edgeDiscretizer,
-                null,
-                null,
-                tolerance
-        );
-
-        List<List<Point3>> result = tessellator.collectDiscretizedEdgePoints(firstBound);
-
-        assertEquals(List.of(List.of(p1, p2), List.of(p3)), result);
         assertEquals(List.of(firstEdge, secondEdge), edgeDiscretizer.recordedEdges());
         assertEquals(2, edgeDiscretizer.recordedTolerances().size());
         assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(0));
         assertSame(tolerance, edgeDiscretizer.recordedTolerances().get(1));
     }
-*/
+
+
+
     @Test
     void flattenDiscretizedEdgePointLists_shouldFlattenPointListsInOrder() {
         Point3 p1 = new Point3(1.0, 0.0, 0.0);
@@ -495,9 +429,10 @@ class PlanarFaceTessellatorTest {
         Point3 p2 = new Point3(2.0, 0.0, 0.0);
         Point3 p3 = new Point3(3.0, 0.0, 0.0);
 
-        Point2 q1 = new Point2(10.0, 20.0);
-        Point2 q2 = new Point2(30.0, 40.0);
-        Point2 q3 = new Point2(50.0, 60.0);
+
+        Point2 q1 = new Point2(0.0, 0.0);
+        Point2 q2 = new Point2(1.0, 0.0);
+        Point2 q3 = new Point2(0.0, 1.0);
 
         RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
         edgeDiscretizer.stubResult(edge, List.of(p1, p2, p3));
@@ -525,8 +460,10 @@ class PlanarFaceTessellatorTest {
         assertNotNull(result);
         assertNotNull(result.vertices());
         assertNotNull(result.triangles());
-        assertTrue(result.vertices().isEmpty());
-        assertTrue(result.triangles().isEmpty());
+
+        assertEquals(List.of(p1, p2, p3), result.vertices());
+        assertEquals(1, result.triangles().size());
+        assertSame(triangulationResult.getFirst(), result.triangles().getFirst());
 
         assertNotNull(polygonTriangulator.recordedPolygon());
         assertEquals(List.of(q1, q2, q3), polygonTriangulator.recordedPolygon().outer().points());
@@ -579,9 +516,9 @@ class PlanarFaceTessellatorTest {
         Point3 p2 = new Point3(2.0, 0.0, 0.0);
         Point3 p3 = new Point3(3.0, 0.0, 0.0);
 
-        Point2 q1 = new Point2(10.0, 20.0);
-        Point2 q2 = new Point2(30.0, 40.0);
-        Point2 q3 = new Point2(50.0, 60.0);
+        Point2 q1 = new Point2(0.0, 0.0);
+        Point2 q2 = new Point2(1.0, 0.0);
+        Point2 q3 = new Point2(0.0, 1.0);
 
         RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
         edgeDiscretizer.stubResult(edge, List.of(p1, p2, p3));
@@ -678,9 +615,9 @@ class PlanarFaceTessellatorTest {
         Point3 p2 = new Point3(2.0, 0.0, 0.0);
         Point3 p3 = new Point3(3.0, 0.0, 0.0);
 
-        Point2 q1 = new Point2(10.0, 20.0);
-        Point2 q2 = new Point2(30.0, 40.0);
-        Point2 q3 = new Point2(50.0, 60.0);
+        Point2 q1 = new Point2(0.0, 0.0);
+        Point2 q2 = new Point2(1.0, 0.0);
+        Point2 q3 = new Point2(0.0, 1.0);
 
         RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
         edgeDiscretizer.stubResult(firstEdge, List.of(p1, p2));
@@ -774,9 +711,9 @@ class PlanarFaceTessellatorTest {
         Point3 p2 = new Point3(2.0, 0.0, 0.0);
         Point3 p3 = new Point3(3.0, 0.0, 0.0);
 
-        Point2 q1 = new Point2(10.0, 20.0);
-        Point2 q2 = new Point2(30.0, 40.0);
-        Point2 q3 = new Point2(50.0, 60.0);
+        Point2 q1 = new Point2(0.0, 0.0);
+        Point2 q2 = new Point2(1.0, 0.0);
+        Point2 q3 = new Point2(0.0, 1.0);
 
         RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
         edgeDiscretizer.stubResult(firstEdge, List.of(p1, p2));
@@ -812,27 +749,7 @@ class PlanarFaceTessellatorTest {
         assertEquals(List.of(q1, q2, q3), polygonTriangulator.recordedPolygon().outer().points());
         assertTrue(polygonTriangulator.recordedPolygon().holes().isEmpty());
     }
-/*
-    @Test
-    void validateBoundaryHasAtLeastThreePoints_shouldThrow_whenBoundaryHasFewerThanThreePoints() {
-        Point3 p1 = new Point3(1.0, 0.0, 0.0);
-        Point3 p2 = new Point3(2.0, 0.0, 0.0);
 
-        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
-                null,
-                null,
-                null,
-                null
-        );
-
-        IllegalArgumentException ex = assertThrows(
-                IllegalArgumentException.class,
-                () -> tessellator.validateBoundaryHasAtLeastThreePoints(List.of(p1, p2))
-        );
-
-        assertEquals("Boundary must contain at least three points for triangulation.", ex.getMessage());
-    }
-    */
 
     @Test
     void validateBoundaryHasAtLeastThreePoints_shouldNotThrow_whenBoundaryHasThreePoints() {
@@ -895,7 +812,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Boundary must contain at least three points for triangulation.", ex.getMessage());
+
+        assertTrue(ex.getMessage().contains("boundary has only 2 point(s) after cleanup; at least 3 required for triangulation"));
 
         assertEquals(List.of(firstEdge, secondEdge), edgeDiscretizer.recordedEdges());
         assertTrue(planeProjector.recordedPoints().isEmpty());
@@ -945,7 +863,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Triangulation must produce at least one triangle.", ex.getMessage());
+
+        assertTrue(ex.getMessage().contains("triangulation produced no triangles"));
 
         assertNotNull(polygonTriangulator.recordedPolygon());
     }
@@ -1178,7 +1097,7 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.validateProjectedBoundaryIsSimple(outerLoop, face, 0)
         );
 
-        assertEquals("Projected boundary must not self-intersect.", ex.getMessage());
+        assertTrue(ex.getMessage().contains("projected boundary must not self-intersect"));
     }
 
     @Test
@@ -1368,7 +1287,7 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.prepareProjectedPolygonLoops(face, plane)
         );
 
-        assertEquals("Boundary must contain at least three points for triangulation.", ex.getMessage());
+        assertTrue(ex.getMessage().contains("boundary has only 2 point(s) after cleanup; at least 3 required for triangulation"));
 
         assertEquals(List.of(outerEdge, holeEdge1, holeEdge2), edgeDiscretizer.recordedEdges());
         assertEquals(List.of(o1, o2, o3, o4), planeProjector.recordedPoints());
@@ -1428,7 +1347,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Boundary must contain at least three points for triangulation.", ex.getMessage());
+
+        assertTrue(ex.getMessage().contains("boundary has only 2 point(s) after cleanup; at least 3 required for triangulation"));
 
         assertEquals(List.of(outerEdge, holeEdge1, holeEdge2), edgeDiscretizer.recordedEdges());
         assertEquals(List.of(o1, o2, o3, o4), planeProjector.recordedPoints());
@@ -1498,7 +1418,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-        assertEquals("Projected boundary must not self-intersect.", ex.getMessage());
+
+        assertTrue(ex.getMessage().contains("projected boundary must not self-intersect"));
 
         assertEquals(List.of(outerEdge, holeEdge), edgeDiscretizer.recordedEdges());
         assertEquals(List.of(o1, o2, o3, o4, h1, h2, h3, h4), planeProjector.recordedPoints());
@@ -1561,7 +1482,8 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.prepareProjectedPolygonLoops(face, plane)
         );
 
-        assertEquals("Projected boundary must not self-intersect.", ex.getMessage());
+
+        assertTrue(ex.getMessage().contains("projected boundary must not self-intersect"));
 
         assertEquals(List.of(outerEdge, holeEdge), edgeDiscretizer.recordedEdges());
         assertEquals(List.of(o1, o2, o3, o4, h1, h2, h3, h4), planeProjector.recordedPoints());
@@ -1933,9 +1855,9 @@ class PlanarFaceTessellatorTest {
         Point3 h14 = new Point3(1.0, 2.0, 0.0);
 
         Point3 h21 = new Point3(4.0, 4.0, 0.0);
-        Point3 h22 = new Point3(5.0, 4.0, 0.0);
-        Point3 h23 = new Point3(6.0, 4.0, 0.0);
-        Point3 h24 = new Point3(5.0, 5.0, 0.0);
+        Point3 h22 = new Point3(4.5, 4.0, 0.0);
+        Point3 h23 = new Point3(5.0, 4.0, 0.0);
+        Point3 h24 = new Point3(4.5, 4.5, 0.0);
 
         Point2 qO1 = new Point2(0.0, 0.0);
         Point2 qO2 = new Point2(6.0, 0.0);
@@ -1948,14 +1870,15 @@ class PlanarFaceTessellatorTest {
         Point2 qH14 = new Point2(1.0, 2.0);
 
         Point2 qH21 = new Point2(4.0, 4.0);
-        Point2 qH22 = new Point2(5.0, 4.0);
-        Point2 qH23 = new Point2(6.0, 4.0);
-        Point2 qH24 = new Point2(5.0, 5.0);
+        Point2 qH22 = new Point2(4.5, 4.0);
+        Point2 qH23 = new Point2(5.0, 4.0);
+        Point2 qH24 = new Point2(4.5, 4.5);
 
         RecordingEdgeDiscretizer edgeDiscretizer = new RecordingEdgeDiscretizer();
         edgeDiscretizer.stubResult(outerEdge, List.of(o1, o2, o3, o4));
         edgeDiscretizer.stubResult(hole1Edge, List.of(h11, h12, h13, h14));
-        edgeDiscretizer.stubResult(hole2Edge, List.of(h21, h22, h23, h24));
+
+        edgeDiscretizer.stubResult(hole2Edge, List.of(h21, h22, h23));
 
         RecordingPlaneProjector planeProjector = new RecordingPlaneProjector();
         planeProjector.stubResult(o1, qO1);
@@ -1990,7 +1913,7 @@ class PlanarFaceTessellatorTest {
 
         assertEquals(List.of(outerEdge, hole1Edge, hole2Edge), edgeDiscretizer.recordedEdges());
         assertEquals(
-                List.of(o1, o2, o3, o4, h11, h12, h13, h14, h21, h22, h23, h24),
+                List.of(o1, o2, o3, o4, h11, h12, h13, h14, h21, h22, h23),
                 planeProjector.recordedPoints()
         );
         assertNotNull(polygonTriangulator.recordedPolygon());
@@ -2973,7 +2896,118 @@ class PlanarFaceTessellatorTest {
 
      /* ************************************************************************************ */
 
+    @Test
+    void simplifyProjectedLoop_removesImmediateBacktrack() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                stubEdgeDiscretizer(),
+                stubPolygonTriangulator(),
+                stubPlaneProjector(),
+                GeometryTolerance.defaults()
+        );
 
+        List<Point2> input = List.of(
+                new Point2(0.0, 0.0),
+                new Point2(1.0, 0.0),
+                new Point2(0.0, 0.0),
+                new Point2(0.0, 1.0)
+        );
+
+        PlanarFaceTessellator.SimplifiedProjectedLoop result = tessellator.simplifyProjectedLoop(
+                boundaryPoints3d(
+                        input.get(0),
+                        input.get(1),
+                        input.get(2),
+                        input.get(3)
+                ),
+                input
+        );
+
+        assertEquals(
+                List.of(
+                        new Point2(0.0, 0.0),
+                        new Point2(0.0, 1.0)
+                ),
+                result.projectedPoints()
+        );
+    }
+
+    @Test
+    void simplifyProjectedLoop_removesCollinearMiddlePoint() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                stubEdgeDiscretizer(),
+                stubPolygonTriangulator(),
+                stubPlaneProjector(),
+                GeometryTolerance.defaults()
+        );
+
+        List<Point2> input = List.of(
+                new Point2(0.0, 0.0),
+                new Point2(1.0, 0.0),
+                new Point2(2.0, 0.0),
+                new Point2(2.0, 1.0)
+        );
+
+        PlanarFaceTessellator.SimplifiedProjectedLoop result = tessellator.simplifyProjectedLoop(
+                boundaryPoints3d(
+                        input.get(0),
+                        input.get(1),
+                        input.get(2),
+                        input.get(3)
+                ),
+                input
+        );
+
+        assertEquals(
+                List.of(
+                        new Point2(0.0, 0.0),
+                        new Point2(2.0, 0.0),
+                        new Point2(2.0, 1.0)
+                ),
+                result.projectedPoints()
+        );
+    }
+
+    @Test
+    void simplifyProjectedLoop_removesDuplicatesBacktracksAndCollinearPointsUntilStable() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(
+                stubEdgeDiscretizer(),
+                stubPolygonTriangulator(),
+                stubPlaneProjector(),
+                GeometryTolerance.defaults()
+        );
+
+        List<Point2> input = List.of(
+                new Point2(0.0, 0.0),
+                new Point2(1.0, 0.0),
+                new Point2(0.0, 0.0),
+                new Point2(0.0, 0.0),
+                new Point2(0.0, 1.0),
+                new Point2(0.0, 2.0),
+                new Point2(1.0, 2.0)
+        );
+
+        PlanarFaceTessellator.SimplifiedProjectedLoop result = tessellator.simplifyProjectedLoop(
+                boundaryPoints3d(
+                        input.get(0),
+                        input.get(1),
+                        input.get(2),
+                        input.get(3),
+                        input.get(4),
+                        input.get(5),
+                        input.get(6)
+                ),
+                input
+        );
+
+        assertEquals(
+                List.of(
+                        new Point2(0.0, 0.0),
+                        new Point2(0.0, 2.0),
+                        new Point2(1.0, 2.0)
+                ),
+                result.projectedPoints()
+        );
+    }
 
 
 
@@ -2998,5 +3032,20 @@ class PlanarFaceTessellatorTest {
     private LoopGeom loop(String stepId) {
         return new LoopGeom(stepId, List.of());
     }
+
+    private List<Point3> boundaryPoints3d(Point2... points) {
+        List<Point3> result = new ArrayList<>();
+
+        for (Point2 point : points) {
+            result.add(new Point3(point.x(), point.y(), 0.0));
+        }
+
+        return result;
+    }
+
+    record SimplifiedProjectedLoop(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {}
 }
 

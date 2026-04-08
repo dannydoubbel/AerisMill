@@ -17,10 +17,8 @@ import be.doebi.aerismill.tessellation.face.FaceTessellator;
 import be.doebi.aerismill.tessellation.face.PlanarFaceTessellator;
 import be.doebi.aerismill.tessellation.polygon.EarClippingPolygonTriangulator;
 import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
-import be.doebi.aerismill.tessellation.polygon.RecordingPolygonTriangulator;
 import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
-import be.doebi.aerismill.tessellation.shell.DefaultShellTessellator;
 import be.doebi.aerismill.tessellation.shell.PreviewShellTessellator;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
@@ -33,7 +31,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 
 import java.io.File;
 import java.util.Objects;

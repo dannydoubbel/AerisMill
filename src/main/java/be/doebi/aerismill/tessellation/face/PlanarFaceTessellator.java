@@ -293,9 +293,17 @@ public class PlanarFaceTessellator implements FaceTessellator {
             throw new IllegalArgumentException("Triangle indices must not be null.");
         }
 
+        int vertexCount = projectedBoundaryPoints.size();
+
         for (int[] triangle : triangleIndices) {
             if (triangle == null || triangle.length != 3) {
                 throw new IllegalArgumentException("Each triangle must contain exactly three vertex indices.");
+            }
+
+            for (int index : triangle) {
+                if (index < 0 || index >= vertexCount) {
+                    throw new IllegalArgumentException("Triangle index out of bounds for projected boundary vertices.");
+                }
             }
 
             Point2 a = projectedBoundaryPoints.get(triangle[0]);
@@ -402,6 +410,12 @@ public class PlanarFaceTessellator implements FaceTessellator {
             PolygonLoop2 polygonLoop
     ) {}
 
+    static record SimplifiedProjectedLoop(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {}
+
+
     PreparedLoop prepareProjectedPolygonLoop(FaceGeom face, LoopGeom loop, PlaneSurface3 plane, int boundIndex) {
         List<List<Point3>> discretizedEdgePointLists = collectDiscretizedEdgePoints(loop, face, boundIndex);
 
@@ -428,10 +442,23 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 boundIndex
         );
 
-        PolygonLoop2 polygonLoop = buildOuterPolygonLoop(projectedBoundaryPoints);
+        SimplifiedProjectedLoop simplifiedLoop = simplifyProjectedLoop(
+                openBoundaryPoints,
+                projectedBoundaryPoints
+        );
+
+        validateBoundaryHasAtLeastThreePoints(
+                simplifiedLoop.boundaryPoints(),
+                face,
+                boundIndex,
+                rawPointCount,
+                collapsedPointCount
+        );
+
+        PolygonLoop2 polygonLoop = buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
         validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
 
-        return new PreparedLoop(openBoundaryPoints, polygonLoop);
+        return new PreparedLoop(simplifiedLoop.boundaryPoints(), polygonLoop);
     }
 
     List<PreparedLoop> prepareProjectedPolygonLoops(FaceGeom face, PlaneSurface3 plane) {
@@ -663,4 +690,321 @@ public class PlanarFaceTessellator implements FaceTessellator {
     private String faceBoundLabel(FaceGeom face, int boundIndex) {
         return faceLabel(face) + ", bound " + (boundIndex + 1);
     }
+
+    SimplifiedProjectedLoop simplifyProjectedLoop(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        if (boundaryPoints == null) {
+            throw new IllegalArgumentException("Boundary points must not be null.");
+        }
+        if (projectedPoints == null) {
+            throw new IllegalArgumentException("Projected points must not be null.");
+        }
+        if (boundaryPoints.size() != projectedPoints.size()) {
+            throw new IllegalArgumentException("Boundary points and projected points must have the same size.");
+        }
+
+        List<Point3> currentBoundary = new ArrayList<>(boundaryPoints);
+        List<Point2> currentProjected = new ArrayList<>(projectedPoints);
+
+        boolean changed;
+        do {
+            changed = false;
+
+            SimplifiedProjectedLoop collapsed = collapseConsecutiveDuplicateProjectedPoints(
+                    currentBoundary,
+                    currentProjected
+            );
+            if (collapsed.projectedPoints().size() != currentProjected.size()) {
+                changed = true;
+            }
+
+            SimplifiedProjectedLoop withoutClosingDuplicate = removeClosingDuplicateProjectedPoint(
+                    collapsed.boundaryPoints(),
+                    collapsed.projectedPoints()
+            );
+            if (withoutClosingDuplicate.projectedPoints().size() != collapsed.projectedPoints().size()) {
+                changed = true;
+            }
+
+            SimplifiedProjectedLoop withoutBacktracks = removeImmediateBacktracks(
+                    withoutClosingDuplicate.boundaryPoints(),
+                    withoutClosingDuplicate.projectedPoints()
+            );
+            if (withoutBacktracks.projectedPoints().size() != withoutClosingDuplicate.projectedPoints().size()) {
+                changed = true;
+            }
+
+            SimplifiedProjectedLoop withoutCollinearPoints = removeCollinearProjectedPoints(
+                    withoutBacktracks.boundaryPoints(),
+                    withoutBacktracks.projectedPoints()
+            );
+            if (withoutCollinearPoints.projectedPoints().size() != withoutBacktracks.projectedPoints().size()) {
+                changed = true;
+            }
+
+            currentBoundary = withoutCollinearPoints.boundaryPoints();
+            currentProjected = withoutCollinearPoints.projectedPoints();
+
+        } while (changed);
+
+        return new SimplifiedProjectedLoop(currentBoundary, currentProjected);
+    }
+
+
+    List<Point2> collapseConsecutiveDuplicateProjectedPoints(List<Point2> points) {
+        List<Point2> collapsed = new ArrayList<>();
+
+        if (points == null || points.isEmpty()) {
+            return collapsed;
+        }
+
+        Point2 previous = null;
+
+        for (Point2 point : points) {
+            if (point == null) {
+                continue;
+            }
+
+            if (!point.equals(previous)) {
+                collapsed.add(point);
+                previous = point;
+            }
+        }
+
+        return collapsed;
+    }
+
+    SimplifiedProjectedLoop removeClosingDuplicateProjectedPoint(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        List<Point3> resultBoundary = new ArrayList<>();
+        List<Point2> resultProjected = new ArrayList<>();
+
+        if (boundaryPoints == null || projectedPoints == null || boundaryPoints.isEmpty()) {
+            return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+        }
+
+        resultBoundary.addAll(boundaryPoints);
+        resultProjected.addAll(projectedPoints);
+
+        if (resultProjected.size() > 1 && resultProjected.getFirst().equals(resultProjected.getLast())) {
+            resultBoundary.removeLast();
+            resultProjected.removeLast();
+        }
+
+        return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+    }
+
+    List<Point2> removeImmediateBacktracks(List<Point2> points) {
+        List<Point2> result = new ArrayList<>();
+
+        if (points == null || points.isEmpty()) {
+            return result;
+        }
+
+        for (Point2 point : points) {
+            result.add(point);
+
+            while (result.size() >= 3) {
+                int size = result.size();
+
+                Point2 a = result.get(size - 3);
+                Point2 b = result.get(size - 2);
+                Point2 c = result.get(size - 1);
+
+                if (a.equals(c)) {
+                    result.remove(size - 1);
+                    result.remove(size - 2);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    List<Point2> removeCollinearProjectedPoints(List<Point2> points) {
+        List<Point2> result = new ArrayList<>();
+
+        if (points == null || points.size() < 3) {
+            if (points != null) {
+                result.addAll(points);
+            }
+            return result;
+        }
+
+        int size = points.size();
+
+        for (int i = 0; i < size; i++) {
+            Point2 previous = points.get((i - 1 + size) % size);
+            Point2 current = points.get(i);
+            Point2 next = points.get((i + 1) % size);
+
+            if (orientation(previous, current, next) == 0.0 && onSegment(previous, current, next)) {
+                continue;
+            }
+
+            result.add(current);
+        }
+
+        return result;
+    }
+
+    SimplifiedProjectedLoop collapseConsecutiveDuplicateProjectedPoints(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        List<Point3> collapsedBoundary = new ArrayList<>();
+        List<Point2> collapsedProjected = new ArrayList<>();
+
+        if (boundaryPoints == null || projectedPoints == null || boundaryPoints.isEmpty()) {
+            return new SimplifiedProjectedLoop(collapsedBoundary, collapsedProjected);
+        }
+
+        Point2 previous = null;
+
+        for (int i = 0; i < projectedPoints.size(); i++) {
+            Point2 projectedPoint = projectedPoints.get(i);
+            Point3 boundaryPoint = boundaryPoints.get(i);
+
+            if (projectedPoint == null || boundaryPoint == null) {
+                continue;
+            }
+
+            if (!projectedPoint.equals(previous)) {
+                collapsedBoundary.add(boundaryPoint);
+                collapsedProjected.add(projectedPoint);
+                previous = projectedPoint;
+            }
+        }
+
+        return new SimplifiedProjectedLoop(collapsedBoundary, collapsedProjected);
+    }
+
+
+
+    SimplifiedProjectedLoop removeImmediateBacktracks(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        List<Point3> resultBoundary = new ArrayList<>();
+        List<Point2> resultProjected = new ArrayList<>();
+
+        if (boundaryPoints == null || projectedPoints == null || boundaryPoints.isEmpty()) {
+            return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+        }
+
+        for (int i = 0; i < projectedPoints.size(); i++) {
+            resultBoundary.add(boundaryPoints.get(i));
+            resultProjected.add(projectedPoints.get(i));
+
+            while (resultProjected.size() >= 3) {
+                int size = resultProjected.size();
+
+                Point2 a = resultProjected.get(size - 3);
+                Point2 c = resultProjected.get(size - 1);
+
+                if (a.equals(c)) {
+                    resultProjected.remove(size - 1);
+                    resultProjected.remove(size - 2);
+
+                    resultBoundary.remove(size - 1);
+                    resultBoundary.remove(size - 2);
+                } else {
+                    break;
+                }
+            }
+        }
+
+        return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+    }
+
+    /*
+    SimplifiedProjectedLoop removeCollinearProjectedPoints(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        List<Point3> resultBoundary = new ArrayList<>();
+        List<Point2> resultProjected = new ArrayList<>();
+
+        if (boundaryPoints == null || projectedPoints == null) {
+            return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+        }
+
+        if (projectedPoints.size() < 3) {
+            resultBoundary.addAll(boundaryPoints);
+            resultProjected.addAll(projectedPoints);
+            return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+        }
+
+        int size = projectedPoints.size();
+
+        for (int i = 0; i < size; i++) {
+            Point2 previous = projectedPoints.get((i - 1 + size) % size);
+            Point2 current = projectedPoints.get(i);
+            Point2 next = projectedPoints.get((i + 1) % size);
+
+            if (orientation(previous, current, next) == 0.0 && onSegment(previous, current, next)) {
+                continue;
+            }
+
+            resultBoundary.add(boundaryPoints.get(i));
+            resultProjected.add(current);
+        }
+
+        return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+    }
+
+     */
+    SimplifiedProjectedLoop removeCollinearProjectedPoints(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        List<Point3> resultBoundary = new ArrayList<>();
+        List<Point2> resultProjected = new ArrayList<>();
+
+        if (boundaryPoints == null || projectedPoints == null) {
+            return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+        }
+
+        // Do not simplify triangles or smaller loops here.
+        // Let later validation stages handle degenerate 3-point cases.
+        if (projectedPoints.size() <= 3) {
+            resultBoundary.addAll(boundaryPoints);
+            resultProjected.addAll(projectedPoints);
+            return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+        }
+
+        int size = projectedPoints.size();
+
+        for (int i = 0; i < size; i++) {
+            Point2 previous = projectedPoints.get((i - 1 + size) % size);
+            Point2 current = projectedPoints.get(i);
+            Point2 next = projectedPoints.get((i + 1) % size);
+
+            if (orientation(previous, current, next) == 0.0 && onSegment(previous, current, next)) {
+                continue;
+            }
+
+            resultBoundary.add(boundaryPoints.get(i));
+            resultProjected.add(current);
+        }
+
+        // If simplification would collapse the loop below 3 points,
+        // keep the original and let later validation report the real issue.
+        if (resultProjected.size() < 3) {
+            return new SimplifiedProjectedLoop(
+                    new ArrayList<>(boundaryPoints),
+                    new ArrayList<>(projectedPoints)
+            );
+        }
+
+        return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
+    }
+
+
 }

@@ -78,7 +78,7 @@ class EarClippingPolygonTriangulatorTest {
     }
 
     @Test
-    void triangulate_rejectsPolygonWithHoles() {
+    void triangulate_polygonWithSingleHole_returnsTriangles() {
         EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
 
         PolygonWithHoles2 polygon = new PolygonWithHoles2(
@@ -92,12 +92,19 @@ class EarClippingPolygonTriangulatorTest {
                 )
         );
 
-        UnsupportedOperationException ex = assertThrows(
-                UnsupportedOperationException.class,
-                () -> triangulator.triangulate(polygon)
-        );
+        List<int[]> triangles = triangulator.triangulate(polygon);
 
-        assertEquals("Polygon holes are not supported yet.", ex.getMessage());
+        assertNotNull(triangles);
+        assertFalse(triangles.isEmpty());
+
+        for (int[] triangle : triangles) {
+            assertNotNull(triangle);
+            assertEquals(3, triangle.length);
+
+            assertTrue(triangle[0] >= 0);
+            assertTrue(triangle[1] >= 0);
+            assertTrue(triangle[2] >= 0);
+        }
     }
 
     @Test
@@ -145,6 +152,101 @@ class EarClippingPolygonTriangulatorTest {
 
         assertEquals(List.of(0, 1, 4, 5, 6, 4, 1, 2, 3), result);
     }
+
+    @Test
+    void bridgeSingleHoleIntoOuterLoop_prefersRightSideCandidateOverCloserLeftCandidate() {
+        ScriptedEarClippingPolygonTriangulator triangulator =
+                new ScriptedEarClippingPolygonTriangulator(
+                        java.util.Set.of(0, 1),
+                        java.util.Set.of(0, 1)
+                );
+
+        List<Point2> outerPoints = List.of(
+                new Point2(4.8, 5.1),   // position 0: left side, slightly closer
+                new Point2(6.5, 5.0),   // position 1: right side, slightly farther
+                new Point2(0.0, 10.0),
+                new Point2(0.0, 0.0)
+        );
+
+        List<Point2> holePoints = List.of(
+                new Point2(5.0, 5.0),   // rightmost hole vertex
+                new Point2(4.0, 6.0),
+                new Point2(3.0, 4.0)
+        );
+
+        List<Point2> allPoints = new ArrayList<>();
+        allPoints.addAll(outerPoints);
+        allPoints.addAll(holePoints);
+
+        List<Integer> outerIndices = List.of(0, 1, 2, 3);
+        List<Integer> holeIndices = List.of(4, 5, 6);
+
+        List<Integer> result = triangulator.bridgeSingleHoleIntoOuterLoop(
+                allPoints,
+                outerPoints,
+                holePoints,
+                outerIndices,
+                holeIndices
+        );
+
+        assertEquals(List.of(0, 1, 4, 5, 6, 4, 1, 2, 3), result);
+        assertEquals(List.of(1), triangulator.attemptedOuterPositions());
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+    @Test
+    void bridgeSingleHoleIntoOuterLoop_prefersLowerVerticalOffsetWhenCandidatesAreOtherwiseValid() {
+        ScriptedEarClippingPolygonTriangulator triangulator =
+                new ScriptedEarClippingPolygonTriangulator(
+                        java.util.Set.of(1, 2),
+                        java.util.Set.of(1, 2)
+                );
+
+        List<Point2> outerPoints = List.of(
+                new Point2(0.0, 0.0),
+                new Point2(6.0, 8.0),   // position 1: right side, closer, but high vertical offset
+                new Point2(8.0, 5.2),   // position 2: right side, slightly farther, low vertical offset
+                new Point2(0.0, 10.0)
+        );
+
+        List<Point2> holePoints = List.of(
+                new Point2(5.0, 5.0),   // rightmost hole vertex
+                new Point2(4.0, 6.0),
+                new Point2(3.0, 4.0)
+        );
+
+        List<Point2> allPoints = new ArrayList<>();
+        allPoints.addAll(outerPoints);
+        allPoints.addAll(holePoints);
+
+        List<Integer> outerIndices = List.of(0, 1, 2, 3);
+        List<Integer> holeIndices = List.of(4, 5, 6);
+
+        List<Integer> result = triangulator.bridgeSingleHoleIntoOuterLoop(
+                allPoints,
+                outerPoints,
+                holePoints,
+                outerIndices,
+                holeIndices
+        );
+
+        assertEquals(List.of(0, 1, 2, 4, 5, 6, 4, 2, 3), result);
+        assertEquals(List.of(2), triangulator.attemptedOuterPositions());
+    }
+
+
+
+
 
     private PolygonWithHoles2 polygon(Point2... points) {
         return new PolygonWithHoles2(
