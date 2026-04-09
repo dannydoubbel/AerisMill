@@ -321,50 +321,6 @@ public class PlanarFaceTessellator implements FaceTessellator {
     }
 
 
-    void validateProjectedBoundaryIsSimple(PolygonLoop2 outerLoop, FaceGeom face, int boundIndex) {
-        if (outerLoop == null) {
-            throw new IllegalArgumentException(
-                    faceBoundLabel(face, boundIndex) + ": projected boundary loop must not be null."
-            );
-        }
-        if (outerLoop.points() == null) {
-            throw new IllegalArgumentException(
-                    faceBoundLabel(face, boundIndex) + ": projected boundary loop points must not be null."
-            );
-        }
-
-        List<Point2> points = outerLoop.points();
-
-        if (points.size() < 4) {
-            return;
-        }
-
-        int segmentCount = points.size();
-
-        for (int i = 0; i < segmentCount; i++) {
-            Point2 a1 = points.get(i);
-            Point2 a2 = points.get((i + 1) % segmentCount);
-
-            for (int j = i + 1; j < segmentCount; j++) {
-                if (j == i + 1) {
-                    continue;
-                }
-
-                if (i == 0 && j == segmentCount - 1) {
-                    continue;
-                }
-
-                Point2 b1 = points.get(j);
-                Point2 b2 = points.get((j + 1) % segmentCount);
-
-                if (segmentsIntersect(a1, a2, b1, b2)) {
-                    throw new IllegalArgumentException(
-                            faceBoundLabel(face, boundIndex) + ": projected boundary must not self-intersect."
-                    );
-                }
-            }
-        }
-    }
 
     private boolean segmentsIntersect(Point2 p1, Point2 p2, Point2 q1, Point2 q2) {
         double o1 = orientation(p1, p2, q1);
@@ -426,13 +382,22 @@ public class PlanarFaceTessellator implements FaceTessellator {
         int collapsedPointCount = cleanedBoundaryPoints.size();
 
         List<Point3> openBoundaryPoints = removeClosingDuplicateBoundaryPoint(cleanedBoundaryPoints);
+        int openPointCount = openBoundaryPoints.size();
+
+        LoopPreparationStats preProjectionStats = new LoopPreparationStats(
+                rawPointCount,
+                collapsedPointCount,
+                openPointCount,
+                -1,
+                -1
+        );
 
         validateBoundaryHasAtLeastThreePoints(
                 openBoundaryPoints,
                 face,
                 boundIndex,
-                rawPointCount,
-                collapsedPointCount
+                preProjectionStats,
+                "after-3d-cleanup"
         );
 
         List<Point2> projectedBoundaryPoints = projectBoundaryPointsTo2D(
@@ -441,24 +406,59 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 face,
                 boundIndex
         );
+        int projectedPointCount = projectedBoundaryPoints.size();
 
         SimplifiedProjectedLoop simplifiedLoop = simplifyProjectedLoop(
                 openBoundaryPoints,
                 projectedBoundaryPoints
+        );
+        int simplifiedPointCount = simplifiedLoop.projectedPoints().size();
+
+        LoopPreparationStats postProjectionStats = new LoopPreparationStats(
+                rawPointCount,
+                collapsedPointCount,
+                openPointCount,
+                projectedPointCount,
+                simplifiedPointCount
         );
 
         validateBoundaryHasAtLeastThreePoints(
                 simplifiedLoop.boundaryPoints(),
                 face,
                 boundIndex,
-                rawPointCount,
-                collapsedPointCount
+                postProjectionStats,
+                "after-projected-simplification"
         );
 
         PolygonLoop2 polygonLoop = buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
         validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
 
         return new PreparedLoop(simplifiedLoop.boundaryPoints(), polygonLoop);
+    }
+
+    void validateProjectedBoundaryIsSimple(PolygonLoop2 outerLoop, FaceGeom face, int boundIndex) {
+        if (outerLoop == null) {
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex) + ": projected boundary loop must not be null."
+            );
+        }
+        if (outerLoop.points() == null) {
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex) + ": projected boundary loop points must not be null."
+            );
+        }
+
+        SegmentIntersection intersection = findSelfIntersection(outerLoop.points());
+        if (intersection != null) {
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex)
+                            + ": projected boundary must not self-intersect"
+                            + " (segment " + intersection.firstSegmentIndex()
+                            + " " + intersection.a1() + " -> " + intersection.a2()
+                            + ", segment " + intersection.secondSegmentIndex()
+                            + " " + intersection.b1() + " -> " + intersection.b2() + ")."
+            );
+        }
     }
 
     List<PreparedLoop> prepareProjectedPolygonLoops(FaceGeom face, PlaneSurface3 plane) {
@@ -1006,5 +1006,92 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return new SimplifiedProjectedLoop(resultBoundary, resultProjected);
     }
 
+    private String formatLoopStats(LoopPreparationStats stats) {
+        return "raw3d=" + stats.raw3dCount()
+                + ", collapsed3d=" + stats.collapsed3dCount()
+                + ", open3d=" + stats.open3dCount()
+                + ", projected2d=" + stats.projected2dCount()
+                + ", simplified2d=" + stats.simplified2dCount();
+    }
+
+
+
+    private void appendStat(StringBuilder sb, String label, int value) {
+        if (value < 0) {
+            return;
+        }
+        if (!sb.isEmpty()) {
+            sb.append(", ");
+        }
+        sb.append(label).append("=").append(value);
+    }
+
+    void validateBoundaryHasAtLeastThreePoints(
+            List<Point3> boundaryPoints,
+            FaceGeom face,
+            int boundIndex,
+            LoopPreparationStats stats,
+            String stage
+    ) {
+        int count = boundaryPoints == null ? 0 : boundaryPoints.size();
+
+        if (count < 3) {
+            throw new IllegalArgumentException(
+                    faceBoundLabel(face, boundIndex)
+                            + ": boundary has only " + count
+                            + " point(s) at stage '" + stage + "'; at least 3 required for triangulation"
+                            + " (" + formatLoopStats(stats) + ")."
+            );
+        }
+    }
+
+    SegmentIntersection findSelfIntersection(List<Point2> points) {
+        if (points == null || points.size() < 4) {
+            return null;
+        }
+
+        int segmentCount = points.size();
+
+        for (int i = 0; i < segmentCount; i++) {
+            Point2 a1 = points.get(i);
+            Point2 a2 = points.get((i + 1) % segmentCount);
+
+            for (int j = i + 1; j < segmentCount; j++) {
+                if (j == i + 1) {
+                    continue;
+                }
+
+                if (i == 0 && j == segmentCount - 1) {
+                    continue;
+                }
+
+                Point2 b1 = points.get(j);
+                Point2 b2 = points.get((j + 1) % segmentCount);
+
+                if (segmentsIntersect(a1, a2, b1, b2)) {
+                    return new SegmentIntersection(i, j, a1, a2, b1, b2);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    static record LoopPreparationStats(
+            int raw3dCount,
+            int collapsed3dCount,
+            int open3dCount,
+            int projected2dCount,
+            int simplified2dCount
+    ) {}
+
+    static record SegmentIntersection(
+            int firstSegmentIndex,
+            int secondSegmentIndex,
+            Point2 a1,
+            Point2 a2,
+            Point2 b1,
+            Point2 b2
+    ) {}
 
 }

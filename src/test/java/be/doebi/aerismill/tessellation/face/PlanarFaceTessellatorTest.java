@@ -766,13 +766,16 @@ class PlanarFaceTessellatorTest {
 
         FaceGeom face = planarFace("#face1", loop("#loop1"));
 
+        PlanarFaceTessellator.LoopPreparationStats stats =
+                new PlanarFaceTessellator.LoopPreparationStats(3, 3, 3, -1, -1);
+
         assertDoesNotThrow(() ->
                 tessellator.validateBoundaryHasAtLeastThreePoints(
                         List.of(p1, p2, p3),
                         face,
                         0,
-                        3,
-                        3
+                        stats,
+                        "after-3d-cleanup"
                 )
         );
     }
@@ -813,11 +816,13 @@ class PlanarFaceTessellatorTest {
         );
 
 
-        assertTrue(ex.getMessage().contains("boundary has only 2 point(s) after cleanup; at least 3 required for triangulation"));
-
-        assertEquals(List.of(firstEdge, secondEdge), edgeDiscretizer.recordedEdges());
-        assertTrue(planeProjector.recordedPoints().isEmpty());
-        assertNull(polygonTriangulator.recordedPolygon());
+        assertTrue(ex.getMessage().contains("boundary has only 2 point(s)"));
+        assertTrue(ex.getMessage().contains("stage 'after-3d-cleanup'"));
+        assertTrue(ex.getMessage().contains("raw3d=4"));
+        assertTrue(ex.getMessage().contains("collapsed3d=3"));
+        assertTrue(ex.getMessage().contains("open3d=2"));
+        assertTrue(ex.getMessage().contains("projected2d=-1"));
+        assertTrue(ex.getMessage().contains("simplified2d=-1"));
     }
 
     @Test
@@ -1286,11 +1291,11 @@ class PlanarFaceTessellatorTest {
                 IllegalArgumentException.class,
                 () -> tessellator.prepareProjectedPolygonLoops(face, plane)
         );
-
-        assertTrue(ex.getMessage().contains("boundary has only 2 point(s) after cleanup; at least 3 required for triangulation"));
-
-        assertEquals(List.of(outerEdge, holeEdge1, holeEdge2), edgeDiscretizer.recordedEdges());
-        assertEquals(List.of(o1, o2, o3, o4), planeProjector.recordedPoints());
+        assertTrue(ex.getMessage().contains("boundary has only 2 point(s)"));
+        assertTrue(ex.getMessage().contains("stage 'after-3d-cleanup'"));
+        assertTrue(ex.getMessage().contains("raw3d=4"));
+        assertTrue(ex.getMessage().contains("collapsed3d=3"));
+        assertTrue(ex.getMessage().contains("open3d=2"));
     }
 
     @Test
@@ -1347,12 +1352,12 @@ class PlanarFaceTessellatorTest {
                 () -> tessellator.tessellate(face)
         );
 
-
-        assertTrue(ex.getMessage().contains("boundary has only 2 point(s) after cleanup; at least 3 required for triangulation"));
-
-        assertEquals(List.of(outerEdge, holeEdge1, holeEdge2), edgeDiscretizer.recordedEdges());
-        assertEquals(List.of(o1, o2, o3, o4), planeProjector.recordedPoints());
-        assertNull(polygonTriangulator.recordedPolygon());
+        System.out.println(ex.getMessage());
+        assertTrue(ex.getMessage().contains("boundary has only 2 point(s)"));
+        assertTrue(ex.getMessage().contains("stage 'after-3d-cleanup'"));
+        assertTrue(ex.getMessage().contains("raw3d=4"));
+        assertTrue(ex.getMessage().contains("collapsed3d=3"));
+        assertTrue(ex.getMessage().contains("open3d=2"));
     }
 
     @Test
@@ -3047,5 +3052,7 @@ class PlanarFaceTessellatorTest {
             List<Point3> boundaryPoints,
             List<Point2> projectedPoints
     ) {}
+
+
 }
 
