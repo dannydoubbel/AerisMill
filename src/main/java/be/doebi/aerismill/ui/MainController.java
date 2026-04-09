@@ -26,6 +26,8 @@ import be.doebi.aerismill.tessellation.solid.SolidTessellator;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
@@ -423,6 +425,60 @@ public class MainController {
     }
 
     @FXML
+    private void onClearInfoField(ActionEvent event) {
+        clearInfoField();
+    }
+
+    @FXML
+    private void onCopyInfoField(ActionEvent event) {
+        if (infoField == null) {
+            return;
+        }
+
+        String text = infoField.getText();
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text == null ? "" : text);
+        Clipboard.getSystemClipboard().setContent(content);
+    }
+
+    @FXML
+    private void onClearConsoleOutput(ActionEvent event) {
+        clearConsoleOutput();
+    }
+
+    @FXML
+    private void onCopyConsoleOutput(ActionEvent event) {
+        if (infoField == null) {
+            return;
+        }
+
+        String text = consoleOutput.getText();
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text == null ? "" : text);
+        Clipboard.getSystemClipboard().setContent(content);
+    }
+
+    @FXML
+    private void onClearComConsole(ActionEvent event) {
+        cleanComConsoleOutput();
+    }
+
+
+    @FXML
+    private void onCopyComConsole(ActionEvent event) {
+        if (infoField == null) {
+            return;
+        }
+
+        String text = comConsoleOutput.getText();
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text == null ? "" : text);
+        Clipboard.getSystemClipboard().setContent(content);
+    }
+
+
+
+    @FXML
     private void onShowAbout(ActionEvent event) {
         Dialog<Void> dialog = new Dialog<>();
         dialog.initOwner(getStage());
@@ -565,6 +621,26 @@ public class MainController {
             infoField.setText("");
         }
     }
+
+    private void clearInfoField() {
+        if (infoField != null) {
+            infoField.clear();
+        }
+    }
+
+    private void clearConsoleOutput() {
+        if (consoleOutput!=null) {
+            consoleOutput.clear();
+        }
+    }
+
+    private void cleanComConsoleOutput() {
+        if (comConsoleOutput!=null) {
+            comConsoleOutput.clear();
+        }
+    }
+
+
 
     private void showWarning(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);

@@ -11,7 +11,6 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 
 <?import javafx.scene.control.Label?>
@@ -92,30 +91,65 @@
                                 <StackPane fx:id="mainWorkArea"
                                            minWidth="300.0" />
 
-                                <VBox fx:id="comConsolePane"
-                                      spacing="6"
-                                      minWidth="220.0"
-                                      prefWidth="320.0">
-                                    <children>
-                                        <Label text="COM Console" />
-                                        <TextArea fx:id="comConsoleOutput"
-                                                  wrapText="true"
-                                                  editable="false"
-                                                  VBox.vgrow="ALWAYS" />
-                                        <HBox>
-                                            <Label>Serial send: </Label>
-                                            <TextField fx:id="textManualSerialSend"
-                                                       text=""
-                                                       prefWidth="70.0"
-                                                       HBox.hgrow="ALWAYS"/>
-                                            <Button fx:id="buttonManualSerialSend"
-                                                    text="Send"
-                                                    maxWidth="1.7976931348623157E308"
-                                                    HBox.hgrow="NEVER"
-                                                    onAction="#onManualSerialSend"/>
-                                        </HBox>
-                                    </children>
-                                </VBox>
+                                <StackPane>
+                                    <VBox fx:id="comConsolePane"
+                                        spacing="6"
+                                        minWidth="220.0"
+                                        prefWidth="320.0">
+                                        <children>
+
+                                            <HBox spacing="4"
+                                                  alignment="TOP_RIGHT"
+                                                  pickOnBounds="false"
+                                                  StackPane.alignment="CENTER_RIGHT">
+                                                <children>
+                                                    <Label text="COM Console" />
+
+
+
+
+
+
+                                                    <Button text="Clear"
+                                                            focusTraversable="false"
+                                                            minHeight="22.0"
+                                                            prefHeight="22.0"
+                                                            onAction="#onClearComConsole" />
+                                                    <Button text="Copy"
+                                                            focusTraversable="false"
+                                                            minHeight="22.0"
+                                                            prefHeight="22.0"
+                                                            onAction="#onCopyComConsole" />
+                                                </children>
+                                            </HBox>
+
+                                            <TextArea fx:id="comConsoleOutput"
+                                                      wrapText="true"
+                                                      editable="false"
+                                                      VBox.vgrow="ALWAYS" />
+
+
+
+
+
+
+
+
+                                            <HBox>
+                                                <Label>Serial send: </Label>
+                                                <TextField fx:id="textManualSerialSend"
+                                                        text=""
+                                                           prefWidth="70.0"
+                                                           HBox.hgrow="ALWAYS"/>
+                                                <Button fx:id="buttonManualSerialSend"
+                                                        text="Send"
+                                                        maxWidth="1.7976931348623157E308"
+                                                        HBox.hgrow="NEVER"
+                                                        onAction="#onManualSerialSend"/>
+                                            </HBox>
+                                        </children>
+                                    </VBox>
+                                </StackPane>
 
                             </items>
                         </SplitPane>
@@ -129,16 +163,56 @@
                 </SplitPane>
 
                 <VBox spacing="2">
-                    <TextArea fx:id="consoleOutput"
-                              id="consoleOutput"
-                              wrapText="false"
-                              VBox.vgrow="ALWAYS" />
-                    <TextField fx:id="infoField"
-                               id="infoField"
-                               focusTraversable="false"
-                               minHeight="26.0"
-                               prefHeight="26.0"
-                               maxHeight="26.0" />
+                    <StackPane>
+                        <TextArea fx:id="consoleOutput"
+                                  id="consoleOutput"
+                                  wrapText="false"
+
+                                VBox.vgrow="ALWAYS" />
+                        <HBox spacing="4"
+                              alignment="TOP_RIGHT"
+                              pickOnBounds="false"
+                              StackPane.alignment="CENTER_RIGHT">
+                            <children>
+                                <Button text="Clear"
+                                        focusTraversable="false"
+                                        minHeight="22.0"
+                                        prefHeight="22.0"
+                                        onAction="#onClearConsoleOutput" />
+                                <Button text="Copy"
+                                        focusTraversable="false"
+                                        minHeight="22.0"
+                                        prefHeight="22.0"
+                                        onAction="#onCopyConsoleOutput" />
+                            </children>
+                        </HBox>
+                    </StackPane>
+                    <StackPane>
+                        <TextField fx:id="infoField"
+                                   id="infoField"
+                                   focusTraversable="false"
+                                   minHeight="26.0"
+                                   prefHeight="26.0"
+                                   maxHeight="26.0"
+                                   style="-fx-padding: 0 112 0 6;" />
+                        <HBox spacing="4"
+                              alignment="CENTER_RIGHT"
+                              pickOnBounds="false"
+                              StackPane.alignment="CENTER_RIGHT">
+                            <children>
+                                <Button text="Clear"
+                                        focusTraversable="false"
+                                        minHeight="22.0"
+                                        prefHeight="22.0"
+                                        onAction="#onClearInfoField" />
+                                <Button text="Copy"
+                                        focusTraversable="false"
+                                        minHeight="22.0"
+                                        prefHeight="22.0"
+                                        onAction="#onCopyInfoField" />
+                            </children>
+                        </HBox>
+                    </StackPane>
                 </VBox>
 
             </items>
