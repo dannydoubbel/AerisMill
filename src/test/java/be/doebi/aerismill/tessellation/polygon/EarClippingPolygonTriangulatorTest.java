@@ -307,7 +307,7 @@ class EarClippingPolygonTriangulatorTest {
     }
 
     @Test
-    void triangulate_rejectsMultipleHoles() {
+    void triangulate_acceptsMultipleHoles() {
         EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
 
         PolygonWithHoles2 polygon = new PolygonWithHoles2(
@@ -324,14 +324,26 @@ class EarClippingPolygonTriangulatorTest {
                 )
         );
 
-        UnsupportedOperationException ex = assertThrows(
-                UnsupportedOperationException.class,
-                () -> triangulator.triangulate(polygon)
-        );
+        List<int[]> triangles = assertDoesNotThrow(() -> triangulator.triangulate(polygon));
 
-        assertEquals("Multiple polygon holes are not supported yet.", ex.getMessage());
+        assertNotNull(triangles);
+        assertFalse(triangles.isEmpty());
+
+        int originalVertexCount =
+                polygon.outer().points().size()
+                        + polygon.holes().get(0).points().size()
+                        + polygon.holes().get(1).points().size();
+
+        for (int[] triangle : triangles) {
+            assertNotNull(triangle);
+            assertEquals(3, triangle.length);
+
+            for (int index : triangle) {
+                assertTrue(index >= 0);
+                assertTrue(index < originalVertexCount);
+            }
+        }
     }
-
     @Test
     void bridgeSingleHoleIntoOuterLoop_triesAlternateVisibleBridgeWhenNearestCreatesSelfIntersection() {
         ScriptedEarClippingPolygonTriangulator triangulator =
@@ -390,6 +402,39 @@ class EarClippingPolygonTriangulatorTest {
                 ex.getMessage()
         );
         assertEquals(List.of(0, 1), triangulator.attemptedOuterPositions());
+    }
+
+    @Test
+    void triangulate_polygonWithHole_returnsIndicesWithinOriginalOuterAndHolePointSpace() {
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+
+        PolygonLoop2 outer = new PolygonLoop2(List.of(
+                new Point2(0.0, 0.0),
+                new Point2(10.0, 0.0),
+                new Point2(10.0, 10.0),
+                new Point2(0.0, 10.0)
+        ));
+
+        PolygonLoop2 hole = new PolygonLoop2(List.of(
+                new Point2(3.0, 3.0),
+                new Point2(7.0, 3.0),
+                new Point2(7.0, 7.0),
+                new Point2(3.0, 7.0)
+        ));
+
+        PolygonWithHoles2 polygon = new PolygonWithHoles2(outer, List.of(hole));
+
+        List<int[]> triangles = triangulator.triangulate(polygon);
+
+        int originalVertexCount = outer.points().size() + hole.points().size();
+
+        for (int[] triangle : triangles) {
+            assertEquals(3, triangle.length);
+            for (int index : triangle) {
+                assertTrue(index >= 0);
+                assertTrue(index < originalVertexCount);
+            }
+        }
     }
 
 

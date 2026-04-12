@@ -273,7 +273,12 @@ public class PlanarFaceTessellator implements FaceTessellator {
 
             for (int index : triangle) {
                 if (index < 0 || index >= vertexCount) {
-                    throw new IllegalArgumentException("Triangle index out of bounds for boundary vertices.");
+                    throw new IllegalArgumentException(
+                            "Triangle index out of bounds for boundary vertices: "
+                                    + "triangle=[" + triangle[0] + ", " + triangle[1] + ", " + triangle[2] + "]"
+                                    + ", offendingIndex=" + index
+                                    + ", boundaryVertexCount=" + vertexCount
+                    );
                 }
             }
         }

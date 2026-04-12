@@ -46,9 +46,54 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
             }
         }
 
-        PolygonLoop2 mergedOuter = mergeHolesIntoOuter(polygon.outer(), polygon.holes());
+        return triangulatePolygonWithHoles(polygon.outer(), polygon.holes());
+    }
 
-        return triangulateSimpleLoop(mergedOuter);
+    List<int[]> triangulatePolygonWithHoles(PolygonLoop2 outer, List<PolygonLoop2> holes) {
+        if (outer == null) {
+            throw new IllegalArgumentException("Outer loop must not be null.");
+        }
+        if (outer.points() == null) {
+            throw new IllegalArgumentException("Outer loop points must not be null.");
+        }
+        if (holes == null) {
+            throw new IllegalArgumentException("Holes must not be null.");
+        }
+
+        List<Point2> allPoints = new ArrayList<>(outer.points());
+        List<Integer> mergedIndices = buildNormalizedOuterIndices(outer.points());
+
+        for (PolygonLoop2 hole : holes) {
+            if (hole == null) {
+                throw new IllegalArgumentException("Polygon hole loop must not be null.");
+            }
+            if (hole.points() == null) {
+                throw new IllegalArgumentException("Polygon hole loop points must not be null.");
+            }
+            if (hole.points().size() < 3) {
+                throw new IllegalArgumentException("Polygon hole loop must contain at least three points.");
+            }
+
+            int holeOffset = allPoints.size();
+            allPoints.addAll(hole.points());
+
+            List<Integer> holeIndices = buildNormalizedHoleIndices(hole.points(), holeOffset);
+
+            List<Point2> currentOuterPoints = new ArrayList<>(mergedIndices.size());
+            for (Integer index : mergedIndices) {
+                currentOuterPoints.add(allPoints.get(index));
+            }
+
+            mergedIndices = bridgeSingleHoleIntoOuterLoop(
+                    allPoints,
+                    currentOuterPoints,
+                    hole.points(),
+                    mergedIndices,
+                    holeIndices
+            );
+        }
+
+        return triangulateSimplePolygon(allPoints, mergedIndices);
     }
 
     List<int[]> triangulateSimplePolygon(List<Point2> points, List<Integer> polygonIndices) {
