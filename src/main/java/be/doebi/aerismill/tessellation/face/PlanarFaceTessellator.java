@@ -210,19 +210,17 @@ public class PlanarFaceTessellator implements FaceTessellator {
             List<Point3> boundaryPoints,
             FaceGeom face,
             int boundIndex,
-            int rawPointCount,
-            int collapsedPointCount
+            BoundPreparationStats stats,
+            String stage
     ) {
-        int openPointCount = boundaryPoints == null ? 0 : boundaryPoints.size();
+        int count = boundaryPoints == null ? 0 : boundaryPoints.size();
 
-        if (openPointCount < 3) {
+        if (count < 3) {
             throw new IllegalArgumentException(
                     faceBoundLabel(face, boundIndex)
-                            + ": boundary has only " + openPointCount
-                            + " point(s) after cleanup; at least 3 required for triangulation"
-                            + " (raw=" + rawPointCount
-                            + ", collapsed=" + collapsedPointCount
-                            + ", open=" + openPointCount + ")."
+                            + ": boundary has only " + count
+                            + " point(s) at stage '" + stage + "'; at least 3 required for triangulation"
+                            + " (" + formatBoundPreparationStats(stats) + ")."
             );
         }
     }
@@ -371,23 +369,30 @@ public class PlanarFaceTessellator implements FaceTessellator {
             List<Point2> projectedPoints
     ) {}
 
-
     PreparedLoop prepareProjectedPolygonLoop(FaceGeom face, LoopGeom loop, PlaneSurface3 plane, int boundIndex) {
         List<List<Point3>> discretizedEdgePointLists = collectDiscretizedEdgePoints(loop, face, boundIndex);
+        List<Integer> perEdgeSampleCounts = collectEdgeSampleCounts(discretizedEdgePointLists);
+        int edgeCount = perEdgeSampleCounts.size();
 
         List<Point3> boundaryPoints = flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
-        int rawPointCount = boundaryPoints.size();
+        int raw3d = boundaryPoints.size();
 
         List<Point3> cleanedBoundaryPoints = collapseConsecutiveDuplicateBoundaryPoints(boundaryPoints);
-        int collapsedPointCount = cleanedBoundaryPoints.size();
+        int collapsed3d = cleanedBoundaryPoints.size();
 
         List<Point3> openBoundaryPoints = removeClosingDuplicateBoundaryPoint(cleanedBoundaryPoints);
-        int openPointCount = openBoundaryPoints.size();
+        int open3d = openBoundaryPoints.size();
 
-        LoopPreparationStats preProjectionStats = new LoopPreparationStats(
-                rawPointCount,
-                collapsedPointCount,
-                openPointCount,
+        BoundPreparationStats preProjectionStats = new BoundPreparationStats(
+                edgeCount,
+                perEdgeSampleCounts,
+                raw3d,
+                collapsed3d,
+                open3d,
+                -1,
+                -1,
+                -1,
+                -1,
                 -1,
                 -1
         );
@@ -406,35 +411,40 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 face,
                 boundIndex
         );
-        int projectedPointCount = projectedBoundaryPoints.size();
 
-        SimplifiedProjectedLoop simplifiedLoop = simplifyProjectedLoop(
+        ProjectedCleanupSnapshot projectedSnapshot = snapshotProjectedCleanup(
                 openBoundaryPoints,
                 projectedBoundaryPoints
         );
-        int simplifiedPointCount = simplifiedLoop.projectedPoints().size();
 
-        LoopPreparationStats postProjectionStats = new LoopPreparationStats(
-                rawPointCount,
-                collapsedPointCount,
-                openPointCount,
-                projectedPointCount,
-                simplifiedPointCount
+        BoundPreparationStats postProjectionStats = new BoundPreparationStats(
+                edgeCount,
+                perEdgeSampleCounts,
+                raw3d,
+                collapsed3d,
+                open3d,
+                projectedSnapshot.projectedRaw().size(),
+                projectedSnapshot.projectedCollapsed().size(),
+                projectedSnapshot.projectedOpen().size(),
+                projectedSnapshot.projectedNoBacktracks().size(),
+                projectedSnapshot.projectedNoCollinear().size(),
+                projectedSnapshot.finalProjected().size()
         );
 
         validateBoundaryHasAtLeastThreePoints(
-                simplifiedLoop.boundaryPoints(),
+                projectedSnapshot.boundaryPoints(),
                 face,
                 boundIndex,
                 postProjectionStats,
                 "after-projected-simplification"
         );
 
-        PolygonLoop2 polygonLoop = buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
+        PolygonLoop2 polygonLoop = buildOuterPolygonLoop(projectedSnapshot.finalProjected());
         validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
 
-        return new PreparedLoop(simplifiedLoop.boundaryPoints(), polygonLoop);
+        return new PreparedLoop(projectedSnapshot.boundaryPoints(), polygonLoop);
     }
+
 
     void validateProjectedBoundaryIsSimple(PolygonLoop2 outerLoop, FaceGeom face, int boundIndex) {
         if (outerLoop == null) {
@@ -1077,6 +1087,86 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return null;
     }
 
+    List<Integer> collectEdgeSampleCounts(List<List<Point3>> discretizedEdgePointLists) {
+        List<Integer> counts = new ArrayList<>();
+
+        if (discretizedEdgePointLists == null) {
+            return counts;
+        }
+
+        for (List<Point3> edgePoints : discretizedEdgePointLists) {
+            counts.add(edgePoints == null ? 0 : edgePoints.size());
+        }
+
+        return counts;
+    }
+
+    ProjectedCleanupSnapshot snapshotProjectedCleanup(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        if (boundaryPoints == null) {
+            throw new IllegalArgumentException("Boundary points must not be null.");
+        }
+        if (projectedPoints == null) {
+            throw new IllegalArgumentException("Projected points must not be null.");
+        }
+        if (boundaryPoints.size() != projectedPoints.size()) {
+            throw new IllegalArgumentException("Boundary points and projected points must have the same size.");
+        }
+
+        List<Point2> projectedRaw = new ArrayList<>(projectedPoints);
+
+        SimplifiedProjectedLoop collapsed = collapseConsecutiveDuplicateProjectedPoints(
+                boundaryPoints,
+                projectedPoints
+        );
+
+        SimplifiedProjectedLoop withoutClosingDuplicate = removeClosingDuplicateProjectedPoint(
+                collapsed.boundaryPoints(),
+                collapsed.projectedPoints()
+        );
+
+        SimplifiedProjectedLoop withoutBacktracks = removeImmediateBacktracks(
+                withoutClosingDuplicate.boundaryPoints(),
+                withoutClosingDuplicate.projectedPoints()
+        );
+
+        SimplifiedProjectedLoop withoutCollinear = removeCollinearProjectedPoints(
+                withoutBacktracks.boundaryPoints(),
+                withoutBacktracks.projectedPoints()
+        );
+
+        SimplifiedProjectedLoop finalLoop = simplifyProjectedLoop(
+                boundaryPoints,
+                projectedPoints
+        );
+
+        return new ProjectedCleanupSnapshot(
+                finalLoop.boundaryPoints(),
+                projectedRaw,
+                new ArrayList<>(collapsed.projectedPoints()),
+                new ArrayList<>(withoutClosingDuplicate.projectedPoints()),
+                new ArrayList<>(withoutBacktracks.projectedPoints()),
+                new ArrayList<>(withoutCollinear.projectedPoints()),
+                new ArrayList<>(finalLoop.projectedPoints())
+        );
+    }
+
+    private String formatBoundPreparationStats(BoundPreparationStats stats) {
+        return "edgeCount=" + stats.edgeCount()
+                + ", perEdgeSampleCounts=" + stats.perEdgeSampleCounts()
+                + ", raw3d=" + stats.raw3d()
+                + ", collapsed3d=" + stats.collapsed3d()
+                + ", open3d=" + stats.open3d()
+                + ", projectedRaw=" + stats.projectedRaw()
+                + ", projectedCollapsed=" + stats.projectedCollapsed()
+                + ", projectedOpen=" + stats.projectedOpen()
+                + ", projectedNoBacktracks=" + stats.projectedNoBacktracks()
+                + ", projectedNoCollinear=" + stats.projectedNoCollinear()
+                + ", final2d=" + stats.final2d();
+    }
+
     static record LoopPreparationStats(
             int raw3dCount,
             int collapsed3dCount,
@@ -1092,6 +1182,30 @@ public class PlanarFaceTessellator implements FaceTessellator {
             Point2 a2,
             Point2 b1,
             Point2 b2
+    ) {}
+
+    static record BoundPreparationStats(
+            int edgeCount,
+            List<Integer> perEdgeSampleCounts,
+            int raw3d,
+            int collapsed3d,
+            int open3d,
+            int projectedRaw,
+            int projectedCollapsed,
+            int projectedOpen,
+            int projectedNoBacktracks,
+            int projectedNoCollinear,
+            int final2d
+    ) {}
+
+    static record ProjectedCleanupSnapshot(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedRaw,
+            List<Point2> projectedCollapsed,
+            List<Point2> projectedOpen,
+            List<Point2> projectedNoBacktracks,
+            List<Point2> projectedNoCollinear,
+            List<Point2> finalProjected
     ) {}
 
 }

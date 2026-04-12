@@ -98,6 +98,46 @@ class PlanarFaceTessellatorTest {
         assertTrue(exception.getMessage().contains("face must have at least one bound"));
     }
 
+    @Test
+    void validateBoundaryHasAtLeastThreePoints_includesBoundPreparationStatsInMessage() {
+        PlanarFaceTessellator tessellator = new PlanarFaceTessellator(null, null, null, null);
+        FaceGeom face = planarFace("#face1", loop("#loop1"));
+
+        PlanarFaceTessellator.BoundPreparationStats stats =
+                new PlanarFaceTessellator.BoundPreparationStats(
+                        2,
+                        List.of(2, 2),
+                        4,
+                        3,
+                        2,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1,
+                        -1
+                );
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> tessellator.validateBoundaryHasAtLeastThreePoints(
+                        List.of(new Point3(0, 0, 0), new Point3(1, 0, 0)),
+                        face,
+                        0,
+                        stats,
+                        "after-3d-cleanup"
+                )
+        );
+
+        assertTrue(ex.getMessage().contains("edgeCount=2"));
+        assertTrue(ex.getMessage().contains("perEdgeSampleCounts=[2, 2]"));
+        assertTrue(ex.getMessage().contains("raw3d=4"));
+        assertTrue(ex.getMessage().contains("collapsed3d=3"));
+        assertTrue(ex.getMessage().contains("open3d=2"));
+    }
+
+
+
 
     private Surface3 createPlanarSurface() {
         return null; // replace with your actual PlaneSurface3 constructor
