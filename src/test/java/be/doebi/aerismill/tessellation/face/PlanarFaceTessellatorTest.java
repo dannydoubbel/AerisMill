@@ -115,7 +115,12 @@ class PlanarFaceTessellatorTest {
                         -1,
                         -1,
                         -1,
-                        -1
+                        -1,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
                 );
 
         IllegalArgumentException ex = assertThrows(
