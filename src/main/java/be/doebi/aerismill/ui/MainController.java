@@ -13,6 +13,7 @@ import be.doebi.aerismill.model.step.base.StepModel;
 import be.doebi.aerismill.service.*;
 import be.doebi.aerismill.tessellation.curve.DefaultEdgeDiscretizer;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
+import be.doebi.aerismill.tessellation.face.DefaultFaceTessellator;
 import be.doebi.aerismill.tessellation.face.FaceTessellator;
 import be.doebi.aerismill.tessellation.face.PlanarFaceTessellator;
 import be.doebi.aerismill.tessellation.polygon.EarClippingPolygonTriangulator;
@@ -710,7 +711,7 @@ public class MainController {
         // PolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
         PolygonTriangulator polygonTriangulator = new EarClippingPolygonTriangulator();
 
-        FaceTessellator faceTessellator = new PlanarFaceTessellator(
+        FaceTessellator faceTessellator = new DefaultFaceTessellator /* PlanarFaceTessellator*/(
                 edgeDiscretizer,
                 polygonTriangulator,
                 planeProjector,
