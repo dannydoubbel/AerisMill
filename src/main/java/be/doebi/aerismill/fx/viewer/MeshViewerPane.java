@@ -3,8 +3,15 @@ package be.doebi.aerismill.fx.viewer;
 import be.doebi.aerismill.model.geom.math.Point3;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshBounds;
+import be.doebi.aerismill.model.mesh.MeshTriangle;
+import be.doebi.aerismill.model.mesh.MeshVertex;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.input.PickResult;
+import javafx.scene.paint.PhongMaterial;
+import javafx.scene.shape.CullFace;
+import javafx.scene.shape.DrawMode;
+import javafx.scene.shape.TriangleMesh;
 import javafx.scene.control.Label;
 import javafx.scene.AmbientLight;
 import javafx.scene.Group;
@@ -49,6 +56,16 @@ public class MeshViewerPane extends StackPane {
 
     private double anchorPanTranslateX;
     private double anchorPanTranslateY;
+
+
+    private Mesh currentMesh;
+    private MeshView selectedTriangleOverlay;
+
+    private static final PhongMaterial SELECTED_TRIANGLE_MATERIAL =
+            new PhongMaterial(Color.YELLOW);
+
+    private static final double HIGHLIGHT_OFFSET_FACTOR = 0.0005;
+    private static final double HIGHLIGHT_OFFSET_MIN = 0.01;
 
     private final Label overlayLabel = new Label();
 
@@ -107,7 +124,20 @@ public class MeshViewerPane extends StackPane {
     public void setMesh(Mesh mesh) {
         Objects.requireNonNull(mesh, "mesh must not be null");
 
+        currentMesh = mesh;
+        clearSelection();
+
         MeshView meshView = meshViewFactory.create(mesh);
+        meshView.setOnMouseClicked(event -> {
+            PickResult pickResult = event.getPickResult();
+            int faceIndex = pickResult.getIntersectedFace();
+
+            if (faceIndex >= 0) {
+                selectTriangle(faceIndex);
+                event.consume();
+            }
+        });
+
         modelContent.getChildren().setAll(meshView);
 
         resetView();
@@ -173,6 +203,18 @@ public class MeshViewerPane extends StackPane {
             }
         });
 
+        subScene.setOnMouseClicked(event -> {
+            Object target = event.getTarget();
+            if (!(target instanceof MeshView)) {
+                clearSelection();
+                if (currentMesh != null) {
+                    updateOverlay(currentMesh);
+                }
+            }
+        });
+
+
+
         subScene.setOnScroll(event -> {
             if (event.getDeltaY() == 0.0) {
                 return;
@@ -213,6 +255,9 @@ public class MeshViewerPane extends StackPane {
     }
 
     public void clear() {
+        currentMesh = null;
+        clearSelection();
+
         modelContent.getChildren().clear();
         modelContent.setTranslateX(0);
         modelContent.setTranslateY(0);
@@ -223,5 +268,122 @@ public class MeshViewerPane extends StackPane {
 
     private static double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+
+    private void selectTriangle(int triangleIndex) {
+        if (currentMesh == null) {
+            return;
+        }
+
+        if (triangleIndex < 0 || triangleIndex >= currentMesh.triangles().size()) {
+            clearSelection();
+            updateOverlay(currentMesh);
+            return;
+        }
+
+        MeshTriangle triangle = currentMesh.triangles().get(triangleIndex);
+
+        MeshVertex va = currentMesh.vertices().get(triangle.a());
+        MeshVertex vb = currentMesh.vertices().get(triangle.b());
+        MeshVertex vc = currentMesh.vertices().get(triangle.c());
+
+        Point3 a = va.point();
+        Point3 b = vb.point();
+        Point3 c = vc.point();
+
+        MeshView overlay = createTriangleOverlay(a, b, c);
+
+        clearSelection();
+        selectedTriangleOverlay = overlay;
+        modelContent.getChildren().add(selectedTriangleOverlay);
+
+        updateOverlay(currentMesh, triangleIndex, triangle);
+    }
+
+    private MeshView createTriangleOverlay(Point3 a, Point3 b, Point3 c) {
+        double[] normal = computeUnitNormal(a, b, c);
+
+        double diagonal = currentMesh.bounds().diagonal();
+        double offset = Math.max(diagonal * HIGHLIGHT_OFFSET_FACTOR, HIGHLIGHT_OFFSET_MIN);
+
+        Point3 oa = offsetPoint(a, normal, offset);
+        Point3 ob = offsetPoint(b, normal, offset);
+        Point3 oc = offsetPoint(c, normal, offset);
+
+        TriangleMesh fxMesh = new TriangleMesh();
+        fxMesh.getTexCoords().addAll(0f, 0f);
+
+        fxMesh.getPoints().addAll(
+                (float) oa.x(), (float) oa.y(), (float) oa.z(),
+                (float) ob.x(), (float) ob.y(), (float) ob.z(),
+                (float) oc.x(), (float) oc.y(), (float) oc.z()
+        );
+
+        fxMesh.getFaces().addAll(
+                0, 0,
+                1, 0,
+                2, 0
+        );
+
+        MeshView overlay = new MeshView(fxMesh);
+        overlay.setCullFace(CullFace.NONE);
+        overlay.setDrawMode(DrawMode.FILL);
+        overlay.setMaterial(SELECTED_TRIANGLE_MATERIAL);
+        overlay.setMouseTransparent(true);
+
+        return overlay;
+    }
+
+    private void clearSelection() {
+        if (selectedTriangleOverlay != null) {
+            modelContent.getChildren().remove(selectedTriangleOverlay);
+            selectedTriangleOverlay = null;
+        }
+    }
+
+    private void updateOverlay(Mesh mesh, int triangleIndex, MeshTriangle triangle) {
+        MeshBounds bounds = mesh.bounds();
+
+        overlayLabel.setText(
+                "Vertices : " + mesh.vertexCount() + System.lineSeparator() +
+                        "Triangles: " + mesh.triangleCount() + System.lineSeparator() +
+                        "Size     : " + format(bounds.sizeX()) + " x "
+                        + format(bounds.sizeY()) + " x "
+                        + format(bounds.sizeZ()) + System.lineSeparator() +
+                        "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
+                        "Selected : triangle #" + triangleIndex + " [" +
+                        triangle.a() + ", " + triangle.b() + ", " + triangle.c() + "]"
+        );
+    }
+
+    private static Point3 offsetPoint(Point3 point, double[] normal, double offset) {
+        return new Point3(
+                point.x() + normal[0] * offset,
+                point.y() + normal[1] * offset,
+                point.z() + normal[2] * offset
+        );
+    }
+
+    private static double[] computeUnitNormal(Point3 a, Point3 b, Point3 c) {
+        double ux = b.x() - a.x();
+        double uy = b.y() - a.y();
+        double uz = b.z() - a.z();
+
+        double vx = c.x() - a.x();
+        double vy = c.y() - a.y();
+        double vz = c.z() - a.z();
+
+        double nx = uy * vz - uz * vy;
+        double ny = uz * vx - ux * vz;
+        double nz = ux * vy - uy * vx;
+
+        double length = Math.sqrt(nx * nx + ny * ny + nz * nz);
+
+        if (length == 0.0) {
+            return new double[]{0.0, 0.0, 1.0};
+        }
+
+        return new double[]{nx / length, ny / length, nz / length};
     }
 }
