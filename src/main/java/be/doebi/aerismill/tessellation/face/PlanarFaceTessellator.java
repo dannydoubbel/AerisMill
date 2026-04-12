@@ -220,7 +220,9 @@ public class PlanarFaceTessellator implements FaceTessellator {
                     faceBoundLabel(face, boundIndex)
                             + ": boundary has only " + count
                             + " point(s) at stage '" + stage + "'; at least 3 required for triangulation"
-                            + " (" + formatBoundPreparationStats(stats) + ")."
+                            + " (" + formatBoundPreparationStats(stats) + "). "
+                            + formatBoundPreparationPointTraces(stats)
+                            + "."
             );
         }
     }
@@ -394,7 +396,11 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 -1,
                 -1,
                 -1,
-                -1
+                -1,
+                new ArrayList<>(openBoundaryPoints),
+                null,
+                null,
+                null
         );
 
         validateBoundaryHasAtLeastThreePoints(
@@ -428,7 +434,11 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 projectedSnapshot.projectedOpen().size(),
                 projectedSnapshot.projectedNoBacktracks().size(),
                 projectedSnapshot.projectedNoCollinear().size(),
-                projectedSnapshot.finalProjected().size()
+                projectedSnapshot.finalProjected().size(),
+                new ArrayList<>(openBoundaryPoints),
+                new ArrayList<>(projectedSnapshot.projectedRaw()),
+                new ArrayList<>(projectedSnapshot.projectedCollapsed()),
+                new ArrayList<>(projectedSnapshot.projectedOpen())
         );
 
         validateBoundaryHasAtLeastThreePoints(
@@ -1167,6 +1177,63 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 + ", final2d=" + stats.final2d();
     }
 
+
+
+    private String formatBoundPreparationPointTraces(BoundPreparationStats stats) {
+        return "open3dPoints=" + formatPoint3List(stats.open3dPoints())
+                + ", projectedRawPoints=" + formatPoint2List(stats.projectedRawPoints())
+                + ", projectedCollapsedPoints=" + formatPoint2List(stats.projectedCollapsedPoints())
+                + ", projectedOpenPoints=" + formatPoint2List(stats.projectedOpenPoints());
+    }
+
+    private String formatPoint3List(List<Point3> points) {
+        if (points == null) {
+            return "null";
+        }
+        if (points.isEmpty()) {
+            return "[]";
+        }
+
+        int limit = Math.min(points.size(), 8);
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            Point3 p = points.get(i);
+            sb.append("(").append(p.x()).append(", ").append(p.y()).append(", ").append(p.z()).append(")");
+        }
+        if (points.size() > limit) {
+            sb.append(", ... total=").append(points.size());
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private String formatPoint2List(List<Point2> points) {
+        if (points == null) {
+            return "null";
+        }
+        if (points.isEmpty()) {
+            return "[]";
+        }
+
+        int limit = Math.min(points.size(), 8);
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            Point2 p = points.get(i);
+            sb.append("(").append(p.x()).append(", ").append(p.y()).append(")");
+        }
+        if (points.size() > limit) {
+            sb.append(", ... total=").append(points.size());
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+
     static record LoopPreparationStats(
             int raw3dCount,
             int collapsed3dCount,
@@ -1195,7 +1262,11 @@ public class PlanarFaceTessellator implements FaceTessellator {
             int projectedOpen,
             int projectedNoBacktracks,
             int projectedNoCollinear,
-            int final2d
+            int final2d,
+            List<Point3> open3dPoints,
+            List<Point2> projectedRawPoints,
+            List<Point2> projectedCollapsedPoints,
+            List<Point2> projectedOpenPoints
     ) {}
 
     static record ProjectedCleanupSnapshot(
