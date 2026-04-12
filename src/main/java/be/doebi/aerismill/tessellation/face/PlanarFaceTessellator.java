@@ -1,6 +1,7 @@
 package be.doebi.aerismill.tessellation.face;
 
 import be.doebi.aerismill.model.geom.math.Point3;
+import be.doebi.aerismill.model.geom.math.Vec3;
 import be.doebi.aerismill.model.geom.surface.PlaneSurface3;
 import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
 import be.doebi.aerismill.model.geom.topology.FaceGeom;
@@ -51,6 +52,8 @@ public class PlanarFaceTessellator implements FaceTessellator {
 
         List<Point3> boundaryPoints = collectPreparedBoundaryPoints(preparedLoops);
         List<Point2> projectedBoundaryPoints = collectPreparedProjectedPoints(preparedLoops);
+
+
 
         validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
         validateTriangleIndices(boundaryPoints, triangles);
@@ -216,14 +219,21 @@ public class PlanarFaceTessellator implements FaceTessellator {
         int count = boundaryPoints == null ? 0 : boundaryPoints.size();
 
         if (count < 3) {
-            throw new IllegalArgumentException(
-                    faceBoundLabel(face, boundIndex)
-                            + ": boundary has only " + count
-                            + " point(s) at stage '" + stage + "'; at least 3 required for triangulation"
-                            + " (" + formatBoundPreparationStats(stats) + "). "
-                            + formatBoundPreparationPointTraces(stats)
-                            + "."
-            );
+            StringBuilder message = new StringBuilder();
+            message.append(faceBoundLabel(face, boundIndex))
+                    .append(": boundary has only ").append(count)
+                    .append(" point(s) at stage '").append(stage)
+                    .append("'; at least 3 required for triangulation")
+                    .append(" (").append(formatBoundPreparationStats(stats)).append("). ")
+                    .append(formatBoundPreparationPointTraces(stats));
+
+            if (stats.frameDebug() != null) {
+                message.append(". ").append(stats.frameDebug());
+            }
+
+            message.append(".");
+
+            throw new IllegalArgumentException(message.toString());
         }
     }
 
@@ -400,6 +410,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 new ArrayList<>(openBoundaryPoints),
                 null,
                 null,
+                null,
                 null
         );
 
@@ -423,6 +434,13 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 projectedBoundaryPoints
         );
 
+        String frameDebug = null;
+        if (openBoundaryPoints.size() == 4
+                && projectedSnapshot.projectedCollapsed().size() == 3
+                && projectedSnapshot.projectedOpen().size() == 2) {
+            frameDebug = buildPlaneFrameDebug(plane, openBoundaryPoints);
+        }
+
         BoundPreparationStats postProjectionStats = new BoundPreparationStats(
                 edgeCount,
                 perEdgeSampleCounts,
@@ -438,7 +456,8 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 new ArrayList<>(openBoundaryPoints),
                 new ArrayList<>(projectedSnapshot.projectedRaw()),
                 new ArrayList<>(projectedSnapshot.projectedCollapsed()),
-                new ArrayList<>(projectedSnapshot.projectedOpen())
+                new ArrayList<>(projectedSnapshot.projectedOpen()),
+                frameDebug
         );
 
         validateBoundaryHasAtLeastThreePoints(
@@ -454,6 +473,9 @@ public class PlanarFaceTessellator implements FaceTessellator {
 
         return new PreparedLoop(projectedSnapshot.boundaryPoints(), polygonLoop);
     }
+
+
+
 
 
     void validateProjectedBoundaryIsSimple(PolygonLoop2 outerLoop, FaceGeom face, int boundIndex) {
@@ -1234,6 +1256,90 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return sb.toString();
     }
 
+    private void debugPlaneProjectionBasis(
+            FaceGeom face,
+            int boundIndex,
+            PlaneSurface3 plane,
+            List<Point3> open3dPoints,
+            List<Point2> projectedRawPoints
+    ) {
+        System.out.println(
+                faceBoundLabel(face, boundIndex)
+                        + " projection debug:"
+                        + " origin=" + plane.frame().origin()
+                        + ", xAxis=" + plane.frame().xAxis()
+                        + ", yAxis=" + plane.frame().yAxis()
+                        + ", open3dPoints=" + open3dPoints
+                        + ", projectedRawPoints=" + projectedRawPoints
+        );
+    }
+
+    private void debugPlaneFrameCoordinates(
+            FaceGeom face,
+            int boundIndex,
+            PlaneSurface3 plane,
+            List<Point3> open3dPoints
+    ) {
+        Point3 origin = plane.frame().origin();
+        Vec3 xAxis = plane.frame().xAxis().toVec3();
+        Vec3 yAxis = plane.frame().yAxis().toVec3();
+        Vec3 zAxis = plane.frame().zAxis().toVec3();
+
+        System.out.println(faceBoundLabel(face, boundIndex) + " frame debug:"
+                + " origin=" + origin
+                + ", xAxis=" + plane.frame().xAxis()
+                + ", yAxis=" + plane.frame().yAxis()
+                + ", zAxis=" + plane.frame().zAxis());
+
+        for (int i = 0; i < open3dPoints.size(); i++) {
+            Point3 p = open3dPoints.get(i);
+            Vec3 delta = p.subtract(origin);
+
+            double dx = delta.dot(xAxis);
+            double dy = delta.dot(yAxis);
+            double dz = delta.dot(zAxis);
+
+            System.out.println("  p" + i + "=" + p
+                    + " -> local=(" + dx + ", " + dy + ", " + dz + ")");
+        }
+    }
+
+    private String buildPlaneFrameDebug(
+            PlaneSurface3 plane,
+            List<Point3> open3dPoints
+    ) {
+        Point3 origin = plane.frame().origin();
+        Vec3 xAxis = plane.frame().xAxis().toVec3();
+        Vec3 yAxis = plane.frame().yAxis().toVec3();
+        Vec3 zAxis = plane.frame().zAxis().toVec3();
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("frameOrigin=").append(origin)
+                .append(", frameXAxis=").append(plane.frame().xAxis())
+                .append(", frameYAxis=").append(plane.frame().yAxis())
+                .append(", frameZAxis=").append(plane.frame().zAxis())
+                .append(", localPoints=[");
+
+        for (int i = 0; i < open3dPoints.size(); i++) {
+            Point3 p = open3dPoints.get(i);
+            Vec3 delta = p.subtract(origin);
+
+            double dx = delta.dot(xAxis);
+            double dy = delta.dot(yAxis);
+            double dz = delta.dot(zAxis);
+
+            if (i > 0) {
+                sb.append(", ");
+            }
+
+            sb.append("p").append(i)
+                    .append("=(").append(dx).append(", ").append(dy).append(", ").append(dz).append(")");
+        }
+
+        sb.append("]");
+        return sb.toString();
+    }
+
     static record LoopPreparationStats(
             int raw3dCount,
             int collapsed3dCount,
@@ -1266,7 +1372,8 @@ public class PlanarFaceTessellator implements FaceTessellator {
             List<Point3> open3dPoints,
             List<Point2> projectedRawPoints,
             List<Point2> projectedCollapsedPoints,
-            List<Point2> projectedOpenPoints
+            List<Point2> projectedOpenPoints,
+            String frameDebug
     ) {}
 
     static record ProjectedCleanupSnapshot(

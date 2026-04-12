@@ -100,12 +100,22 @@ public final class DefaultPlacementEvaluator implements PlacementEvaluator {
 
         Point3 origin = evaluatePoint(location);
 
-        UnitVec3 zAxis = placement.getAxis() != null
-                ? evaluateDirection(placement.getAxis())
+        Direction axis = placement.getAxis();
+        if (axis == null && placement.getAxisRef() != null) {
+            axis = requireDirectionEntity(placement.getAxisRef(), placement.getId(), "axis");
+        }
+
+        Direction refDirection = placement.getRefDirection();
+        if (refDirection == null && placement.getRefDirectionRef() != null) {
+            refDirection = requireDirectionEntity(placement.getRefDirectionRef(), placement.getId(), "refDirection");
+        }
+
+        UnitVec3 zAxis = axis != null
+                ? evaluateDirection(axis)
                 : DEFAULT_Z;
 
-        UnitVec3 xHint = placement.getRefDirection() != null
-                ? evaluateDirection(placement.getRefDirection())
+        UnitVec3 xHint = refDirection != null
+                ? evaluateDirection(refDirection)
                 : DEFAULT_X;
 
         Frame3 result = buildFrame(origin, zAxis, xHint);
