@@ -8,6 +8,7 @@ import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
 import be.doebi.aerismill.tessellation.face.FaceMeshPatch;
 import be.doebi.aerismill.tessellation.face.FaceTessellator;
+import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +52,15 @@ public class PreviewShellTessellator implements ShellTessellator {
                 appendTrianglesWithOffset(combinedTriangles, patch.triangles(), vertexOffset);
 
             } catch (IllegalArgumentException ex) {
-                skippedReasons.add(ex.getMessage());
+                String surfaceType = face.surface() == null
+                        ? "null"
+                        : face.surface().getClass().getSimpleName();
+
+                String reason = "Face " + face.stepId()
+                        + " [" + surfaceType + "]: " + ex.getMessage();
+
+                skippedReasons.add(reason);
+                AppConsole.log(reason);
             }
         }
 
