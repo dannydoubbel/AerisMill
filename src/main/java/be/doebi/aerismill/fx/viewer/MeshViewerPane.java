@@ -8,6 +8,7 @@ import be.doebi.aerismill.model.mesh.MeshVertex;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.input.PickResult;
+import javafx.scene.layout.Region;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
@@ -97,11 +98,21 @@ public class MeshViewerPane extends StackPane {
         );
         subScene.setFill(Color.rgb(30, 30, 30));
         subScene.setCamera(camera);
+        setCache(false);
+        overlayLabel.setCache(false);
+        subScene.setCache(false);
 
         subScene.widthProperty().bind(widthProperty());
         subScene.heightProperty().bind(heightProperty());
 
         getChildren().add(subScene);
+        setPrefSize(Region.USE_COMPUTED_SIZE, Region.USE_COMPUTED_SIZE);
+        setMinSize(200, 0);
+        setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);
+
+
+
+
 
         overlayLabel.setMouseTransparent(true);
         overlayLabel.setStyle("""
@@ -385,5 +396,34 @@ public class MeshViewerPane extends StackPane {
         }
 
         return new double[]{nx / length, ny / length, nz / length};
+    }
+
+    public void fitToView() {
+        if (currentMesh == null) {
+            return;
+        }
+
+        clearSelection();
+        resetView();
+        fitToMesh(currentMesh.bounds());
+        updateOverlay(currentMesh);
+    }
+
+    public void zoomIn() {
+        zoomByFactor(0.9);
+    }
+
+    public void zoomOut() {
+        zoomByFactor(1.1);
+    }
+
+    private void zoomByFactor(double factor) {
+        if (currentMesh == null) {
+            return;
+        }
+
+        cameraDistance *= factor;
+        cameraDistance = clamp(cameraDistance, minCameraDistance, maxCameraDistance);
+        applyCameraDistance();
     }
 }

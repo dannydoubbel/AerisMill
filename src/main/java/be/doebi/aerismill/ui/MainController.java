@@ -109,7 +109,7 @@ public class MainController {
         AppConsole.setConsoleConsumer(message -> {
             consoleOutput.appendText(message + System.lineSeparator());
         });
-        mainWorkArea.getChildren().add(meshViewerPane);
+        mainWorkArea.getChildren().add(0,meshViewerPane);
 
 
         setupManualSerialSendField();
@@ -746,6 +746,25 @@ public class MainController {
 
         meshViewerPane.clear();
     }
+
+    @FXML
+    private void onViewerFit(ActionEvent event) {
+        log("zoom to fit");
+        meshViewerPane.fitToView();;
+    }
+
+    @FXML
+    private void onViewerZoomIn(ActionEvent event) {
+        log("zoom in");
+        meshViewerPane.zoomIn();
+    }
+
+    @FXML
+    private void onViewerZoomOut(ActionEvent event) {
+        log("zoom out");
+        meshViewerPane.zoomOut();
+    }
+
 
 
 }

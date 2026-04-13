@@ -16,6 +16,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.SeparatorMenuItem?>
 
+<?import javafx.geometry.Insets?>
 <BorderPane fx:id="rootPane"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="be.doebi.aerismill.ui.MainController"
@@ -92,9 +93,31 @@
                                    minWidth="100.0">
                             <items>
 
-                                <StackPane fx:id="mainWorkArea"
-                                           minWidth="300.0"
-                                           minHeight="0.0"/>
+                                <StackPane fx:id="mainWorkArea" >
+                                    <children>
+                                        <AnchorPane pickOnBounds="false" mouseTransparent="false">
+                                            <children>
+                                                <HBox alignment="CENTER"
+                                                      spacing="8"
+                                                      mouseTransparent="false"
+                                                      AnchorPane.rightAnchor="12.0"
+                                                      AnchorPane.bottomAnchor="12.0">
+                                                    <children>
+                                                        <Button text="Fit"
+                                                                mnemonicParsing="false"
+                                                                onAction="#onViewerFit"/>
+                                                        <Button text="+"
+                                                                mnemonicParsing="false"
+                                                                onAction="#onViewerZoomIn"/>
+                                                        <Button text="-"
+                                                                mnemonicParsing="false"
+                                                                onAction="#onViewerZoomOut"/>
+                                                    </children>
+                                                </HBox>
+                                            </children>
+                                        </AnchorPane>
+                                    </children>
+                                </StackPane>
 
                                 <VBox fx:id="comConsolePane"
                                       spacing="6"
