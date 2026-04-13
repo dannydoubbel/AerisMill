@@ -673,7 +673,7 @@ public class MainController {
         System.out.println("issues: " + assemblyResult.issues().size());
 
         if (assemblyResult.solids().size() > 1) {
-            log("Preview note: multiple solids detected; evaluating all solids and selecting the best previewable candidate.");
+            log("Preview note: multiple solids detected; evaluating all solids and combining all previewable solids into one mesh.");
         }
 
         for (SolidAssemblyResult solid : assemblyResult.solids()) {

@@ -4,6 +4,8 @@ import be.doebi.aerismill.assemble.step.geom.AssembledSolidResult;
 import be.doebi.aerismill.assemble.step.geom.AssemblyResult;
 import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
 import be.doebi.aerismill.model.mesh.Mesh;
+import be.doebi.aerismill.model.mesh.MeshTriangle;
+import be.doebi.aerismill.model.mesh.MeshVertex;
 import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
@@ -12,9 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-
 public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
-
 
     private final Consumer<String> logSink;
     private final AssembledSolidMeshService assembledSolidMeshService;
@@ -45,25 +45,49 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
         }
 
         List<String> failureReasons = new ArrayList<>();
-        Optional<PreviewCandidate> bestCandidate = selectBestPreviewableSolid(solids, failureReasons);
+        List<PreviewCandidate> previewCandidates = collectPreviewCandidates(solids, failureReasons);
 
-        if (bestCandidate.isPresent()) {
-            PreviewCandidate selected = bestCandidate.get();
-            AppConsole.log("Preview selected solid[" + selected.solidIndex() + "] "
-                    + selected.stepId()
-                    + " because it has the highest preview score: "
-                    + selected.triangleCount() + " triangles, "
-                    + selected.vertexCount() + " vertices.");
-            return selected.mesh();
+        if (previewCandidates.isEmpty()) {
+            String firstReason = failureReasons.isEmpty()
+                    ? "No solid produced previewable mesh."
+                    : failureReasons.getFirst();
+
+            throw new IllegalArgumentException(
+                    "No previewable solids found in assembly. First reason: " + firstReason
+            );
         }
 
-        String firstReason = failureReasons.isEmpty()
-                ? "No solid produced previewable mesh."
-                : failureReasons.getFirst();
+        Mesh combinedMesh = previewCandidates.getFirst().mesh();
 
-        throw new IllegalArgumentException(
-                "No previewable solids found in assembly. First reason: " + firstReason
+        for (int i = 1; i < previewCandidates.size(); i++) {
+            PreviewCandidate candidate = previewCandidates.get(i);
+            combinedMesh = appendMesh(combinedMesh, candidate.mesh());
+        }
+
+        AppConsole.log(
+                "Preview combined " + previewCandidates.size() + " solid(s) into one mesh: "
+                        + combinedMesh.triangles().size() + " triangles, "
+                        + combinedMesh.vertices().size() + " vertices."
         );
+
+        return combinedMesh;
+    }
+
+    private List<PreviewCandidate> collectPreviewCandidates(
+            List<SolidAssemblyResult> solids,
+            List<String> failureReasons
+    ) {
+        List<PreviewCandidate> previewCandidates = new ArrayList<>();
+
+        for (int i = 0; i < solids.size(); i++) {
+            SolidAssemblyResult solidAssemblyResult = solids.get(i);
+            Optional<PreviewCandidate> candidateOpt =
+                    tryBuildPreviewCandidate(solidAssemblyResult, i, failureReasons);
+
+            candidateOpt.ifPresent(previewCandidates::add);
+        }
+
+        return previewCandidates;
     }
 
     private Optional<PreviewCandidate> tryBuildPreviewCandidate(
@@ -116,31 +140,6 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
         }
     }
 
-    private Optional<PreviewCandidate> selectBestPreviewableSolid(
-            List<SolidAssemblyResult> solids,
-            List<String> failureReasons
-    ) {
-        PreviewCandidate best = null;
-
-        for (int i = 0; i < solids.size(); i++) {
-            SolidAssemblyResult solidAssemblyResult = solids.get(i);
-            Optional<PreviewCandidate> candidateOpt =
-                    tryBuildPreviewCandidate(solidAssemblyResult, i, failureReasons);
-
-            if (candidateOpt.isEmpty()) {
-                continue;
-            }
-
-            PreviewCandidate candidate = candidateOpt.get();
-
-            if (best == null || isBetter(candidate, best)) {
-                best = candidate;
-            }
-        }
-
-        return Optional.ofNullable(best);
-    }
-
     private AssembledSolidResult toAssembledSolidResult(
             SolidAssemblyResult solidAssemblyResult,
             List<String> failureReasons
@@ -165,6 +164,34 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
         return null;
     }
 
+    private Mesh appendMesh(Mesh base, Mesh addition) {
+        Objects.requireNonNull(base, "base mesh must not be null");
+        Objects.requireNonNull(addition, "addition mesh must not be null");
+
+        List<MeshVertex> vertices = new ArrayList<>(
+                base.vertices().size() + addition.vertices().size()
+        );
+        vertices.addAll(base.vertices());
+
+        int vertexOffset = base.vertices().size();
+        vertices.addAll(addition.vertices());
+
+        List<MeshTriangle> triangles = new ArrayList<>(
+                base.triangles().size() + addition.triangles().size()
+        );
+        triangles.addAll(base.triangles());
+
+        for (MeshTriangle triangle : addition.triangles()) {
+            triangles.add(new MeshTriangle(
+                    triangle.a() + vertexOffset,
+                    triangle.b() + vertexOffset,
+                    triangle.c() + vertexOffset
+            ));
+        }
+
+        return new Mesh(vertices, triangles);
+    }
+
     private record PreviewCandidate(
             int solidIndex,
             String stepId,
@@ -172,16 +199,6 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
             int triangleCount,
             int vertexCount
     ) {}
-
-    private boolean isBetter(PreviewCandidate candidate, PreviewCandidate currentBest) {
-        if (candidate.triangleCount() > currentBest.triangleCount()) {
-            return true;
-        }
-        if (candidate.triangleCount() < currentBest.triangleCount()) {
-            return false;
-        }
-        return candidate.vertexCount() > currentBest.vertexCount();
-    }
 
     private void log(String message) {
         logSink.accept(message);
