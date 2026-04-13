@@ -1,5 +1,6 @@
 package be.doebi.aerismill.tessellation.face;
 
+import be.doebi.aerismill.model.geom.surface.ConicalSurface3;
 import be.doebi.aerismill.model.geom.surface.CylindricalSurface3;
 import be.doebi.aerismill.model.geom.surface.PlaneSurface3;
 import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
@@ -12,6 +13,7 @@ public final class DefaultFaceTessellator implements FaceTessellator {
 
     private final PlanarFaceTessellator planarFaceTessellator;
     private final CylindricalFaceTessellator cylindricalFaceTessellator;
+    private final ConicalFaceTessellator conicalFaceTessellator;
 
     public DefaultFaceTessellator(
             EdgeDiscretizer edgeDiscretizer,
@@ -30,6 +32,11 @@ public final class DefaultFaceTessellator implements FaceTessellator {
                 polygonTriangulator,
                 tolerance
         );
+        this.conicalFaceTessellator = new ConicalFaceTessellator(
+                edgeDiscretizer,
+                polygonTriangulator,
+                tolerance
+        );
     }
 
     @Override
@@ -40,10 +47,13 @@ public final class DefaultFaceTessellator implements FaceTessellator {
         if (face.surface() instanceof CylindricalSurface3) {
             return cylindricalFaceTessellator.tessellate(face);
         }
+        if (face.surface() instanceof ConicalSurface3) {
+            return conicalFaceTessellator.tessellate(face);
+        }
 
         throw new IllegalArgumentException(
                 (face == null || face.stepId() == null ? "Face <unknown>" : "Face " + face.stepId())
-                        + ": only planar and cylindrical faces are supported for now."
+                        + ": only planar, cylindrical, and conical faces are supported for now."
         );
     }
 }
