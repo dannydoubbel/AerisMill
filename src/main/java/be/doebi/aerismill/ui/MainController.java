@@ -172,7 +172,7 @@ public class MainController {
 
             try {
                 Mesh mesh = stepAssemblyMeshService.generateMesh(assemblyResult);
-                applyGeneratedMesh(mesh);
+                applyGeneratedMesh(selectedFile, mesh);
             } catch (Exception meshException) {
                 handlePreviewMeshFailure(selectedFile, meshException);
             }
@@ -690,14 +690,24 @@ public class MainController {
         }
     }
 
-    private void applyGeneratedMesh(Mesh mesh) {
+    private void applyGeneratedMesh(File selectedFile, Mesh mesh) {
+        meshViewerPane.setMesh(mesh);
+
+        MeshBounds bounds = mesh.bounds();
+
+        infoField.setText(
+                selectedFile.getAbsolutePath()
+                        + "   |   v: " + mesh.vertexCount()
+                        + "   |   t: " + mesh.triangleCount()
+                        + "   |   size: "
+                        + bounds.sizeX() + " x "
+                        + bounds.sizeY() + " x "
+                        + bounds.sizeZ()
+        );
+
         log("Mesh generated successfully.");
         log("Mesh vertices: " + mesh.vertices().size());
         log("Mesh triangles: " + mesh.triangles().size());
-
-        System.out.println("MESH RESULT");
-        System.out.println("vertices: " + mesh.vertices().size());
-        System.out.println("triangles: " + mesh.triangles().size());
     }
 
     private SolidTessellator createSolidTessellator() {
