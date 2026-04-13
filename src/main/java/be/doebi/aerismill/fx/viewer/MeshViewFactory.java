@@ -25,7 +25,7 @@ public final class MeshViewFactory {
         Objects.requireNonNull(mesh, "mesh must not be null");
 
         MeshView view = new MeshView(converter.convert(mesh));
-        view.setCullFace(CullFace.BACK);
+        view.setCullFace(CullFace.NONE);
         view.setDrawMode(DrawMode.FILL);
         view.setMaterial(new PhongMaterial(Color.LIGHTGRAY));
         return view;
