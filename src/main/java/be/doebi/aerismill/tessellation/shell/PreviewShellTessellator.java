@@ -13,6 +13,8 @@ import be.doebi.aerismill.ui.AppConsole;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 public class PreviewShellTessellator implements ShellTessellator {
 
     private final FaceTessellator faceTessellator;
@@ -37,6 +39,8 @@ public class PreviewShellTessellator implements ShellTessellator {
         List<MeshTriangle> combinedTriangles = new ArrayList<>();
         List<String> skippedReasons = new ArrayList<>();
 
+
+
         for (FaceGeom face : shell.faces()) {
             if (face == null) {
                 throw new IllegalArgumentException("Shell faces must not contain null faces.");
@@ -44,6 +48,10 @@ public class PreviewShellTessellator implements ShellTessellator {
 
             try {
                 FaceMeshPatch patch = faceTessellator.tessellate(face);
+
+
+
+
                 validateFaceMeshPatch(patch);
 
                 int vertexOffset = combinedVertices.size();
@@ -130,5 +138,92 @@ public class PreviewShellTessellator implements ShellTessellator {
                 triangle[1] + vertexOffset,
                 triangle[2] + vertexOffset
         );
+    }
+
+
+    public DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(ShellGeom shell) {
+        if (shell == null) {
+            throw new IllegalArgumentException("Shell must not be null.");
+        }
+        if (shell.faces() == null) {
+            throw new IllegalArgumentException("Shell faces must not be null.");
+        }
+
+        List<MeshVertex> planarVertices = new ArrayList<>();
+        List<MeshTriangle> planarTriangles = new ArrayList<>();
+
+        List<MeshVertex> cylindricalVertices = new ArrayList<>();
+        List<MeshTriangle> cylindricalTriangles = new ArrayList<>();
+
+        List<MeshVertex> conicalVertices = new ArrayList<>();
+        List<MeshTriangle> conicalTriangles = new ArrayList<>();
+
+        List<String> skippedReasons = new ArrayList<>();
+
+        for (FaceGeom face : shell.faces()) {
+            if (face == null) {
+                throw new IllegalArgumentException("Shell faces must not contain null faces.");
+            }
+
+            try {
+                FaceMeshPatch patch = faceTessellator.tessellate(face);
+                validateFaceMeshPatch(patch);
+
+                switch (patch.surfaceFamily()) {
+                    case PLANAR -> appendPatch(planarVertices, planarTriangles, patch);
+                    case CYLINDRICAL -> appendPatch(cylindricalVertices, cylindricalTriangles, patch);
+                    case CONICAL -> appendPatch(conicalVertices, conicalTriangles, patch);
+                }
+
+            } catch (IllegalArgumentException ex) {
+                String surfaceType = face.surface() == null
+                        ? "null"
+                        : face.surface().getClass().getSimpleName();
+
+                String reason = "Face " + face.stepId()
+                        + " [" + surfaceType + "]: " + ex.getMessage();
+
+                skippedReasons.add(reason);
+                AppConsole.log(reason);
+            }
+        }
+
+        Mesh planarMesh = buildMesh(planarVertices, planarTriangles);
+        Mesh cylindricalMesh = buildMesh(cylindricalVertices, cylindricalTriangles);
+        Mesh conicalMesh = buildMesh(conicalVertices, conicalTriangles);
+
+        if ((planarMesh == null || planarMesh.isEmpty())
+                && (cylindricalMesh == null || cylindricalMesh.isEmpty())
+                && (conicalMesh == null || conicalMesh.isEmpty())) {
+
+            String firstReason = skippedReasons.isEmpty()
+                    ? "No face produced previewable mesh."
+                    : skippedReasons.getFirst();
+
+            throw new IllegalArgumentException(
+                    "No previewable faces found in shell. First reason: " + firstReason
+            );
+        }
+
+        return new DebugSurfaceFamilyMeshes(planarMesh, cylindricalMesh, conicalMesh);
+    }
+
+
+    private void appendPatch(
+            List<MeshVertex> targetVertices,
+            List<MeshTriangle> targetTriangles,
+            FaceMeshPatch patch
+    ) {
+        int vertexOffset = targetVertices.size();
+
+        appendVertices(targetVertices, patch.vertices());
+        appendTrianglesWithOffset(targetTriangles, patch.triangles(), vertexOffset);
+    }
+
+    private Mesh buildMesh(List<MeshVertex> vertices, List<MeshTriangle> triangles) {
+        if (vertices.isEmpty() || triangles.isEmpty()) {
+            return null;
+        }
+        return new Mesh(vertices, triangles);
     }
 }

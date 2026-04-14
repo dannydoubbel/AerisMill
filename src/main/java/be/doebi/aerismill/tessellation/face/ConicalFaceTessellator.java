@@ -60,7 +60,7 @@ public final class ConicalFaceTessellator implements FaceTessellator {
         shared.validateTrianglesAreNonDegenerate(triangles);
         shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
 
-        return shared.buildFaceMeshPatch(boundaryPoints, triangles);
+        return shared.buildFaceMeshPatch(boundaryPoints, triangles,SurfaceFamily.CONICAL);
     }
 
     List<PlanarFaceTessellator.PreparedLoop> prepareProjectedPolygonLoops(

@@ -5,6 +5,7 @@ import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshBounds;
 import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.input.PickResult;
@@ -426,4 +427,109 @@ public class MeshViewerPane extends StackPane {
         cameraDistance = clamp(cameraDistance, minCameraDistance, maxCameraDistance);
         applyCameraDistance();
     }
+
+    public void setDebugSurfaceFamilyMeshes(DebugSurfaceFamilyMeshes meshes) {
+        Objects.requireNonNull(meshes, "meshes must not be null");
+
+        clearSelection();
+
+        Mesh planarMesh = meshes.planarMesh();
+        Mesh cylindricalMesh = meshes.cylindricalMesh();
+        Mesh conicalMesh = meshes.conicalMesh();
+
+        Group debugGroup = new Group();
+
+        Mesh combinedMesh = combineNonEmptyMeshes(planarMesh, cylindricalMesh, conicalMesh);
+        currentMesh = combinedMesh;
+
+        if (planarMesh != null && !planarMesh.isEmpty()) {
+            MeshView planarView = meshViewFactory.create(planarMesh);
+            planarView.setMaterial(new PhongMaterial(Color.LIGHTGRAY));
+            debugGroup.getChildren().add(planarView);
+        }
+
+        if (cylindricalMesh != null && !cylindricalMesh.isEmpty()) {
+            MeshView cylindricalView = meshViewFactory.create(cylindricalMesh);
+            cylindricalView.setMaterial(new PhongMaterial(Color.MEDIUMPURPLE));
+            debugGroup.getChildren().add(cylindricalView);
+        }
+
+        if (conicalMesh != null && !conicalMesh.isEmpty()) {
+            MeshView conicalView = meshViewFactory.create(conicalMesh);
+            conicalView.setMaterial(new PhongMaterial(Color.CYAN));
+            debugGroup.getChildren().add(conicalView);
+        }
+
+        modelContent.getChildren().setAll(debugGroup);
+
+        if (combinedMesh != null && !combinedMesh.isEmpty()) {
+            resetView();
+            fitToMesh(combinedMesh.bounds());
+            updateOverlayForDebugMeshes(planarMesh, cylindricalMesh, conicalMesh, combinedMesh);
+        } else {
+            clear();
+        }
+
+
+    }
+
+    private void updateOverlayForDebugMeshes(
+            Mesh planarMesh,
+            Mesh cylindricalMesh,
+            Mesh conicalMesh,
+            Mesh combinedMesh
+    ) {
+        MeshBounds bounds = combinedMesh.bounds();
+
+        overlayLabel.setText(
+                "Vertices : " + combinedMesh.vertexCount() + System.lineSeparator() +
+                        "Triangles: " + combinedMesh.triangleCount() + System.lineSeparator() +
+                        "Size     : " + format(bounds.sizeX()) + " x "
+                        + format(bounds.sizeY()) + " x "
+                        + format(bounds.sizeZ()) + System.lineSeparator() +
+                        "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
+                        "Planar   : " + triangleCountOf(planarMesh) + System.lineSeparator() +
+                        "Cylindrical: " + triangleCountOf(cylindricalMesh) + System.lineSeparator() +
+                        "Conical  : " + triangleCountOf(conicalMesh)
+        );
+    }
+
+    private int triangleCountOf(Mesh mesh) {
+        return mesh == null ? 0 : mesh.triangleCount();
+    }
+
+    private Mesh combineNonEmptyMeshes(Mesh... meshes) {
+        java.util.List<MeshVertex> combinedVertices = new java.util.ArrayList<>();
+        java.util.List<MeshTriangle> combinedTriangles = new java.util.ArrayList<>();
+
+        for (Mesh mesh : meshes) {
+            if (mesh == null || mesh.isEmpty()) {
+                continue;
+            }
+
+            int vertexOffset = combinedVertices.size();
+
+            for (MeshVertex vertex : mesh.vertices()) {
+                combinedVertices.add(new MeshVertex(
+                        combinedVertices.size(),
+                        vertex.point()
+                ));
+            }
+
+            for (MeshTriangle triangle : mesh.triangles()) {
+                combinedTriangles.add(new MeshTriangle(
+                        triangle.a() + vertexOffset,
+                        triangle.b() + vertexOffset,
+                        triangle.c() + vertexOffset
+                ));
+            }
+        }
+
+        if (combinedVertices.isEmpty() || combinedTriangles.isEmpty()) {
+            return null;
+        }
+
+        return new Mesh(combinedVertices, combinedTriangles);
+    }
+
 }

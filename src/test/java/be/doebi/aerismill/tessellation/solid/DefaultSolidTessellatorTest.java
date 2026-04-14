@@ -7,6 +7,7 @@ import be.doebi.aerismill.model.geom.topology.SolidGeom;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import org.junit.jupiter.api.Test;
 
@@ -28,7 +29,7 @@ class DefaultSolidTessellatorTest {
 
     @Test
     void tessellate_throws_whenSolidIsNull() {
-        DefaultSolidTessellator tessellator = new DefaultSolidTessellator(shell -> emptyMesh());
+        DefaultSolidTessellator tessellator = new DefaultSolidTessellator(stubShellTessellatorReturning(emptyMesh()));
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
@@ -40,7 +41,7 @@ class DefaultSolidTessellatorTest {
 
     @Test
     void tessellate_throws_whenOuterShellIsNull() {
-        DefaultSolidTessellator tessellator = new DefaultSolidTessellator(shell -> emptyMesh());
+        DefaultSolidTessellator tessellator = new DefaultSolidTessellator(stubShellTessellatorReturning(emptyMesh()));
         SolidGeom solid = new SolidGeom("#solid1", null);
 
         IllegalArgumentException ex = assertThrows(
@@ -80,7 +81,7 @@ class DefaultSolidTessellatorTest {
                 )
         );
 
-        DefaultSolidTessellator tessellator = new DefaultSolidTessellator(shellArg -> mesh);
+        DefaultSolidTessellator tessellator = new DefaultSolidTessellator(stubShellTessellatorReturning(emptyMesh()));
 
         Mesh result = tessellator.tessellate(solid);
 
@@ -109,8 +110,31 @@ class DefaultSolidTessellatorTest {
             return meshToReturn;
         }
 
+        @Override
+        public DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(ShellGeom shell) {
+            throw new UnsupportedOperationException(
+                    "Debug surface-family tessellation is only supported by PreviewShellTessellator."
+            );
+        }
+
         ShellGeom seenShell() {
             return seenShell;
         }
+
+
+    }
+
+    private ShellTessellator stubShellTessellatorReturning(Mesh mesh) {
+        return new ShellTessellator() {
+            @Override
+            public Mesh tessellate(ShellGeom shell) {
+                return mesh;
+            }
+
+            @Override
+            public DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(ShellGeom shell) {
+                throw new UnsupportedOperationException("Not needed in this test.");
+            }
+        };
     }
 }

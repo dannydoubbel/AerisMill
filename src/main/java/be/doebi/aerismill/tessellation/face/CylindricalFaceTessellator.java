@@ -72,7 +72,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             shared.validateTrianglesAreNonDegenerate(triangles);
             shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
 
-            return shared.buildFaceMeshPatch(boundaryPoints, triangles);
+            return shared.buildFaceMeshPatch(boundaryPoints, triangles,SurfaceFamily.CYLINDRICAL);
         } catch (IllegalArgumentException ex) {
             AppConsole.log("CYL_CATCH " + faceLabel(face) + " -> " + ex.getMessage());
 
@@ -132,7 +132,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, fallbackTriangles);
 
                     AppConsole.log("CYL_ORTHO_FALLBACK_OK " + faceLabel(face));
-                    return shared.buildFaceMeshPatch(boundaryPoints, fallbackTriangles);
+                    return shared.buildFaceMeshPatch(boundaryPoints, fallbackTriangles,SurfaceFamily.CYLINDRICAL);
                 } catch (IllegalArgumentException fallbackEx) {
                     AppConsole.log("CYL_ORTHO_FALLBACK_FAIL " + faceLabel(face) + " -> " + fallbackEx.getMessage());
                 }
@@ -689,7 +689,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             );
         }
 
-        return shared.buildFaceMeshPatch(boundaryPoints, triangles);
+        return shared.buildFaceMeshPatch(boundaryPoints, triangles,SurfaceFamily.CYLINDRICAL);
     }
 
     private void logPreparedCylindricalLoops(

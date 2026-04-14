@@ -7,6 +7,7 @@ import be.doebi.aerismill.model.geom.topology.ShellGeom;
 import be.doebi.aerismill.model.geom.topology.SolidGeom;
 import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
 import be.doebi.aerismill.model.mesh.Mesh;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.validate.geom.topology.ValidationReport;
 import org.junit.jupiter.api.Test;
 
@@ -289,6 +290,11 @@ class DefaultStepAssemblyMeshServiceTest {
             }
 
             throw new IllegalStateException("No stubbed response for stepId " + assembledSolidResult.stepId());
+        }
+
+        @Override
+        public DebugSurfaceFamilyMeshes generateDebugSurfaceFamilyMeshes(AssembledSolidResult assembledSolidResult) {
+            return null;
         }
 
         void willReturn(String stepId, Mesh mesh) {

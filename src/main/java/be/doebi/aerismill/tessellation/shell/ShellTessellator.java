@@ -5,4 +5,5 @@ import be.doebi.aerismill.model.mesh.Mesh;
 
 public interface ShellTessellator {
     Mesh tessellate(ShellGeom shell);
+    DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(ShellGeom shell);
 }

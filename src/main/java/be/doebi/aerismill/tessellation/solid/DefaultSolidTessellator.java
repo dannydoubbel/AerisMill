@@ -4,6 +4,7 @@ import be.doebi.aerismill.model.geom.topology.ShellGeom;
 import be.doebi.aerismill.model.geom.topology.SolidGeom;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 
 public class DefaultSolidTessellator implements SolidTessellator {
 
@@ -28,5 +29,18 @@ public class DefaultSolidTessellator implements SolidTessellator {
         }
 
         return shellTessellator.tessellate(outerShell);
+    }
+    @Override
+    public DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(SolidGeom solid) {
+        if (solid == null) {
+            throw new IllegalArgumentException("Solid must not be null.");
+        }
+
+        ShellGeom outerShell = solid.outerShell();
+        if (outerShell == null) {
+            throw new IllegalArgumentException("Solid outer shell must not be null.");
+        }
+
+        return shellTessellator.tessellateDebugSurfaceFamilies(outerShell);
     }
 }

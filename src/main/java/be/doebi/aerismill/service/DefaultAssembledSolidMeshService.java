@@ -8,6 +8,7 @@ import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.tessellation.solid.SolidTessellator;
 
 import java.util.ArrayList;
@@ -121,5 +122,102 @@ public class DefaultAssembledSolidMeshService implements AssembledSolidMeshServi
 
     private Object extractGeomPayload(AssembledSolidResult assembledSolidResult) {
         return assembledSolidResult.solid();
+    }
+
+    @Override
+    public DebugSurfaceFamilyMeshes generateDebugSurfaceFamilyMeshes(AssembledSolidResult assembledSolidResult) {
+        Objects.requireNonNull(assembledSolidResult, "assembledSolidResult must not be null");
+
+        Object geom = extractGeomPayload(assembledSolidResult);
+
+        if (geom instanceof SolidGeom solid) {
+            return solidTessellator.tessellateDebugSurfaceFamilies(solid);
+        }
+
+        if (geom instanceof SolidWithVoidsGeom solidWithVoids) {
+            return generateDebugMeshesForSolidWithVoids(solidWithVoids);
+        }
+
+        throw new IllegalArgumentException("Unsupported assembled solid payload: " + geom);
+    }
+
+    private DebugSurfaceFamilyMeshes generateDebugMeshesForSolidWithVoids(SolidWithVoidsGeom solidWithVoids) {
+        String solidStepId = solidWithVoids.stepId();
+
+        DebugSurfaceFamilyMeshes combined;
+        try {
+            combined = tessellateShellAsTemporaryDebugSolid(
+                    solidStepId + ":outer",
+                    solidWithVoids.outerShell()
+            );
+        } catch (IllegalArgumentException | UnsupportedOperationException ex) {
+            throw new IllegalArgumentException(
+                    "Outer shell of solid " + solidStepId + " is not previewable: " + ex.getMessage(),
+                    ex
+            );
+        }
+
+        List<ShellGeom> voidShells = solidWithVoids.voidShells();
+        if (voidShells == null) {
+            throw new IllegalArgumentException("SolidWithVoidsGeom void shells must not be null");
+        }
+
+        for (int i = 0; i < voidShells.size(); i++) {
+            ShellGeom voidShell = voidShells.get(i);
+
+            DebugSurfaceFamilyMeshes voidDebugMeshes;
+            try {
+                voidDebugMeshes = tessellateShellAsTemporaryDebugSolid(
+                        solidStepId + ":void[" + i + "]",
+                        voidShell
+                );
+            } catch (IllegalArgumentException | UnsupportedOperationException ex) {
+                throw new IllegalArgumentException(
+                        "Void shell " + i + " of solid " + solidStepId + " is not previewable: " + ex.getMessage(),
+                        ex
+                );
+            }
+
+            combined = appendDebugMeshes(combined, voidDebugMeshes);
+        }
+
+        return combined;
+    }
+
+    private DebugSurfaceFamilyMeshes tessellateShellAsTemporaryDebugSolid(String temporaryStepId, ShellGeom shell) {
+        if (shell == null) {
+            throw new IllegalArgumentException("Shell must not be null");
+        }
+
+        SolidGeom temporarySolid = new SolidGeom(temporaryStepId, shell);
+        return solidTessellator.tessellateDebugSurfaceFamilies(temporarySolid);
+    }
+
+    private DebugSurfaceFamilyMeshes appendDebugMeshes(
+            DebugSurfaceFamilyMeshes base,
+            DebugSurfaceFamilyMeshes addition
+    ) {
+        if (base == null) {
+            return addition;
+        }
+        if (addition == null) {
+            return base;
+        }
+
+        return new DebugSurfaceFamilyMeshes(
+                appendIfNotNull(base.planarMesh(), addition.planarMesh()),
+                appendIfNotNull(base.cylindricalMesh(), addition.cylindricalMesh()),
+                appendIfNotNull(base.conicalMesh(), addition.conicalMesh())
+        );
+    }
+
+    private Mesh appendIfNotNull(Mesh base, Mesh addition) {
+        if (addition == null || addition.isEmpty()) {
+            return base;
+        }
+        if (base == null || base.isEmpty()) {
+            return addition;
+        }
+        return appendMesh(base, addition);
     }
 }

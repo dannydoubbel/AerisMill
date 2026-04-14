@@ -536,7 +536,8 @@ class PlanarFaceTessellatorTest {
 
         FaceMeshPatch result = tessellator.buildFaceMeshPatch(
                 List.of(p1, p2, p3),
-                List.of(triangle)
+                List.of(triangle),
+                SurfaceFamily.PLANAR
         );
 
         assertNotNull(result);

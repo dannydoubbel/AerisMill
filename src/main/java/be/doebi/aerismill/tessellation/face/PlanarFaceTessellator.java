@@ -60,7 +60,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
         validateTrianglesAreNonDegenerate(triangles);
         validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
 
-        return buildFaceMeshPatch(boundaryPoints, triangles);
+        return buildFaceMeshPatch(boundaryPoints, triangles,SurfaceFamily.PLANAR);
     }
 
     List<Point3> collapseConsecutiveDuplicateBoundaryPoints(List<Point3> boundaryPoints) {
@@ -174,15 +174,22 @@ public class PlanarFaceTessellator implements FaceTessellator {
         return polygonTriangulator.triangulate(polygon);
     }
 
-    FaceMeshPatch buildFaceMeshPatch(List<Point3> boundaryPoints, List<int[]> triangleIndices) {
+    FaceMeshPatch buildFaceMeshPatch(
+            List<Point3> boundaryPoints,
+            List<int[]> triangleIndices,
+            SurfaceFamily surfaceFamily
+    ) {
         if (boundaryPoints == null) {
             throw new IllegalArgumentException("Boundary points must not be null.");
         }
         if (triangleIndices == null) {
             throw new IllegalArgumentException("Triangle indices must not be null.");
         }
+        if (surfaceFamily == null) {
+            throw new IllegalArgumentException("Surface family must not be null.");
+        }
 
-        return new FaceMeshPatch(boundaryPoints, triangleIndices);
+        return new FaceMeshPatch(boundaryPoints, triangleIndices, surfaceFamily);
     }
 
     List<Point3> removeClosingDuplicateBoundaryPoint(List<Point3> boundaryPoints) {

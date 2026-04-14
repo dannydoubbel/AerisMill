@@ -3,9 +3,11 @@ package be.doebi.aerismill.service;
 import be.doebi.aerismill.assemble.step.geom.AssembledSolidResult;
 import be.doebi.aerismill.assemble.step.geom.AssemblyResult;
 import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
+
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
@@ -200,7 +202,117 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
             int vertexCount
     ) {}
 
-    private void log(String message) {
-        logSink.accept(message);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    private Mesh appendIfNotNull(Mesh base, Mesh addition) {
+        if (addition == null || addition.isEmpty()) {
+            return base;
+        }
+        if (base == null || base.isEmpty()) {
+            return addition;
+        }
+        return appendMesh(base, addition);
     }
+
+    @Override
+    public DebugSurfaceFamilyMeshes generateDebugSurfaceFamilyMeshes(AssemblyResult assemblyResult) {
+        Objects.requireNonNull(assemblyResult, "assemblyResult must not be null");
+
+        List<SolidAssemblyResult> solids = assemblyResult.solids();
+        if (solids.isEmpty()) {
+            throw new IllegalArgumentException("AssemblyResult contains no solids");
+        }
+
+        Mesh planar = null;
+        Mesh cylindrical = null;
+        Mesh conical = null;
+
+        List<String> failureReasons = new ArrayList<>();
+        boolean foundAnyPreviewable = false;
+
+        for (int i = 0; i < solids.size(); i++) {
+            SolidAssemblyResult solidAssemblyResult = solids.get(i);
+
+            AssembledSolidResult assembledSolid =
+                    toAssembledSolidResult(solidAssemblyResult, failureReasons);
+
+            if (assembledSolid == null) {
+                continue;
+            }
+
+            try {
+                DebugSurfaceFamilyMeshes debugMeshes =
+                        assembledSolidMeshService.generateDebugSurfaceFamilyMeshes(assembledSolid);
+
+                boolean hasPlanar = debugMeshes.planarMesh() != null && !debugMeshes.planarMesh().isEmpty();
+                boolean hasCylindrical = debugMeshes.cylindricalMesh() != null && !debugMeshes.cylindricalMesh().isEmpty();
+                boolean hasConical = debugMeshes.conicalMesh() != null && !debugMeshes.conicalMesh().isEmpty();
+
+                if (!hasPlanar && !hasCylindrical && !hasConical) {
+                    String reason = "Solid " + solidAssemblyResult.stepId() + ": debug mesh has no previewable families";
+                    failureReasons.add(reason);
+                    AppConsole.log(reason);
+                    continue;
+                }
+
+                planar = appendIfNotNull(planar, debugMeshes.planarMesh());
+                cylindrical = appendIfNotNull(cylindrical, debugMeshes.cylindricalMesh());
+                conical = appendIfNotNull(conical, debugMeshes.conicalMesh());
+
+                foundAnyPreviewable = true;
+
+                AppConsole.log(
+                        "Debug preview candidate solid[" + i + "] "
+                                + solidAssemblyResult.stepId()
+                                + ": planar=" + countTriangles(debugMeshes.planarMesh())
+                                + ", cylindrical=" + countTriangles(debugMeshes.cylindricalMesh())
+                                + ", conical=" + countTriangles(debugMeshes.conicalMesh())
+                );
+
+            } catch (IllegalArgumentException | UnsupportedOperationException ex) {
+                String reason = "Solid " + solidAssemblyResult.stepId() + ": " + ex.getMessage();
+                failureReasons.add(reason);
+                AppConsole.log(reason);
+            }
+        }
+
+        if (!foundAnyPreviewable) {
+            String firstReason = failureReasons.isEmpty()
+                    ? "No solid produced previewable debug mesh."
+                    : failureReasons.getFirst();
+
+            throw new IllegalArgumentException(
+                    "No previewable solids found in debug assembly. First reason: " + firstReason
+            );
+        }
+
+        return new DebugSurfaceFamilyMeshes(planar, cylindrical, conical);
+    }
+
+    private int countTriangles(Mesh mesh) {
+        return mesh == null ? 0 : mesh.triangleCount();
+    }
+
+
+
+
+
 }

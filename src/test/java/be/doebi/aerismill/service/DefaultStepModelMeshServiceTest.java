@@ -6,6 +6,7 @@ import be.doebi.aerismill.model.geom.topology.ShellGeom;
 import be.doebi.aerismill.model.geom.topology.SolidGeom;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.step.base.StepModel;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.validate.geom.topology.ValidationReport;
 import org.junit.jupiter.api.Test;
 
@@ -159,6 +160,11 @@ class DefaultStepModelMeshServiceTest {
             callCount++;
             lastInput = assemblyResult;
             return meshToReturn;
+        }
+
+        @Override
+        public DebugSurfaceFamilyMeshes generateDebugSurfaceFamilyMeshes(AssemblyResult assemblyResult) {
+            return null;
         }
 
         private int callCount() {

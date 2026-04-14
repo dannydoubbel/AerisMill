@@ -20,6 +20,7 @@ import be.doebi.aerismill.tessellation.polygon.EarClippingPolygonTriangulator;
 import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
 import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.tessellation.shell.PreviewShellTessellator;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
@@ -171,8 +172,15 @@ public class MainController {
             applyAssemblyResult(assemblyResult);
 
             try {
+                /*
                 Mesh mesh = stepAssemblyMeshService.generateMesh(assemblyResult);
                 applyGeneratedMesh(selectedFile, mesh);
+
+                 */
+                DebugSurfaceFamilyMeshes debugMeshes =
+                        stepAssemblyMeshService.generateDebugSurfaceFamilyMeshes(assemblyResult);
+
+                applyGeneratedDebugMeshes(selectedFile, debugMeshes);
             } catch (Exception meshException) {
                 handlePreviewMeshFailure(selectedFile, meshException);
             }
@@ -765,6 +773,57 @@ public class MainController {
         meshViewerPane.zoomOut();
     }
 
+    private void applyGeneratedDebugMeshes(File selectedFile, DebugSurfaceFamilyMeshes debugMeshes) {
+        meshViewerPane.setDebugSurfaceFamilyMeshes(debugMeshes);
+
+        Mesh planar = debugMeshes.planarMesh();
+        Mesh cylindrical = debugMeshes.cylindricalMesh();
+        Mesh conical = debugMeshes.conicalMesh();
+
+        int vertexCount =
+                countVertices(planar) + countVertices(cylindrical) + countVertices(conical);
+        int triangleCount =
+                countTriangles(planar) + countTriangles(cylindrical) + countTriangles(conical);
+
+        Mesh combinedMesh = firstNonEmpty(planar, cylindrical, conical);
+        if (combinedMesh != null) {
+            MeshBounds bounds = combinedMesh.bounds();
+
+            infoField.setText(
+                    selectedFile.getAbsolutePath()
+                            + "   |   v: " + vertexCount
+                            + "   |   t: " + triangleCount
+                            + "   |   size: "
+                            + bounds.sizeX() + " x "
+                            + bounds.sizeY() + " x "
+                            + bounds.sizeZ()
+            );
+        } else {
+            infoField.setText(selectedFile.getAbsolutePath() + "   |   no debug preview mesh");
+        }
+
+        log("Debug mesh generated successfully.");
+        log("Planar triangles: " + countTriangles(planar));
+        log("Cylindrical triangles: " + countTriangles(cylindrical));
+        log("Conical triangles: " + countTriangles(conical));
+    }
+
+    private int countVertices(Mesh mesh) {
+        return mesh == null ? 0 : mesh.vertexCount();
+    }
+
+    private int countTriangles(Mesh mesh) {
+        return mesh == null ? 0 : mesh.triangleCount();
+    }
+
+    private Mesh firstNonEmpty(Mesh... meshes) {
+        for (Mesh mesh : meshes) {
+            if (mesh != null && !mesh.isEmpty()) {
+                return mesh;
+            }
+        }
+        return null;
+    }
 
 
 }

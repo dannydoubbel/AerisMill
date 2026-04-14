@@ -5,5 +5,6 @@ import java.util.List;
 
 public record FaceMeshPatch(
         List<Point3> vertices,
-        List<int[]> triangles
+        List<int[]> triangles,
+        SurfaceFamily surfaceFamily
 ) {}

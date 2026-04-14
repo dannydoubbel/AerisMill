@@ -8,6 +8,7 @@ import be.doebi.aerismill.model.geom.topology.SolidWithVoidsGeom;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
+import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.tessellation.solid.SolidTessellator;
 import org.junit.jupiter.api.Test;
 
@@ -268,6 +269,11 @@ class DefaultAssembledSolidMeshServiceTest {
             return meshToReturn;
         }
 
+        @Override
+        public DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(SolidGeom solid) {
+            return null;
+        }
+
         private int callCount() {
             return callCount;
         }
@@ -316,6 +322,11 @@ class DefaultAssembledSolidMeshServiceTest {
             }
 
             return mesh;
+        }
+
+        @Override
+        public DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(SolidGeom solid) {
+            return null;
         }
     }
 

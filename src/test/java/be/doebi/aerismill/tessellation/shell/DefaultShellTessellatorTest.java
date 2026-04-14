@@ -8,6 +8,7 @@ import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
 import be.doebi.aerismill.tessellation.face.FaceMeshPatch;
 import be.doebi.aerismill.tessellation.face.FaceTessellator;
+import be.doebi.aerismill.tessellation.face.SurfaceFamily;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -45,7 +46,8 @@ class DefaultShellTessellatorTest {
                         p(1, 0, 0),
                         p(0, 1, 0)
                 ),
-                List.of(new int[]{0, 1, 2})
+                List.of(new int[]{0, 1, 2}),
+                SurfaceFamily.PLANAR
         );
 
         RecordingFaceTessellator faceTessellator = new RecordingFaceTessellator(List.of(patch));
@@ -77,7 +79,8 @@ class DefaultShellTessellatorTest {
                         p(1, 0, 0),
                         p(0, 1, 0)
                 ),
-                List.of(new int[]{0, 1, 2})
+                List.of(new int[]{0, 1, 2}),
+                SurfaceFamily.PLANAR
         );
 
         FaceMeshPatch patch2 = new FaceMeshPatch(
@@ -86,7 +89,8 @@ class DefaultShellTessellatorTest {
                         p(11, 0, 0),
                         p(10, 1, 0)
                 ),
-                List.of(new int[]{0, 2, 1})
+                List.of(new int[]{0, 2, 1}),
+                SurfaceFamily.PLANAR
         );
 
         RecordingFaceTessellator faceTessellator = new RecordingFaceTessellator(List.of(patch1, patch2));

@@ -106,4 +106,11 @@ public class DefaultShellTessellator implements ShellTessellator {
                 triangle[2] + vertexOffset
         );
     }
+
+    @Override
+    public DebugSurfaceFamilyMeshes tessellateDebugSurfaceFamilies(ShellGeom shell) {
+        throw new UnsupportedOperationException(
+                "Debug surface-family tessellation is only supported by PreviewShellTessellator."
+        );
+    }
 }
