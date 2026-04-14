@@ -54,26 +54,101 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
 
         List<PlanarFaceTessellator.PreparedLoop> preparedLoops =
                 prepareProjectedPolygonLoops(face, cylinder);
-
-
-
-
-
-
-        PolygonWithHoles2 polygon = shared.buildPolygonWithHoles(preparedLoops);
-        shared.validateHoleRelationships(polygon);
-
-        List<int[]> triangles = shared.triangulatePolygon(polygon);
+        preparedLoops = reorderPreparedLoopsOuterFirst(preparedLoops);
 
         List<Point3> boundaryPoints = shared.collectPreparedBoundaryPoints(preparedLoops);
         List<Point2> projectedBoundaryPoints = shared.collectPreparedProjectedPoints(preparedLoops);
 
-        shared.validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
-        shared.validateTriangleIndices(boundaryPoints, triangles);
-        shared.validateTrianglesAreNonDegenerate(triangles);
-        shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
 
-        return shared.buildFaceMeshPatch(boundaryPoints, triangles);
+
+        try {
+            PolygonWithHoles2 polygon = shared.buildPolygonWithHoles(preparedLoops);
+            List<int[]> triangles = shared.triangulatePolygon(polygon);
+
+
+            shared.validateHoleRelationships(polygon);
+            shared.validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
+            shared.validateTriangleIndices(boundaryPoints, triangles);
+            shared.validateTrianglesAreNonDegenerate(triangles);
+            shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
+
+            return shared.buildFaceMeshPatch(boundaryPoints, triangles);
+        } catch (IllegalArgumentException ex) {
+            AppConsole.log("CYL_CATCH " + faceLabel(face) + " -> " + ex.getMessage());
+
+            StringBuilder sb = new StringBuilder();
+            sb.append("CYL_DEBUG ")
+                    .append(faceLabel(face))
+                    .append(" | loopCount=")
+                    .append(preparedLoops.size());
+
+
+
+            for (int i = 0; i < preparedLoops.size(); i++) {
+                PlanarFaceTessellator.PreparedLoop preparedLoop = preparedLoops.get(i);
+                List<Point2> points = preparedLoop == null || preparedLoop.polygonLoop() == null
+                        ? List.of()
+                        : preparedLoop.polygonLoop().points();
+
+                int count = points.size();
+                double minX = count == 0 ? Double.NaN : minX(points);
+                double maxX = count == 0 ? Double.NaN : maxX(points);
+                double minY = count == 0 ? Double.NaN : minY(points);
+                double maxY = count == 0 ? Double.NaN : maxY(points);
+                double width = count == 0 ? Double.NaN : (maxX - minX);
+                double height = count == 0 ? Double.NaN : (maxY - minY);
+
+                sb.append(" | [").append(i).append("]")
+                        .append(" count=").append(count)
+                        .append(", x=[").append(format(minX)).append(", ").append(format(maxX)).append("]")
+                        .append(", y=[").append(format(minY)).append(", ").append(format(maxY)).append("]")
+                        .append(", w=").append(format(width))
+                        .append(", h=").append(format(height))
+                        .append(", area=").append(format(signedArea(points)))
+                        .append(", orth=").append(orthogonalSegmentStats(points))
+                        .append(", sample=").append(samplePoints(points, 10));
+            }
+
+
+            AppConsole.log(sb.toString());
+
+            boolean orthogonalSingleLoop = isOrthogonalSingleLoop(preparedLoops);
+            String message = ex.getMessage();
+
+            if (message != null
+                    && message.contains("ear clipping")
+                    && orthogonalSingleLoop
+                    && preparedLoops.size() == 1) {
+
+                AppConsole.log("CYL_ORTHO_FALLBACK " + faceLabel(face));
+
+                List<Point2> points = preparedLoops.getFirst().polygonLoop().points();
+                List<int[]> fallbackTriangles = tryOrthogonalSingleLoopFallbackTriangles(points);
+
+                try {
+                    shared.validateTrianglesNotEmpty(fallbackTriangles, face, preparedLoops, boundaryPoints);
+                    shared.validateTriangleIndices(boundaryPoints, fallbackTriangles);
+                    shared.validateTrianglesAreNonDegenerate(fallbackTriangles);
+                    shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, fallbackTriangles);
+
+                    AppConsole.log("CYL_ORTHO_FALLBACK_OK " + faceLabel(face));
+                    return shared.buildFaceMeshPatch(boundaryPoints, fallbackTriangles);
+                } catch (IllegalArgumentException fallbackEx) {
+                    AppConsole.log("CYL_ORTHO_FALLBACK_FAIL " + faceLabel(face) + " -> " + fallbackEx.getMessage());
+                }
+            }
+
+            if (message != null
+                    && message.contains("ear clipping")
+                    && orthogonalSingleLoop) {
+                AppConsole.log("CYL_ORTHO_FALLBACK " + faceLabel(face));
+
+            }
+
+
+
+            throw ex;
+        }
     }
 
     List<PlanarFaceTessellator.PreparedLoop> prepareProjectedPolygonLoops(
@@ -114,7 +189,6 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
     }
 
 
-
     PlanarFaceTessellator.PreparedLoop prepareProjectedPolygonLoop(
             FaceGeom face,
             LoopGeom loop,
@@ -123,7 +197,6 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
     ) {
         List<List<Point3>> discretizedEdgePointLists =
                 shared.collectDiscretizedEdgePoints(loop, face, boundIndex);
-
 
 
         List<Point3> boundaryPoints =
@@ -151,18 +224,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         }
 
         try {
-            /*
-            List<Point2> projectedBoundaryPoints =
-                    projectBoundaryPointsTo2D(cylinder, openBoundaryPoints, face, boundIndex);
 
-            projectedBoundaryPoints =
-                    normalizeLoopToCompactBand(projectedBoundaryPoints, cylinder.radius());
-
-            PlanarFaceTessellator.SimplifiedProjectedLoop simplifiedLoop =
-                    shared.simplifyProjectedLoop(openBoundaryPoints, projectedBoundaryPoints);
-
-
-            */
             List<Point2> projectedBoundaryPoints =
                     projectBoundaryPointsTo2D(cylinder, openBoundaryPoints, face, boundIndex);
 
@@ -173,11 +235,13 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             double height = maxY(projectedBoundaryPoints) - minY(projectedBoundaryPoints);
 
 
-
             PlanarFaceTessellator.SimplifiedProjectedLoop simplifiedLoop =
                     shared.simplifyProjectedLoop(openBoundaryPoints, projectedBoundaryPoints);
 
-
+            simplifiedLoop = removeProjectedCollinearPoints(
+                    simplifiedLoop.boundaryPoints(),
+                    simplifiedLoop.projectedPoints()
+            );
 
             validateBoundaryHasAtLeastThreePoints(
                     simplifiedLoop.boundaryPoints(),
@@ -187,8 +251,20 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             );
 
             PolygonLoop2 polygonLoop = shared.buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
-            shared.validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
 
+            try {
+                shared.validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
+            } catch (IllegalArgumentException ex) {
+                AppConsole.log(
+                        "CYL_SIMPLE "
+                                + faceBoundLabel(face, boundIndex)
+                                + " | count=" + polygonLoop.points().size()
+                                + " | area=" + format(signedArea(polygonLoop.points()))
+                                + " | sample=" + samplePoints(polygonLoop.points(), 10)
+                                + " | msg=" + ex.getMessage()
+                );
+                throw ex;
+            }
             return new PlanarFaceTessellator.PreparedLoop(
                     simplifiedLoop.boundaryPoints(),
                     polygonLoop
@@ -431,7 +507,6 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
     }
 
 
-
     private double minX(List<Point2> points) {
         double min = Double.POSITIVE_INFINITY;
         for (Point2 p : points) {
@@ -467,9 +542,6 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
     private String format(double value) {
         return String.format(java.util.Locale.US, "%.6f", value);
     }
-
-
-
 
 
     private void logBoundaryCollapseDiagnostics(
@@ -552,7 +624,6 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
     }
 
 
-
     private double distance(Point3 a, Point3 b) {
         double dx = a.x() - b.x();
         double dy = a.y() - b.y();
@@ -619,5 +690,241 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         }
 
         return shared.buildFaceMeshPatch(boundaryPoints, triangles);
+    }
+
+    private void logPreparedCylindricalLoops(
+            FaceGeom face,
+            List<PlanarFaceTessellator.PreparedLoop> preparedLoops
+    ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("CYL_DEBUG ")
+                .append(faceLabel(face))
+                .append(": cylindrical prepared loop diagnostics");
+
+        if (preparedLoops == null || preparedLoops.isEmpty()) {
+            sb.append(" | no prepared loops");
+            System.out.println(sb);
+            return;
+        }
+
+        sb.append(" | loopCount=").append(preparedLoops.size());
+
+        for (int i = 0; i < preparedLoops.size(); i++) {
+            PlanarFaceTessellator.PreparedLoop preparedLoop = preparedLoops.get(i);
+            List<Point2> points = preparedLoop == null || preparedLoop.polygonLoop() == null
+                    ? List.of()
+                    : preparedLoop.polygonLoop().points();
+
+            int count = points.size();
+            double minX = count == 0 ? Double.NaN : minX(points);
+            double maxX = count == 0 ? Double.NaN : maxX(points);
+            double minY = count == 0 ? Double.NaN : minY(points);
+            double maxY = count == 0 ? Double.NaN : maxY(points);
+            double width = count == 0 ? Double.NaN : (maxX - minX);
+            double height = count == 0 ? Double.NaN : (maxY - minY);
+
+            sb.append(" | [").append(i).append("]")
+                    .append(" count=").append(count)
+                    .append(", xRange=[").append(format(minX)).append(", ").append(format(maxX)).append("]")
+                    .append(", yRange=[").append(format(minY)).append(", ").append(format(maxY)).append("]")
+                    .append(", width=").append(format(width))
+                    .append(", height=").append(format(height))
+                    .append(", area=").append(format(signedArea(points)))
+                    .append(", sample=").append(samplePoints(points, 6));
+        }
+
+        System.out.println(sb);
+    }
+
+    private String samplePoints(List<Point2> points, int limit) {
+        if (points == null || points.isEmpty()) {
+            return "[]";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+
+        int actualLimit = Math.min(points.size(), limit);
+        for (int i = 0; i < actualLimit; i++) {
+            Point2 p = points.get(i);
+            if (i > 0) {
+                sb.append(" ; ");
+            }
+            sb.append("(")
+                    .append(format(p.x()))
+                    .append(", ")
+                    .append(format(p.y()))
+                    .append(")");
+        }
+
+        if (points.size() > actualLimit) {
+            sb.append(" ; ...");
+        }
+
+        sb.append("]");
+        return sb.toString();
+    }
+
+    private List<PlanarFaceTessellator.PreparedLoop> reorderPreparedLoopsOuterFirst(
+            List<PlanarFaceTessellator.PreparedLoop> preparedLoops
+    ) {
+        if (preparedLoops == null || preparedLoops.size() <= 1) {
+            return preparedLoops;
+        }
+
+        List<PlanarFaceTessellator.PreparedLoop> reordered = new ArrayList<>(preparedLoops);
+
+        int outerIndex = 0;
+        double maxAbsArea = Double.NEGATIVE_INFINITY;
+
+        for (int i = 0; i < reordered.size(); i++) {
+            List<Point2> points = reordered.get(i).polygonLoop().points();
+            double absArea = Math.abs(signedArea(points));
+            if (absArea > maxAbsArea) {
+                maxAbsArea = absArea;
+                outerIndex = i;
+            }
+        }
+
+        if (outerIndex == 0) {
+            return reordered;
+        }
+
+        PlanarFaceTessellator.PreparedLoop outer = reordered.remove(outerIndex);
+        reordered.addFirst(outer);
+        return reordered;
+    }
+
+    private double signedArea(List<Point2> points) {
+        if (points == null || points.size() < 3) {
+            return 0.0;
+        }
+
+        double area = 0.0;
+        for (int i = 0; i < points.size(); i++) {
+            Point2 a = points.get(i);
+            Point2 b = points.get((i + 1) % points.size());
+            area += a.x() * b.y() - b.x() * a.y();
+        }
+        return 0.5 * area;
+    }
+
+
+    private PlanarFaceTessellator.SimplifiedProjectedLoop removeProjectedCollinearPoints(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        if (boundaryPoints.size() != projectedPoints.size()) {
+            throw new IllegalArgumentException("Boundary/projected point counts must match.");
+        }
+
+        if (projectedPoints.size() < 4) {
+            return new PlanarFaceTessellator.SimplifiedProjectedLoop(boundaryPoints, projectedPoints);
+        }
+
+        List<Point3> filteredBoundary = new ArrayList<>();
+        List<Point2> filteredProjected = new ArrayList<>();
+
+        int n = projectedPoints.size();
+
+        for (int i = 0; i < n; i++) {
+            Point2 prev = projectedPoints.get((i - 1 + n) % n);
+            Point2 curr = projectedPoints.get(i);
+            Point2 next = projectedPoints.get((i + 1) % n);
+
+            double area2 =
+                    (curr.x() - prev.x()) * (next.y() - prev.y())
+                            - (curr.y() - prev.y()) * (next.x() - prev.x());
+
+            boolean nearlyCollinear = Math.abs(area2) <= tolerance.pointEqualityEpsilon() * 10.0;
+
+            if (!nearlyCollinear) {
+                filteredBoundary.add(boundaryPoints.get(i));
+                filteredProjected.add(curr);
+            }
+        }
+
+        if (filteredProjected.size() < 3) {
+            return new PlanarFaceTessellator.SimplifiedProjectedLoop(boundaryPoints, projectedPoints);
+        }
+
+        return new PlanarFaceTessellator.SimplifiedProjectedLoop(filteredBoundary, filteredProjected);
+    }
+
+
+    private String orthogonalSegmentStats(List<Point2> points) {
+        if (points == null || points.size() < 2) {
+            return "segments=0";
+        }
+
+        int horizontal = 0;
+        int vertical = 0;
+        int other = 0;
+
+        for (int i = 0; i < points.size(); i++) {
+            Point2 a = points.get(i);
+            Point2 b = points.get((i + 1) % points.size());
+
+            double dx = Math.abs(b.x() - a.x());
+            double dy = Math.abs(b.y() - a.y());
+
+            if (dx <= tolerance.pointEqualityEpsilon() * 10.0 && dy > tolerance.pointEqualityEpsilon() * 10.0) {
+                vertical++;
+            } else if (dy <= tolerance.pointEqualityEpsilon() * 10.0 && dx > tolerance.pointEqualityEpsilon() * 10.0) {
+                horizontal++;
+            } else {
+                other++;
+            }
+        }
+
+        return "segments[h=" + horizontal + ", v=" + vertical + ", other=" + other + "]";
+    }
+
+    private boolean isOrthogonalSingleLoop(
+            List<PlanarFaceTessellator.PreparedLoop> preparedLoops
+    ) {
+        if (preparedLoops == null || preparedLoops.size() != 1) {
+            return false;
+        }
+
+        List<Point2> points = preparedLoops.getFirst().polygonLoop().points();
+        if (points.size() < 4) {
+            return false;
+        }
+
+        int other = 0;
+        double eps = tolerance.pointEqualityEpsilon() * 10.0;
+
+        for (int i = 0; i < points.size(); i++) {
+            Point2 a = points.get(i);
+            Point2 b = points.get((i + 1) % points.size());
+
+            double dx = Math.abs(b.x() - a.x());
+            double dy = Math.abs(b.y() - a.y());
+
+            boolean vertical = dx <= eps && dy > eps;
+            boolean horizontal = dy <= eps && dx > eps;
+
+            if (!vertical && !horizontal) {
+                other++;
+            }
+        }
+
+        return other == 0;
+    }
+
+    private List<int[]> tryOrthogonalSingleLoopFallbackTriangles(List<Point2> points) {
+        List<int[]> triangles = new ArrayList<>();
+
+        if (points == null || points.size() < 3) {
+            return triangles;
+        }
+
+        int anchor = 0;
+        for (int i = 1; i < points.size() - 1; i++) {
+            triangles.add(new int[]{anchor, i, i + 1});
+        }
+
+        return triangles;
     }
 }
