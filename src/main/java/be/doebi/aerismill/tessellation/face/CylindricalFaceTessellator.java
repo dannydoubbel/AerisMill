@@ -1,17 +1,21 @@
 package be.doebi.aerismill.tessellation.face;
 
+import be.doebi.aerismill.model.geom.curve.LineCurve3;
 import be.doebi.aerismill.model.geom.math.Frame3;
 import be.doebi.aerismill.model.geom.math.Point3;
 import be.doebi.aerismill.model.geom.math.Vec3;
 import be.doebi.aerismill.model.geom.surface.CylindricalSurface3;
 import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
+import be.doebi.aerismill.model.geom.topology.EdgeGeom;
 import be.doebi.aerismill.model.geom.topology.FaceGeom;
 import be.doebi.aerismill.model.geom.topology.LoopGeom;
+import be.doebi.aerismill.model.geom.topology.OrientedEdgeGeom;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
 import be.doebi.aerismill.tessellation.polygon.Point2;
 import be.doebi.aerismill.tessellation.polygon.PolygonLoop2;
 import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
 import be.doebi.aerismill.tessellation.polygon.PolygonWithHoles2;
+import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,15 +48,14 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             throw new IllegalArgumentException(faceLabel(face) + ": face must have at least one bound.");
         }
 
+        if (face.bounds().size() == 1 && isTwoLineStripLoop(face.bounds().getFirst())) {
+            return tessellateTwoLineStrip(face, face.bounds().getFirst());
+        }
+
         List<PlanarFaceTessellator.PreparedLoop> preparedLoops =
                 prepareProjectedPolygonLoops(face, cylinder);
 
-        if (isNarrowStripCase(preparedLoops)) {
-            List<Point3> boundaryPoints = shared.collectPreparedBoundaryPoints(preparedLoops);
-            List<int[]> triangles = buildTriangleFan(boundaryPoints, face);
 
-            return shared.buildFaceMeshPatch(boundaryPoints, triangles);
-        }
 
 
 
@@ -121,6 +124,8 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         List<List<Point3>> discretizedEdgePointLists =
                 shared.collectDiscretizedEdgePoints(loop, face, boundIndex);
 
+
+
         List<Point3> boundaryPoints =
                 shared.flattenDiscretizedEdgePointLists(discretizedEdgePointLists);
 
@@ -130,7 +135,20 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         List<Point3> openBoundaryPoints =
                 shared.removeClosingDuplicateBoundaryPoint(cleanedBoundaryPoints);
 
-        validateBoundaryHasAtLeastThreePoints(openBoundaryPoints, face, boundIndex, "after-3d-cleanup");
+        if (openBoundaryPoints == null || openBoundaryPoints.size() < 3) {
+            logBoundaryCollapseDiagnostics(
+                    face,
+                    boundIndex,
+                    discretizedEdgePointLists,
+                    boundaryPoints,
+                    cleanedBoundaryPoints,
+                    openBoundaryPoints
+            );
+
+            logBoundaryEdgeDetails(loop, face, boundIndex);
+
+            validateBoundaryHasAtLeastThreePoints(openBoundaryPoints, face, boundIndex, "after-3d-cleanup");
+        }
 
         try {
             /*
@@ -154,12 +172,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             double width = maxX(projectedBoundaryPoints) - minX(projectedBoundaryPoints);
             double height = maxY(projectedBoundaryPoints) - minY(projectedBoundaryPoints);
 
-            if (width <= tolerance.pointEqualityEpsilon() * 10.0 || (height > 0.0 && width < height * 1.0e-4)) {
-                return new PlanarFaceTessellator.PreparedLoop(
-                        openBoundaryPoints,
-                        new PolygonLoop2(projectedBoundaryPoints)
-                );
-            }
+
 
             PlanarFaceTessellator.SimplifiedProjectedLoop simplifiedLoop =
                     shared.simplifyProjectedLoop(openBoundaryPoints, projectedBoundaryPoints);
@@ -455,33 +468,156 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         return String.format(java.util.Locale.US, "%.6f", value);
     }
 
-    private boolean isNarrowStripCase(List<PlanarFaceTessellator.PreparedLoop> preparedLoops) {
-        if (preparedLoops == null || preparedLoops.size() != 1) {
-            return false;
+
+
+
+
+    private void logBoundaryCollapseDiagnostics(
+            FaceGeom face,
+            int boundIndex,
+            List<List<Point3>> discretizedEdgePointLists,
+            List<Point3> boundaryPoints,
+            List<Point3> cleanedBoundaryPoints,
+            List<Point3> openBoundaryPoints
+    ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(faceBoundLabel(face, boundIndex))
+                .append(": cylindrical boundary collapse diagnostics")
+                .append(" | edgeLists=").append(discretizedEdgePointLists == null ? 0 : discretizedEdgePointLists.size())
+                .append(" | raw=").append(boundaryPoints == null ? 0 : boundaryPoints.size())
+                .append(" | cleaned=").append(cleanedBoundaryPoints == null ? 0 : cleanedBoundaryPoints.size())
+                .append(" | open=").append(openBoundaryPoints == null ? 0 : openBoundaryPoints.size());
+
+        if (discretizedEdgePointLists != null && !discretizedEdgePointLists.isEmpty()) {
+            sb.append(" | perEdge=");
+            for (int i = 0; i < discretizedEdgePointLists.size(); i++) {
+                List<Point3> edgePoints = discretizedEdgePointLists.get(i);
+                if (i > 0) {
+                    sb.append(",");
+                }
+                sb.append(edgePoints == null ? 0 : edgePoints.size());
+            }
         }
 
-        List<Point2> points = preparedLoops.getFirst().polygonLoop().points();
-        if (points == null || points.size() < 3) {
-            return false;
-        }
-
-        double width = maxX(points) - minX(points);
-        double height = maxY(points) - minY(points);
-
-        return width <= tolerance.pointEqualityEpsilon() * 10.0
-                || (height > 0.0 && width < height * 1.0e-4);
+        AppConsole.log(sb.toString());
     }
 
-    private List<int[]> buildTriangleFan(List<Point3> boundaryPoints, FaceGeom face) {
-        if (boundaryPoints == null || boundaryPoints.size() < 3) {
-            throw new IllegalArgumentException(faceLabel(face) + ": not enough points for cylindrical strip fallback.");
+    private void logBoundaryEdgeDetails(
+            LoopGeom loop,
+            FaceGeom face,
+            int boundIndex
+    ) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(faceBoundLabel(face, boundIndex))
+                .append(": cylindrical boundary edge details");
+
+        if (loop == null || loop.edges() == null || loop.edges().isEmpty()) {
+            sb.append(" | no oriented edges");
+            System.out.println(sb);
+            return;
+        }
+
+        sb.append(" | edgeCount=").append(loop.edges().size());
+
+        for (int i = 0; i < loop.edges().size(); i++) {
+            OrientedEdgeGeom orientedEdge = loop.edges().get(i);
+            EdgeGeom edge = orientedEdge == null ? null : orientedEdge.edge();
+            Object curve = edge == null ? null : edge.curve();
+
+            sb.append(" | [").append(i).append("]")
+                    .append(" oe=").append(orientedEdge == null ? "null" : orientedEdge.stepId())
+                    .append(", e=").append(edge == null ? "null" : edge.stepId())
+                    .append(", curve=").append(curve == null ? "null" : curve.getClass().getSimpleName())
+                    .append(", orient=").append(orientedEdge != null && orientedEdge.orientation());
+        }
+
+        AppConsole.log(sb.toString());
+    }
+
+    private boolean isTwoLineStripLoop(LoopGeom loop) {
+        if (loop == null || loop.edges() == null || loop.edges().size() != 2) {
+            return false;
+        }
+
+        for (OrientedEdgeGeom orientedEdge : loop.edges()) {
+            if (orientedEdge == null || orientedEdge.edge() == null || orientedEdge.edge().curve() == null) {
+                return false;
+            }
+            if (!(orientedEdge.edge().curve() instanceof LineCurve3)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+
+    private double distance(Point3 a, Point3 b) {
+        double dx = a.x() - b.x();
+        double dy = a.y() - b.y();
+        double dz = a.z() - b.z();
+        return Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
+
+    private FaceMeshPatch tessellateTwoLineStrip(FaceGeom face, LoopGeom loop) {
+        List<List<Point3>> discretizedEdgePointLists =
+                shared.collectDiscretizedEdgePoints(loop, face, 0);
+
+        if (discretizedEdgePointLists == null || discretizedEdgePointLists.size() != 2) {
+            throw new IllegalArgumentException(
+                    faceLabel(face) + ": two-line cylindrical strip must have exactly 2 discretized edge point lists."
+            );
+        }
+
+        List<Point3> edgeA = new ArrayList<>(discretizedEdgePointLists.get(0));
+        List<Point3> edgeB = new ArrayList<>(discretizedEdgePointLists.get(1));
+
+        if (edgeA.size() < 2 || edgeB.size() < 2) {
+            throw new IllegalArgumentException(
+                    faceLabel(face) + ": two-line cylindrical strip edges must each have at least 2 points."
+            );
+        }
+
+        double sameDirectionCost =
+                distance(edgeA.getFirst(), edgeB.getFirst()) + distance(edgeA.getLast(), edgeB.getLast());
+        double reversedDirectionCost =
+                distance(edgeA.getFirst(), edgeB.getLast()) + distance(edgeA.getLast(), edgeB.getFirst());
+
+        if (reversedDirectionCost < sameDirectionCost) {
+            java.util.Collections.reverse(edgeB);
+        }
+
+        int segmentCount = Math.min(edgeA.size(), edgeB.size());
+        if (segmentCount < 2) {
+            throw new IllegalArgumentException(
+                    faceLabel(face) + ": two-line cylindrical strip must have at least 2 aligned points per edge."
+            );
+        }
+
+        List<Point3> boundaryPoints = new ArrayList<>(segmentCount * 2);
+        for (int i = 0; i < segmentCount; i++) {
+            boundaryPoints.add(edgeA.get(i));
+            boundaryPoints.add(edgeB.get(i));
         }
 
         List<int[]> triangles = new ArrayList<>();
-        for (int i = 1; i < boundaryPoints.size() - 1; i++) {
-            triangles.add(new int[]{0, i, i + 1});
+        for (int i = 0; i < segmentCount - 1; i++) {
+            int a0 = i * 2;
+            int b0 = i * 2 + 1;
+            int a1 = (i + 1) * 2;
+            int b1 = (i + 1) * 2 + 1;
+
+            triangles.add(new int[]{a0, b0, a1});
+            triangles.add(new int[]{a1, b0, b1});
         }
 
-        return triangles;
+        if (triangles.isEmpty()) {
+            throw new IllegalArgumentException(
+                    faceLabel(face) + ": two-line cylindrical strip produced no triangles."
+            );
+        }
+
+        return shared.buildFaceMeshPatch(boundaryPoints, triangles);
     }
 }
