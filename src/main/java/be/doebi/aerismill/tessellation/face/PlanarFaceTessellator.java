@@ -12,6 +12,7 @@ import be.doebi.aerismill.tessellation.projection.PlaneProjector;
 import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class PlanarFaceTessellator implements FaceTessellator {
@@ -333,8 +334,34 @@ public class PlanarFaceTessellator implements FaceTessellator {
             double twiceSignedArea = PolygonMath.twiceSignedArea(a, b, c);
 
             double areaEpsilon = 1e-9;
+
+
+            if (Math.abs(twiceSignedArea) <= tolerance.pointEqualityEpsilon() * 10.0) {
+
+                int ia = triangle[0];
+                int ib = triangle[1];
+                int ic = triangle[2];
+
+                Point2 prevA = projectedBoundaryPoints.get((ia - 1 + vertexCount) % vertexCount);
+                Point2 nextC = projectedBoundaryPoints.get((ic + 1) % vertexCount);
+
+                AppConsole.log(
+                        "DEGEN_CONTEXT "
+                                + " tri=" + Arrays.toString(triangle)
+                                + " | a=" + a
+                                + " b=" + b
+                                + " c=" + c
+                                + " | prevA=" + prevA
+                                + " nextC=" + nextC
+                );
+            }
+
+
+
+
+
             if (Math.abs(twiceSignedArea) <= areaEpsilon) {
-                AppConsole.log("DEGEN_TRI Face #130775 tri=[" + triangle[0] + "," + triangle[1] + "," + triangle[2]
+                AppConsole.log("DEGEN_TRI tri=[" + triangle[0] + "," + triangle[1] + "," + triangle[2]
                         + "] area2=" + twiceSignedArea
                         + " a=" + a + " b=" + b + " c=" + c);
                 throw new IllegalArgumentException("Triangle must have non-zero area in projected space.");

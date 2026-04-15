@@ -228,9 +228,6 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             projectedBoundaryPoints =
                     normalizeLoopToCompactBand(projectedBoundaryPoints, cylinder.radius());
 
-            double width = maxX(projectedBoundaryPoints) - minX(projectedBoundaryPoints);
-            double height = maxY(projectedBoundaryPoints) - minY(projectedBoundaryPoints);
-
 
             PlanarFaceTessellator.SimplifiedProjectedLoop simplifiedLoop =
                     shared.simplifyProjectedLoop(openBoundaryPoints, projectedBoundaryPoints);
@@ -240,12 +237,33 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     simplifiedLoop.projectedPoints()
             );
 
+            simplifiedLoop = collapseHorizontalPlateaus(
+                    simplifiedLoop.boundaryPoints(),
+                    simplifiedLoop.projectedPoints()
+            );
+
+
+
+
+
+
             validateBoundaryHasAtLeastThreePoints(
                     simplifiedLoop.boundaryPoints(),
                     face,
                     boundIndex,
                     "after-cylindrical-projection"
             );
+
+            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
+                AppConsole.log(
+                        "CYL_FINAL "
+                                + faceBoundLabel(face, boundIndex)
+                                + " | count=" + simplifiedLoop.projectedPoints().size()
+                                + " | area=" + format(PolygonMath.signedArea(simplifiedLoop.projectedPoints()))
+                                + " | orth=" + orthogonalSegmentStats(simplifiedLoop.projectedPoints())
+                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
+                );
+            }
 
             PolygonLoop2 polygonLoop = shared.buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
 
@@ -791,21 +809,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         reordered.addFirst(outer);
         return reordered;
     }
-/*
-    private double signedArea(List<Point2> points) {
-        if (points == null || points.size() < 3) {
-            return 0.0;
-        }
 
-        double area = 0.0;
-        for (int i = 0; i < points.size(); i++) {
-            Point2 a = points.get(i);
-            Point2 b = points.get((i + 1) % points.size());
-            area += a.x() * b.y() - b.x() * a.y();
-        }
-        return 0.5 * area;
-    }
-*/
 
     private PlanarFaceTessellator.SimplifiedProjectedLoop removeProjectedCollinearPoints(
             List<Point3> boundaryPoints,
@@ -960,5 +964,52 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                         (b.y() - a.y()) * (c.x() - a.x());
 
         return Math.abs(area2) <= tolerance.pointEqualityEpsilon() * 10.0;
+    }
+
+    private PlanarFaceTessellator.SimplifiedProjectedLoop collapseHorizontalPlateaus(
+            List<Point3> boundaryPoints,
+            List<Point2> projectedPoints
+    ) {
+        if (boundaryPoints.size() != projectedPoints.size()) {
+            throw new IllegalArgumentException("Boundary/projected point counts must match.");
+        }
+
+        if (projectedPoints.size() < 4) {
+            return new PlanarFaceTessellator.SimplifiedProjectedLoop(boundaryPoints, projectedPoints);
+        }
+
+        List<Point3> filteredBoundary = new ArrayList<>();
+        List<Point2> filteredProjected = new ArrayList<>();
+
+        int n = projectedPoints.size();
+        double eps = tolerance.pointEqualityEpsilon() * 1000.0;
+
+        for (int i = 0; i < n; i++) {
+            Point2 prev = projectedPoints.get((i - 1 + n) % n);
+            Point2 curr = projectedPoints.get(i);
+            Point2 next = projectedPoints.get((i + 1) % n);
+
+            double minY = Math.min(prev.y(), Math.min(curr.y(), next.y()));
+            double maxY = Math.max(prev.y(), Math.max(curr.y(), next.y()));
+
+            boolean nearHorizontalBand = (maxY - minY) <= eps;
+
+            boolean xBetween =
+                    curr.x() >= Math.min(prev.x(), next.x()) - eps &&
+                            curr.x() <= Math.max(prev.x(), next.x()) + eps;
+
+            boolean interiorHorizontalPlateauPoint = nearHorizontalBand && xBetween;
+
+            if (!interiorHorizontalPlateauPoint) {
+                filteredBoundary.add(boundaryPoints.get(i));
+                filteredProjected.add(curr);
+            }
+        }
+
+        if (filteredProjected.size() < 3) {
+            return new PlanarFaceTessellator.SimplifiedProjectedLoop(boundaryPoints, projectedPoints);
+        }
+
+        return new PlanarFaceTessellator.SimplifiedProjectedLoop(filteredBoundary, filteredProjected);
     }
 }
