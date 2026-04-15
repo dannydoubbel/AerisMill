@@ -11,10 +11,7 @@ import be.doebi.aerismill.model.geom.topology.FaceGeom;
 import be.doebi.aerismill.model.geom.topology.LoopGeom;
 import be.doebi.aerismill.model.geom.topology.OrientedEdgeGeom;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
-import be.doebi.aerismill.tessellation.polygon.Point2;
-import be.doebi.aerismill.tessellation.polygon.PolygonLoop2;
-import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
-import be.doebi.aerismill.tessellation.polygon.PolygonWithHoles2;
+import be.doebi.aerismill.tessellation.polygon.*;
 import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
@@ -104,7 +101,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                         .append(", y=[").append(format(minY)).append(", ").append(format(maxY)).append("]")
                         .append(", w=").append(format(width))
                         .append(", h=").append(format(height))
-                        .append(", area=").append(format(signedArea(points)))
+                        .append(", area=").append(format(PolygonMath.signedArea(points)))
                         .append(", orth=").append(orthogonalSegmentStats(points))
                         .append(", sample=").append(samplePoints(points, 10));
             }
@@ -259,7 +256,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                         "CYL_SIMPLE "
                                 + faceBoundLabel(face, boundIndex)
                                 + " | count=" + polygonLoop.points().size()
-                                + " | area=" + format(signedArea(polygonLoop.points()))
+                                + " | area=" + format(PolygonMath.signedArea(polygonLoop.points()))
                                 + " | sample=" + samplePoints(polygonLoop.points(), 10)
                                 + " | msg=" + ex.getMessage()
                 );
@@ -729,7 +726,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     .append(", yRange=[").append(format(minY)).append(", ").append(format(maxY)).append("]")
                     .append(", width=").append(format(width))
                     .append(", height=").append(format(height))
-                    .append(", area=").append(format(signedArea(points)))
+                    .append(", area=").append(format(PolygonMath.signedArea(points)))
                     .append(", sample=").append(samplePoints(points, 6));
         }
 
@@ -779,7 +776,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
 
         for (int i = 0; i < reordered.size(); i++) {
             List<Point2> points = reordered.get(i).polygonLoop().points();
-            double absArea = Math.abs(signedArea(points));
+            double absArea = Math.abs(PolygonMath.signedArea(points));
             if (absArea > maxAbsArea) {
                 maxAbsArea = absArea;
                 outerIndex = i;
@@ -794,7 +791,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         reordered.addFirst(outer);
         return reordered;
     }
-
+/*
     private double signedArea(List<Point2> points) {
         if (points == null || points.size() < 3) {
             return 0.0;
@@ -808,7 +805,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         }
         return 0.5 * area;
     }
-
+*/
 
     private PlanarFaceTessellator.SimplifiedProjectedLoop removeProjectedCollinearPoints(
             List<Point3> boundaryPoints,
@@ -833,10 +830,20 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             Point2 next = projectedPoints.get((i + 1) % n);
 
             double area2 =
-                    (curr.x() - prev.x()) * (next.y() - prev.y())
-                            - (curr.y() - prev.y()) * (next.x() - prev.x());
+                    (curr.x() - prev.x()) * (next.y() - prev.y()) -
+                            (curr.y() - prev.y()) * (next.x() - prev.x());
 
-            boolean nearlyCollinear = Math.abs(area2) <= tolerance.pointEqualityEpsilon() * 10.0;
+            double dx1 = curr.x() - prev.x();
+            double dy1 = curr.y() - prev.y();
+            double dx2 = next.x() - curr.x();
+            double dy2 = next.y() - curr.y();
+
+            double len1 = Math.hypot(dx1, dy1);
+            double len2 = Math.hypot(dx2, dy2);
+            double scale = Math.max(len1 * len2, 1.0);
+            double collinearEpsilon = 1e-9 * scale;
+
+            boolean nearlyCollinear = Math.abs(area2) <= collinearEpsilon;
 
             if (!nearlyCollinear) {
                 filteredBoundary.add(boundaryPoints.get(i));
@@ -920,11 +927,38 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             return triangles;
         }
 
-        int anchor = 0;
+        int anchor = findGoodAnchor(points);
         for (int i = 1; i < points.size() - 1; i++) {
-            triangles.add(new int[]{anchor, i, i + 1});
+            int a = anchor;
+            int b = i;
+            int c = i + 1;
+
+            if (!isDegenerate(points.get(a), points.get(b), points.get(c))) {
+                triangles.add(new int[]{a, b, c});
+            }
         }
 
         return triangles;
+    }
+
+    private int findGoodAnchor(List<Point2> points) {
+        int best = 0;
+        for (int i = 1; i < points.size(); i++) {
+            Point2 p = points.get(i);
+            Point2 b = points.get(best);
+
+            if (p.y() < b.y() || (p.y() == b.y() && p.x() < b.x())) {
+                best = i;
+            }
+        }
+        return best;
+    }
+
+    private boolean isDegenerate(Point2 a, Point2 b, Point2 c) {
+        double area2 =
+                (b.x() - a.x()) * (c.y() - a.y()) -
+                        (b.y() - a.y()) * (c.x() - a.x());
+
+        return Math.abs(area2) <= tolerance.pointEqualityEpsilon() * 10.0;
     }
 }

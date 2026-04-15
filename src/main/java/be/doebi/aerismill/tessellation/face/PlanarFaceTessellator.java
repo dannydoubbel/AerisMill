@@ -7,11 +7,9 @@ import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
 import be.doebi.aerismill.model.geom.topology.FaceGeom;
 import be.doebi.aerismill.model.geom.topology.LoopGeom;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
-import be.doebi.aerismill.tessellation.polygon.Point2;
-import be.doebi.aerismill.tessellation.polygon.PolygonLoop2;
-import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
-import be.doebi.aerismill.tessellation.polygon.PolygonWithHoles2;
+import be.doebi.aerismill.tessellation.polygon.*;
 import be.doebi.aerismill.tessellation.projection.PlaneProjector;
+import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -332,11 +330,13 @@ public class PlanarFaceTessellator implements FaceTessellator {
             Point2 b = projectedBoundaryPoints.get(triangle[1]);
             Point2 c = projectedBoundaryPoints.get(triangle[2]);
 
-            double twiceSignedArea =
-                    (b.x() - a.x()) * (c.y() - a.y()) -
-                            (b.y() - a.y()) * (c.x() - a.x());
+            double twiceSignedArea = PolygonMath.twiceSignedArea(a, b, c);
 
-            if (twiceSignedArea == 0.0) {
+            double areaEpsilon = 1e-9;
+            if (Math.abs(twiceSignedArea) <= areaEpsilon) {
+                AppConsole.log("DEGEN_TRI Face #130775 tri=[" + triangle[0] + "," + triangle[1] + "," + triangle[2]
+                        + "] area2=" + twiceSignedArea
+                        + " a=" + a + " b=" + b + " c=" + c);
                 throw new IllegalArgumentException("Triangle must have non-zero area in projected space.");
             }
         }
