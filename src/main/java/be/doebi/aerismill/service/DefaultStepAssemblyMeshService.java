@@ -245,6 +245,10 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
         Mesh cylindrical = null;
         Mesh conical = null;
 
+        int totalFaces = 0;
+        int succeededFaces = 0;
+        int failedFaces = 0;
+
         List<String> failureReasons = new ArrayList<>();
         boolean foundAnyPreviewable = false;
 
@@ -261,6 +265,10 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
             try {
                 DebugSurfaceFamilyMeshes debugMeshes =
                         assembledSolidMeshService.generateDebugSurfaceFamilyMeshes(assembledSolid);
+
+                totalFaces += debugMeshes.totalFaces();
+                succeededFaces += debugMeshes.succeededFaces();
+                failedFaces += debugMeshes.failedFaces();
 
                 boolean hasPlanar = debugMeshes.planarMesh() != null && !debugMeshes.planarMesh().isEmpty();
                 boolean hasCylindrical = debugMeshes.cylindricalMesh() != null && !debugMeshes.cylindricalMesh().isEmpty();
@@ -304,7 +312,14 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
             );
         }
 
-        return new DebugSurfaceFamilyMeshes(planar, cylindrical, conical);
+        return new DebugSurfaceFamilyMeshes(
+                planar,
+                cylindrical,
+                conical,
+                totalFaces,
+                succeededFaces,
+                failedFaces
+        );
     }
 
     private int countTriangles(Mesh mesh) {

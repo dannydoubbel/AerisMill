@@ -207,7 +207,10 @@ public class DefaultAssembledSolidMeshService implements AssembledSolidMeshServi
         return new DebugSurfaceFamilyMeshes(
                 appendIfNotNull(base.planarMesh(), addition.planarMesh()),
                 appendIfNotNull(base.cylindricalMesh(), addition.cylindricalMesh()),
-                appendIfNotNull(base.conicalMesh(), addition.conicalMesh())
+                appendIfNotNull(base.conicalMesh(), addition.conicalMesh()),
+                base.totalFaces() + addition.totalFaces(),
+                base.succeededFaces() + addition.succeededFaces(),
+                base.failedFaces() + addition.failedFaces()
         );
     }
 

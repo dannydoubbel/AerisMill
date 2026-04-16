@@ -5,5 +5,8 @@ import be.doebi.aerismill.model.mesh.Mesh;
 public record DebugSurfaceFamilyMeshes(
         Mesh planarMesh,
         Mesh cylindricalMesh,
-        Mesh conicalMesh
+        Mesh conicalMesh,
+        int totalFaces,
+        int succeededFaces,
+        int failedFaces
 ) {}

@@ -238,6 +238,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             );
 
             simplifiedLoop = collapseHorizontalPlateaus(
+                    face,
                     simplifiedLoop.boundaryPoints(),
                     simplifiedLoop.projectedPoints()
             );
@@ -967,6 +968,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
     }
 
     private PlanarFaceTessellator.SimplifiedProjectedLoop collapseHorizontalPlateaus(
+            FaceGeom face,
             List<Point3> boundaryPoints,
             List<Point2> projectedPoints
     ) {
@@ -1000,7 +1002,68 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
 
             boolean interiorHorizontalPlateauPoint = nearHorizontalBand && xBetween;
 
-            if (!interiorHorizontalPlateauPoint) {
+
+
+
+            boolean nearSameYAsPrev = Math.abs(curr.y() - prev.y()) <= eps;
+            boolean nearSameYAsNext = Math.abs(curr.y() - next.y()) <= eps;
+            boolean prevAndNextNearSameY = Math.abs(prev.y() - next.y()) <= eps;
+
+            boolean currBetweenPrevNext =
+                    curr.x() >= Math.min(prev.x(), next.x()) - eps &&
+                            curr.x() <= Math.max(prev.x(), next.x()) + eps;
+
+            boolean removableBridgePoint =
+                    nearSameYAsPrev &&
+                            nearSameYAsNext &&
+                            prevAndNextNearSameY &&
+                            currBetweenPrevNext;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Point2 next2 = projectedPoints.get((i + 2) % n);
+
+            double minYForward = Math.min(curr.y(), Math.min(next.y(), next2.y()));
+            double maxYForward = Math.max(curr.y(), Math.max(next.y(), next2.y()));
+
+            boolean forwardHorizontalBand = (maxYForward - minYForward) <= eps;
+
+            boolean currBetweenForward =
+                    curr.x() >= Math.min(next.x(), next2.x()) - eps &&
+                            curr.x() <= Math.max(next.x(), next2.x()) + eps;
+
+
+            boolean removableForwardPlateauPoint = forwardHorizontalBand && currBetweenForward;
+
+
+
+
+
+            boolean removed = interiorHorizontalPlateauPoint || removableForwardPlateauPoint || removableBridgePoint;
+
+            if (face != null && "#104057".equals(face.stepId())) {
+                AppConsole.log(
+                        "CYL_PLATEAU_SCAN Face #104057"
+                                + " | i=" + i
+                                + " | prev=" + prev
+                                + " | curr=" + curr
+                                + " | next=" + next
+                                + " | remove=" + removed
+                );
+            }
+
+            if (!interiorHorizontalPlateauPoint && !removableForwardPlateauPoint && !removableBridgePoint) {
                 filteredBoundary.add(boundaryPoints.get(i));
                 filteredProjected.add(curr);
             }

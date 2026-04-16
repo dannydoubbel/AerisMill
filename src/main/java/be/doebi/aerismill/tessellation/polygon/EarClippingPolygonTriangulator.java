@@ -111,6 +111,10 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         List<int[]> triangles = new ArrayList<>();
 
         while (remaining.size() > 3) {
+            if (removeOneNearlyCollinearVertex(points, remaining)) {
+                continue;
+            }
+
             boolean earFound = false;
 
             for (int i = 0; i < remaining.size(); i++) {
@@ -136,17 +140,6 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                 break;
             }
 
-            /*
-            if (!earFound) {
-                boolean removedCollinear = removeOneNearlyCollinearVertex(points, remaining);
-                if (removedCollinear) {
-                    continue;
-                }
-
-                throw new IllegalArgumentException("Failed to triangulate polygon using ear clipping.");
-            }
-
-             */
             if (!earFound) {
                 throw new IllegalArgumentException("Failed to triangulate polygon using ear clipping.");
             }
@@ -719,7 +712,8 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
             boolean rightSide,
             double verticalPenalty,
             double distanceSquared
-    ) {}
+    ) {
+    }
 
     private boolean isDegenerateEar(
             List<Point2> points,
@@ -753,12 +747,38 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
             int currentIndex = remaining.get(i);
             int nextIndex = remaining.get((i + 1) % remaining.size());
 
-            if (isDegenerateEar(points, previousIndex, currentIndex, nextIndex)) {
+            if (isNearlyCollinearVertex(points, previousIndex, currentIndex, nextIndex)) {
                 remaining.remove(i);
                 return true;
             }
         }
 
         return false;
+    }
+
+
+
+    private boolean isNearlyCollinearVertex(
+            List<Point2> points,
+            int previousIndex,
+            int currentIndex,
+            int nextIndex
+    ) {
+        Point2 a = points.get(previousIndex);
+        Point2 b = points.get(currentIndex);
+        Point2 c = points.get(nextIndex);
+
+        double twiceArea = Math.abs(cross(a, b, c));
+
+        double ab = Math.hypot(b.x() - a.x(), b.y() - a.y());
+        double bc = Math.hypot(c.x() - b.x(), c.y() - b.y());
+        double ca = Math.hypot(a.x() - c.x(), a.y() - c.y());
+
+        double scale = Math.max(ab + bc + ca, 1.0);
+
+        // looser than degenerate-ear rejection on purpose
+        double epsilon = 1.0e-6 * scale;
+
+        return twiceArea <= epsilon;
     }
 }

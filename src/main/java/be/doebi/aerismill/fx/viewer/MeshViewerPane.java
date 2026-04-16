@@ -465,7 +465,7 @@ public class MeshViewerPane extends StackPane {
         if (combinedMesh != null && !combinedMesh.isEmpty()) {
             resetView();
             fitToMesh(combinedMesh.bounds());
-            updateOverlayForDebugMeshes(planarMesh, cylindricalMesh, conicalMesh, combinedMesh);
+            updateOverlayForDebugMeshes(meshes, combinedMesh);
         } else {
             clear();
         }
@@ -474,23 +474,27 @@ public class MeshViewerPane extends StackPane {
     }
 
     private void updateOverlayForDebugMeshes(
-            Mesh planarMesh,
-            Mesh cylindricalMesh,
-            Mesh conicalMesh,
+            DebugSurfaceFamilyMeshes debugMeshes,
             Mesh combinedMesh
     ) {
+        Mesh planarMesh = debugMeshes.planarMesh();
+        Mesh cylindricalMesh = debugMeshes.cylindricalMesh();
+        Mesh conicalMesh = debugMeshes.conicalMesh();
+
         MeshBounds bounds = combinedMesh.bounds();
 
         overlayLabel.setText(
                 "Vertices : " + combinedMesh.vertexCount() + System.lineSeparator() +
-                        "Triangles: " + combinedMesh.triangleCount() + System.lineSeparator() +
-                        "Size     : " + format(bounds.sizeX()) + " x "
-                        + format(bounds.sizeY()) + " x "
-                        + format(bounds.sizeZ()) + System.lineSeparator() +
-                        "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
-                        "Planar   : " + triangleCountOf(planarMesh) + System.lineSeparator() +
-                        "Cylindrical: " + triangleCountOf(cylindricalMesh) + System.lineSeparator() +
-                        "Conical  : " + triangleCountOf(conicalMesh)
+                "Triangles: " + combinedMesh.triangleCount() + System.lineSeparator() +
+                "Size     : " + format(bounds.sizeX()) + " x "
+                + format(bounds.sizeY()) + " x "
+                + format(bounds.sizeZ()) + System.lineSeparator() +
+                "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
+                "Faces OK : " + debugMeshes.succeededFaces() + " / " + debugMeshes.totalFaces() + System.lineSeparator() +
+                "Faces bad: " + debugMeshes.failedFaces() + System.lineSeparator() +
+                "Planar   : " + triangleCountOf(planarMesh) + System.lineSeparator() +
+                "Cylindrical: " + triangleCountOf(cylindricalMesh) + System.lineSeparator() +
+                "Conical  : " + triangleCountOf(conicalMesh)
         );
     }
 

@@ -160,10 +160,18 @@ public class PreviewShellTessellator implements ShellTessellator {
 
         List<String> skippedReasons = new ArrayList<>();
 
+
+        int totalFaces = 0;
+        int succeededFaces = 0;
+        int failedFaces = 0;
+
+
         for (FaceGeom face : shell.faces()) {
             if (face == null) {
                 throw new IllegalArgumentException("Shell faces must not contain null faces.");
             }
+
+            totalFaces++;
 
             try {
                 FaceMeshPatch patch = faceTessellator.tessellate(face);
@@ -175,7 +183,11 @@ public class PreviewShellTessellator implements ShellTessellator {
                     case CONICAL -> appendPatch(conicalVertices, conicalTriangles, patch);
                 }
 
+                succeededFaces++;
+
             } catch (IllegalArgumentException ex) {
+                failedFaces++;
+
                 String surfaceType = face.surface() == null
                         ? "null"
                         : face.surface().getClass().getSimpleName();
@@ -205,7 +217,14 @@ public class PreviewShellTessellator implements ShellTessellator {
             );
         }
 
-        return new DebugSurfaceFamilyMeshes(planarMesh, cylindricalMesh, conicalMesh);
+        return new DebugSurfaceFamilyMeshes(
+                planarMesh,
+                cylindricalMesh,
+                conicalMesh,
+                totalFaces,
+                succeededFaces,
+                failedFaces
+        );
     }
 
 
