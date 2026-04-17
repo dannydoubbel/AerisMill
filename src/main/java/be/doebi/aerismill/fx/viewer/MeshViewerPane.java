@@ -1,5 +1,6 @@
 package be.doebi.aerismill.fx.viewer;
 
+import be.doebi.aerismill.model.debug.StepLoadTiming;
 import be.doebi.aerismill.model.geom.math.Point3;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshBounds;
@@ -428,7 +429,10 @@ public class MeshViewerPane extends StackPane {
         applyCameraDistance();
     }
 
-    public void setDebugSurfaceFamilyMeshes(DebugSurfaceFamilyMeshes meshes) {
+        public void setDebugSurfaceFamilyMeshes(
+            DebugSurfaceFamilyMeshes meshes,
+            StepLoadTiming timing
+        ) {
         Objects.requireNonNull(meshes, "meshes must not be null");
 
         clearSelection();
@@ -465,7 +469,7 @@ public class MeshViewerPane extends StackPane {
         if (combinedMesh != null && !combinedMesh.isEmpty()) {
             resetView();
             fitToMesh(combinedMesh.bounds());
-            updateOverlayForDebugMeshes(meshes, combinedMesh);
+            updateOverlayForDebugMeshes(meshes, combinedMesh, timing);
         } else {
             clear();
         }
@@ -475,7 +479,8 @@ public class MeshViewerPane extends StackPane {
 
     private void updateOverlayForDebugMeshes(
             DebugSurfaceFamilyMeshes debugMeshes,
-            Mesh combinedMesh
+            Mesh combinedMesh,
+            StepLoadTiming timing
     ) {
         Mesh planarMesh = debugMeshes.planarMesh();
         Mesh cylindricalMesh = debugMeshes.cylindricalMesh();
@@ -485,16 +490,20 @@ public class MeshViewerPane extends StackPane {
 
         overlayLabel.setText(
                 "Vertices : " + combinedMesh.vertexCount() + System.lineSeparator() +
-                "Triangles: " + combinedMesh.triangleCount() + System.lineSeparator() +
-                "Size     : " + format(bounds.sizeX()) + " x "
-                + format(bounds.sizeY()) + " x "
-                + format(bounds.sizeZ()) + System.lineSeparator() +
-                "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
-                "Faces OK : " + debugMeshes.succeededFaces() + " / " + debugMeshes.totalFaces() + System.lineSeparator() +
-                "Faces bad: " + debugMeshes.failedFaces() + System.lineSeparator() +
-                "Planar   : " + triangleCountOf(planarMesh) + System.lineSeparator() +
-                "Cylindrical: " + triangleCountOf(cylindricalMesh) + System.lineSeparator() +
-                "Conical  : " + triangleCountOf(conicalMesh)
+                        "Triangles: " + combinedMesh.triangleCount() + System.lineSeparator() +
+                        "Size     : " + format(bounds.sizeX()) + " x "
+                        + format(bounds.sizeY()) + " x "
+                        + format(bounds.sizeZ()) + System.lineSeparator() +
+                        "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
+                        "Faces OK : " + debugMeshes.succeededFaces() + " / " + debugMeshes.totalFaces() + System.lineSeparator() +
+                        "Faces bad: " + debugMeshes.failedFaces() + System.lineSeparator() +
+                        "Planar   : " + triangleCountOf(planarMesh) + System.lineSeparator() +
+                        "Cylindrical: " + triangleCountOf(cylindricalMesh) + System.lineSeparator() +
+                        "Conical  : " + triangleCountOf(conicalMesh) + System.lineSeparator() +
+                        "Import   : " + timing.importMillis() + " ms" + System.lineSeparator() +
+                        "Assembly : " + timing.assemblyMillis() + " ms" + System.lineSeparator() +
+                        "Mesh     : " + timing.meshMillis() + " ms" + System.lineSeparator() +
+                        "Total    : " + timing.totalMillis() + " ms"
         );
     }
 

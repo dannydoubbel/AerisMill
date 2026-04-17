@@ -6,6 +6,7 @@ import be.doebi.aerismill.assemble.step.geom.SolidAssemblyResult;
 import be.doebi.aerismill.fx.viewer.MeshViewerPane;
 import be.doebi.aerismill.io.stl.AsciiStlReader;
 import be.doebi.aerismill.io.stl.BinaryStlReader;
+import be.doebi.aerismill.model.debug.StepLoadTiming;
 import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
 import be.doebi.aerismill.model.mesh.Mesh;
 import be.doebi.aerismill.model.mesh.MeshBounds;
@@ -35,6 +36,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.io.File;
 import java.util.Objects;
@@ -165,22 +167,35 @@ public class MainController {
         rememberLastDirectory(selectedFile);
 
         try {
+            long totalStartNanos = System.nanoTime();
+
+            long importStartNanos = System.nanoTime();
             StepModel loadedModel = stepImportService.open(selectedFile);
+            long importMillis = (System.nanoTime() - importStartNanos) / 1_000_000L;
+
+            long assemblyStartNanos = System.nanoTime();
             AssemblyResult assemblyResult = stepAssemblyService.assemble(loadedModel);
+            long assemblyMillis = (System.nanoTime() - assemblyStartNanos) / 1_000_000L;
 
             applyLoadedStepFile(selectedFile, loadedModel);
             applyAssemblyResult(assemblyResult);
 
             try {
-                /*
-                Mesh mesh = stepAssemblyMeshService.generateMesh(assemblyResult);
-                applyGeneratedMesh(selectedFile, mesh);
-
-                 */
+                long meshStartNanos = System.nanoTime();
                 DebugSurfaceFamilyMeshes debugMeshes =
                         stepAssemblyMeshService.generateDebugSurfaceFamilyMeshes(assemblyResult);
+                long meshMillis = (System.nanoTime() - meshStartNanos) / 1_000_000L;
 
-                applyGeneratedDebugMeshes(selectedFile, debugMeshes);
+                long totalMillis = (System.nanoTime() - totalStartNanos) / 1_000_000L;
+
+                StepLoadTiming timing = new StepLoadTiming(
+                        importMillis,
+                        assemblyMillis,
+                        meshMillis,
+                        totalMillis
+                );
+
+                applyGeneratedDebugMeshes(selectedFile, debugMeshes, timing);
             } catch (Exception meshException) {
                 handlePreviewMeshFailure(selectedFile, meshException);
             }
@@ -212,24 +227,26 @@ public class MainController {
 
         return closeCurrentFile();
     }
-
     private File chooseStepFile() {
         FileChooser fileChooser = createStepFileChooser();
         Stage stage = getStage();
         return fileChooser.showOpenDialog(stage);
     }
 
+
     private FileChooser createStepFileChooser() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open STEP File");
         fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("STEP Files", "*.step", "*.stp"),
+                new FileChooser.ExtensionFilter("STEP Files", "*.step", "*.STEP", "*.stp","*.STP"),
                 new FileChooser.ExtensionFilter("All Files", "*.*")
         );
 
         applyLastUsedDirectory(fileChooser);
         return fileChooser;
     }
+
+
 
     @FXML
     private void onOpenAsciiStlFile(ActionEvent event) {
@@ -380,6 +397,17 @@ public class MainController {
         if (lastDir.exists() && lastDir.isDirectory()) {
             fileChooser.setInitialDirectory(lastDir);
         }
+    }
+
+
+    private File getLastUsedDirectory() {
+        String path =  prefs.get(PREF_LAST_OPEN_DIR, null);
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+
+        File dir = new File(path);
+        return dir.isDirectory() ? dir : null;
     }
 
     private void rememberLastDirectory(File selectedFile) {
@@ -773,9 +801,11 @@ public class MainController {
         meshViewerPane.zoomOut();
     }
 
-    private void applyGeneratedDebugMeshes(File selectedFile, DebugSurfaceFamilyMeshes debugMeshes) {
-        meshViewerPane.setDebugSurfaceFamilyMeshes(debugMeshes);
-
+    private void applyGeneratedDebugMeshes(
+            File selectedFile,
+            DebugSurfaceFamilyMeshes debugMeshes,
+            StepLoadTiming timing
+    ) {
         Mesh planar = debugMeshes.planarMesh();
         Mesh cylindrical = debugMeshes.cylindricalMesh();
         Mesh conical = debugMeshes.conicalMesh();
@@ -801,6 +831,8 @@ public class MainController {
         } else {
             infoField.setText(selectedFile.getAbsolutePath() + "   |   no debug preview mesh");
         }
+
+        meshViewerPane.setDebugSurfaceFamilyMeshes(debugMeshes, timing);
 
         log("Debug mesh generated successfully.");
         log("Planar triangles: " + countTriangles(planar));
