@@ -194,8 +194,9 @@ public class MainController {
                         meshMillis,
                         totalMillis
                 );
-
+                AppConsole.log("\"DEBUG: before applyGeneratedDebugMeshes\"");
                 applyGeneratedDebugMeshes(selectedFile, debugMeshes, timing);
+                AppConsole.log("DEBUG: after applyGeneratedDebugMeshes");
             } catch (Exception meshException) {
                 handlePreviewMeshFailure(selectedFile, meshException);
             }
@@ -832,7 +833,9 @@ public class MainController {
             infoField.setText(selectedFile.getAbsolutePath() + "   |   no debug preview mesh");
         }
 
+        AppConsole.log("DEBUG: before viewer update");
         meshViewerPane.setDebugSurfaceFamilyMeshes(debugMeshes, timing);
+        AppConsole.log("DEBUG: after viewer update");
 
         log("Debug mesh generated successfully.");
         log("Planar triangles: " + countTriangles(planar));

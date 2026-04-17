@@ -7,6 +7,7 @@ import be.doebi.aerismill.model.mesh.MeshBounds;
 import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
 import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
+import be.doebi.aerismill.ui.AppConsole;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.input.PickResult;
@@ -433,46 +434,47 @@ public class MeshViewerPane extends StackPane {
             DebugSurfaceFamilyMeshes meshes,
             StepLoadTiming timing
         ) {
-        Objects.requireNonNull(meshes, "meshes must not be null");
+            AppConsole.log("DEBUG: entering setDebugSurfaceFamilyMeshes");
+            Objects.requireNonNull(meshes, "meshes must not be null");
 
-        clearSelection();
+            clearSelection();
 
-        Mesh planarMesh = meshes.planarMesh();
-        Mesh cylindricalMesh = meshes.cylindricalMesh();
-        Mesh conicalMesh = meshes.conicalMesh();
+            Mesh planarMesh = meshes.planarMesh();
+            Mesh cylindricalMesh = meshes.cylindricalMesh();
+            Mesh conicalMesh = meshes.conicalMesh();
 
-        Group debugGroup = new Group();
+            Group debugGroup = new Group();
 
-        Mesh combinedMesh = combineNonEmptyMeshes(planarMesh, cylindricalMesh, conicalMesh);
-        currentMesh = combinedMesh;
+            Mesh combinedMesh = combineNonEmptyMeshes(planarMesh, cylindricalMesh, conicalMesh);
+            currentMesh = combinedMesh;
 
-        if (planarMesh != null && !planarMesh.isEmpty()) {
-            MeshView planarView = meshViewFactory.create(planarMesh);
-            planarView.setMaterial(new PhongMaterial(Color.LIGHTGRAY));
-            debugGroup.getChildren().add(planarView);
-        }
+            if (planarMesh != null && !planarMesh.isEmpty()) {
+                MeshView planarView = meshViewFactory.create(planarMesh);
+                planarView.setMaterial(new PhongMaterial(Color.LIGHTGRAY));
+                debugGroup.getChildren().add(planarView);
+            }
 
-        if (cylindricalMesh != null && !cylindricalMesh.isEmpty()) {
-            MeshView cylindricalView = meshViewFactory.create(cylindricalMesh);
-            cylindricalView.setMaterial(new PhongMaterial(Color.MEDIUMPURPLE));
-            debugGroup.getChildren().add(cylindricalView);
-        }
+            if (cylindricalMesh != null && !cylindricalMesh.isEmpty()) {
+                MeshView cylindricalView = meshViewFactory.create(cylindricalMesh);
+                cylindricalView.setMaterial(new PhongMaterial(Color.MEDIUMPURPLE));
+                debugGroup.getChildren().add(cylindricalView);
+            }
 
-        if (conicalMesh != null && !conicalMesh.isEmpty()) {
-            MeshView conicalView = meshViewFactory.create(conicalMesh);
-            conicalView.setMaterial(new PhongMaterial(Color.CYAN));
-            debugGroup.getChildren().add(conicalView);
-        }
+            if (conicalMesh != null && !conicalMesh.isEmpty()) {
+                MeshView conicalView = meshViewFactory.create(conicalMesh);
+                conicalView.setMaterial(new PhongMaterial(Color.CYAN));
+                debugGroup.getChildren().add(conicalView);
+            }
 
-        modelContent.getChildren().setAll(debugGroup);
+            modelContent.getChildren().setAll(debugGroup);
 
-        if (combinedMesh != null && !combinedMesh.isEmpty()) {
-            resetView();
-            fitToMesh(combinedMesh.bounds());
-            updateOverlayForDebugMeshes(meshes, combinedMesh, timing);
-        } else {
-            clear();
-        }
+            if (combinedMesh != null && !combinedMesh.isEmpty()) {
+                resetView();
+                fitToMesh(combinedMesh.bounds());
+                updateOverlayForDebugMeshes(meshes, combinedMesh, timing);
+            } else {
+                clear();
+            }
 
 
     }
