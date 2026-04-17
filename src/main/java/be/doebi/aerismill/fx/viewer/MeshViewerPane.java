@@ -10,12 +10,14 @@ import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.ui.AppConsole;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
+import javafx.geometry.Point3D;
 import javafx.geometry.Pos;
 import javafx.scene.input.PickResult;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.PhongMaterial;
 import javafx.scene.shape.CullFace;
 import javafx.scene.shape.DrawMode;
+import javafx.scene.shape.Sphere;
 import javafx.scene.shape.TriangleMesh;
 import javafx.scene.control.Label;
 import javafx.scene.AmbientLight;
@@ -71,12 +73,17 @@ public class MeshViewerPane extends StackPane {
 
     private Mesh currentMesh;
     private MeshView selectedTriangleOverlay;
+    private Sphere selectedVertexMarker;
 
     private static final PhongMaterial SELECTED_TRIANGLE_MATERIAL =
+            new PhongMaterial(Color.YELLOW);
+    private static final PhongMaterial SELECTED_VERTEX_MATERIAL =
             new PhongMaterial(Color.YELLOW);
 
     private static final double HIGHLIGHT_OFFSET_FACTOR = 0.0005;
     private static final double HIGHLIGHT_OFFSET_MIN = 0.01;
+    private static final double SELECTED_VERTEX_RADIUS_FACTOR = 0.01;
+    private static final double SELECTED_VERTEX_RADIUS_MIN = 0.05;
 
     private final Label overlayLabel = new Label();
 
@@ -146,15 +153,7 @@ public class MeshViewerPane extends StackPane {
         clearSelection();
 
         MeshView meshView = meshViewFactory.create(mesh);
-        meshView.setOnMouseClicked(event -> {
-            PickResult pickResult = event.getPickResult();
-            int faceIndex = pickResult.getIntersectedFace();
-
-            if (faceIndex >= 0) {
-                selectTriangle(faceIndex);
-                event.consume();
-            }
-        });
+        configureMeshPicking(meshView, mesh, 0);
 
         modelContent.getChildren().setAll(meshView);
 
@@ -325,35 +324,51 @@ public class MeshViewerPane extends StackPane {
         return Math.max(min, Math.min(max, value));
     }
 
+    private void configureMeshPicking(MeshView meshView, Mesh mesh, int vertexIndexOffset) {
+        meshView.setOnMouseClicked(event -> {
+            PickResult pickResult = event.getPickResult();
+            int faceIndex = pickResult.getIntersectedFace();
 
-    private void selectTriangle(int triangleIndex) {
+            if (faceIndex >= 0) {
+                selectTriangle(mesh, faceIndex, vertexIndexOffset, pickResult.getIntersectedPoint());
+                event.consume();
+            }
+        });
+    }
+
+    private void selectTriangle(Mesh mesh, int triangleIndex, int vertexIndexOffset, Point3D pickedPoint) {
         if (currentMesh == null) {
             return;
         }
 
-        if (triangleIndex < 0 || triangleIndex >= currentMesh.triangles().size()) {
+        if (triangleIndex < 0 || triangleIndex >= mesh.triangles().size()) {
             clearSelection();
             updateOverlay(currentMesh);
             return;
         }
 
-        MeshTriangle triangle = currentMesh.triangles().get(triangleIndex);
+        MeshTriangle triangle = mesh.triangles().get(triangleIndex);
 
-        MeshVertex va = currentMesh.vertices().get(triangle.a());
-        MeshVertex vb = currentMesh.vertices().get(triangle.b());
-        MeshVertex vc = currentMesh.vertices().get(triangle.c());
+        MeshVertex va = mesh.vertices().get(triangle.a());
+        MeshVertex vb = mesh.vertices().get(triangle.b());
+        MeshVertex vc = mesh.vertices().get(triangle.c());
 
         Point3 a = va.point();
         Point3 b = vb.point();
         Point3 c = vc.point();
 
         MeshView overlay = createTriangleOverlay(a, b, c);
+        int selectedVertexIndex = nearestVertexIndex(triangle, a, b, c, pickedPoint) + vertexIndexOffset;
+        Point3 selectedPoint = selectedVertexPoint(triangle, selectedVertexIndex - vertexIndexOffset, a, b, c);
+        Sphere marker = createSelectedVertexMarker(selectedPoint);
 
         clearSelection();
         selectedTriangleOverlay = overlay;
+        selectedVertexMarker = marker;
         modelContent.getChildren().add(selectedTriangleOverlay);
+        modelContent.getChildren().add(selectedVertexMarker);
 
-        updateOverlay(currentMesh, triangleIndex, triangle);
+        updateOverlay(currentMesh, triangleIndex, triangle, selectedVertexIndex);
     }
 
     private MeshView createTriangleOverlay(Point3 a, Point3 b, Point3 c) {
@@ -390,14 +405,32 @@ public class MeshViewerPane extends StackPane {
         return overlay;
     }
 
+    private Sphere createSelectedVertexMarker(Point3 point) {
+        double diagonal = currentMesh.bounds().diagonal();
+        double radius = Math.max(diagonal * SELECTED_VERTEX_RADIUS_FACTOR, SELECTED_VERTEX_RADIUS_MIN);
+
+        Sphere marker = new Sphere(radius);
+        marker.setMaterial(SELECTED_VERTEX_MATERIAL);
+        marker.setMouseTransparent(true);
+        marker.setTranslateX(point.x());
+        marker.setTranslateY(point.y());
+        marker.setTranslateZ(point.z());
+
+        return marker;
+    }
+
     private void clearSelection() {
         if (selectedTriangleOverlay != null) {
             modelContent.getChildren().remove(selectedTriangleOverlay);
             selectedTriangleOverlay = null;
         }
+        if (selectedVertexMarker != null) {
+            modelContent.getChildren().remove(selectedVertexMarker);
+            selectedVertexMarker = null;
+        }
     }
 
-    private void updateOverlay(Mesh mesh, int triangleIndex, MeshTriangle triangle) {
+    private void updateOverlay(Mesh mesh, int triangleIndex, MeshTriangle triangle, int selectedVertexIndex) {
         MeshBounds bounds = mesh.bounds();
 
         overlayLabel.setText(
@@ -408,8 +441,50 @@ public class MeshViewerPane extends StackPane {
                         + format(bounds.sizeZ()) + System.lineSeparator() +
                         "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
                         "Selected : triangle #" + triangleIndex + " [" +
-                        triangle.a() + ", " + triangle.b() + ", " + triangle.c() + "]"
+                        triangle.a() + ", " + triangle.b() + ", " + triangle.c() + "]" + System.lineSeparator() +
+                        "Vertex   : #" + selectedVertexIndex
         );
+    }
+
+    private static int nearestVertexIndex(
+            MeshTriangle triangle,
+            Point3 a,
+            Point3 b,
+            Point3 c,
+            Point3D pickedPoint
+    ) {
+        if (pickedPoint == null) {
+            return triangle.a();
+        }
+
+        double distanceA = squaredDistance(a, pickedPoint);
+        double distanceB = squaredDistance(b, pickedPoint);
+        double distanceC = squaredDistance(c, pickedPoint);
+
+        if (distanceA <= distanceB && distanceA <= distanceC) {
+            return triangle.a();
+        }
+        if (distanceB <= distanceA && distanceB <= distanceC) {
+            return triangle.b();
+        }
+        return triangle.c();
+    }
+
+    private static Point3 selectedVertexPoint(MeshTriangle triangle, int vertexIndex, Point3 a, Point3 b, Point3 c) {
+        if (vertexIndex == triangle.a()) {
+            return a;
+        }
+        if (vertexIndex == triangle.b()) {
+            return b;
+        }
+        return c;
+    }
+
+    private static double squaredDistance(Point3 point, Point3D pickedPoint) {
+        double dx = point.x() - pickedPoint.getX();
+        double dy = point.y() - pickedPoint.getY();
+        double dz = point.z() - pickedPoint.getZ();
+        return dx * dx + dy * dy + dz * dz;
     }
 
     private static Point3 offsetPoint(Point3 point, double[] normal, double offset) {
@@ -500,18 +575,23 @@ public class MeshViewerPane extends StackPane {
 
             if (planarMesh != null && !planarMesh.isEmpty()) {
                 MeshView planarView = meshViewFactory.create(planarMesh);
+                configureMeshPicking(planarView, planarMesh, 0);
                 planarView.setMaterial(new PhongMaterial(Color.LIGHTGRAY));
                 debugGroup.getChildren().add(planarView);
             }
 
+            int cylindricalVertexOffset = vertexCountOf(planarMesh);
             if (cylindricalMesh != null && !cylindricalMesh.isEmpty()) {
                 MeshView cylindricalView = meshViewFactory.create(cylindricalMesh);
+                configureMeshPicking(cylindricalView, cylindricalMesh, cylindricalVertexOffset);
                 cylindricalView.setMaterial(new PhongMaterial(Color.MEDIUMPURPLE));
                 debugGroup.getChildren().add(cylindricalView);
             }
 
+            int conicalVertexOffset = vertexCountOf(planarMesh) + vertexCountOf(cylindricalMesh);
             if (conicalMesh != null && !conicalMesh.isEmpty()) {
                 MeshView conicalView = meshViewFactory.create(conicalMesh);
+                configureMeshPicking(conicalView, conicalMesh, conicalVertexOffset);
                 conicalView.setMaterial(new PhongMaterial(Color.CYAN));
                 debugGroup.getChildren().add(conicalView);
             }
@@ -560,6 +640,10 @@ public class MeshViewerPane extends StackPane {
 
     private int triangleCountOf(Mesh mesh) {
         return mesh == null ? 0 : mesh.triangleCount();
+    }
+
+    private int vertexCountOf(Mesh mesh) {
+        return mesh == null ? 0 : mesh.vertexCount();
     }
 
     private Mesh combineNonEmptyMeshes(Mesh... meshes) {
