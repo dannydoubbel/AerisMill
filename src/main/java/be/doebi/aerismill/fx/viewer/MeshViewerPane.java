@@ -32,6 +32,12 @@ import java.util.Objects;
 
 public class MeshViewerPane extends StackPane {
 
+    private static final String STYLESHEET =
+            Objects.requireNonNull(
+                    MeshViewerPane.class.getResource("mesh-viewer.css"),
+                    "mesh-viewer.css must be available"
+            ).toExternalForm();
+
     private final Group sceneRoot = new Group();
     private final Group worldRoot = new Group();
     private final Group modelPivot = new Group();
@@ -82,6 +88,9 @@ public class MeshViewerPane extends StackPane {
     public MeshViewerPane(MeshViewFactory meshViewFactory) {
         this.meshViewFactory = Objects.requireNonNull(meshViewFactory, "meshViewFactory must not be null");
 
+        getStyleClass().add("mesh-viewer-pane");
+        getStylesheets().add(STYLESHEET);
+
         modelPivot.getTransforms().addAll(rotateX, rotateY);
         modelPivot.getChildren().add(modelContent);
 
@@ -99,7 +108,9 @@ public class MeshViewerPane extends StackPane {
                 true,
                 SceneAntialiasing.BALANCED
         );
+        /*
         subScene.setFill(Color.rgb(30, 30, 30));
+        */
         subScene.setCamera(camera);
         setCache(false);
         overlayLabel.setCache(false);
@@ -118,6 +129,8 @@ public class MeshViewerPane extends StackPane {
 
 
         overlayLabel.setMouseTransparent(true);
+        overlayLabel.getStyleClass().add("mesh-viewer-overlay-label");
+        /*
         overlayLabel.setStyle("""
         -fx-background-color: rgba(20,20,20,0.75);
         -fx-text-fill: white;
@@ -126,6 +139,7 @@ public class MeshViewerPane extends StackPane {
         -fx-font-family: Consolas;
         -fx-font-size: 12px;
         """);
+        */
 
         getChildren().add(overlayLabel);
         StackPane.setAlignment(overlayLabel, Pos.TOP_LEFT);
