@@ -786,8 +786,14 @@ public class MainController {
 
     @FXML
     private void onViewerFit(ActionEvent event) {
-        log("zoom to fit");
-        meshViewerPane.fitToView();;
+        log("fit view");
+        meshViewerPane.fitToView();
+    }
+
+    @FXML
+    private void onViewerReset(ActionEvent event) {
+        log("reset view");
+        meshViewerPane.resetView();
     }
 
     @FXML

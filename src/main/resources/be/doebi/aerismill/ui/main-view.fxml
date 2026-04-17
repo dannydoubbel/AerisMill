@@ -106,6 +106,9 @@
                                                         <Button text="Fit"
                                                                 mnemonicParsing="false"
                                                                 onAction="#onViewerFit"/>
+                                                        <Button text="Reset"
+                                                                mnemonicParsing="false"
+                                                                onAction="#onViewerReset"/>
                                                         <Button text="+"
                                                                 mnemonicParsing="false"
                                                                 onAction="#onViewerZoomIn"/>

@@ -8,6 +8,7 @@ import be.doebi.aerismill.model.mesh.MeshTriangle;
 import be.doebi.aerismill.model.mesh.MeshVertex;
 import be.doebi.aerismill.tessellation.shell.DebugSurfaceFamilyMeshes;
 import be.doebi.aerismill.ui.AppConsole;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.input.PickResult;
@@ -168,8 +169,7 @@ public class MeshViewerPane extends StackPane {
 
         modelContent.getChildren().setAll(meshView);
 
-        resetView();
-        fitToMesh(mesh.bounds());
+        resetView(mesh.bounds());
         updateOverlay(mesh);
     }
 
@@ -190,7 +190,7 @@ public class MeshViewerPane extends StackPane {
         return String.format(java.util.Locale.US, "%.3f", value);
     }
 
-    public void resetView() {
+    private void resetOrientation() {
         rotateX.setAngle(-20);
         rotateY.setAngle(-20);
         panGroup.setTranslateX(0);
@@ -256,7 +256,9 @@ public class MeshViewerPane extends StackPane {
         });
     }
 
-    private void fitToMesh(MeshBounds bounds) {
+    private void resetView(MeshBounds bounds) {
+        resetOrientation();
+
         Point3 center = bounds.center();
 
         modelContent.setTranslateX(-center.x());
@@ -278,6 +280,42 @@ public class MeshViewerPane extends StackPane {
         applyCameraDistance();
     }
 
+    private void fitToMesh() {
+        Bounds bounds = panGroup.getBoundsInParent();
+
+        double viewportWidth = subScene.getWidth() > 0.0 ? subScene.getWidth() : 800.0;
+        double viewportHeight = subScene.getHeight() > 0.0 ? subScene.getHeight() : 600.0;
+        double aspectRatio = viewportWidth / viewportHeight;
+
+        double fieldOfView = Math.toRadians(camera.getFieldOfView());
+        double verticalFieldOfView;
+        double horizontalFieldOfView;
+
+        if (camera.isVerticalFieldOfView()) {
+            verticalFieldOfView = fieldOfView;
+            horizontalFieldOfView = 2.0 * Math.atan(Math.tan(verticalFieldOfView / 2.0) * aspectRatio);
+        } else {
+            horizontalFieldOfView = fieldOfView;
+            verticalFieldOfView = 2.0 * Math.atan(Math.tan(horizontalFieldOfView / 2.0) / aspectRatio);
+        }
+
+        double padding = 1.10;
+        double halfWidth = Math.max(Math.abs(bounds.getMinX()), Math.abs(bounds.getMaxX())) * padding;
+        double halfHeight = Math.max(Math.abs(bounds.getMinY()), Math.abs(bounds.getMaxY())) * padding;
+        double frontZ = bounds.getMinZ();
+
+        double distanceForWidth = halfWidth / Math.tan(horizontalFieldOfView / 2.0) - frontZ;
+        double distanceForHeight = halfHeight / Math.tan(verticalFieldOfView / 2.0) - frontZ;
+
+        cameraDistance = clamp(
+                Math.max(distanceForWidth, distanceForHeight),
+                minCameraDistance,
+                maxCameraDistance
+        );
+
+        applyCameraDistance();
+    }
+
     private void applyCameraDistance() {
         cameraHolder.setTranslateZ(-cameraDistance);
     }
@@ -291,7 +329,7 @@ public class MeshViewerPane extends StackPane {
         modelContent.setTranslateY(0);
         modelContent.setTranslateZ(0);
         overlayLabel.setText("");
-        resetView();
+        resetOrientation();
     }
 
     private static double clamp(double value, double min, double max) {
@@ -421,8 +459,17 @@ public class MeshViewerPane extends StackPane {
         }
 
         clearSelection();
-        resetView();
-        fitToMesh(currentMesh.bounds());
+        fitToMesh();
+        updateOverlay(currentMesh);
+    }
+
+    public void resetView() {
+        if (currentMesh == null) {
+            return;
+        }
+
+        clearSelection();
+        resetView(currentMesh.bounds());
         updateOverlay(currentMesh);
     }
 
@@ -483,8 +530,7 @@ public class MeshViewerPane extends StackPane {
             modelContent.getChildren().setAll(debugGroup);
 
             if (combinedMesh != null && !combinedMesh.isEmpty()) {
-                resetView();
-                fitToMesh(combinedMesh.bounds());
+                resetView(combinedMesh.bounds());
                 updateOverlayForDebugMeshes(meshes, combinedMesh, timing);
             } else {
                 clear();
