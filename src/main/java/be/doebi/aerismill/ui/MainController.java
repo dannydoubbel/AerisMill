@@ -26,6 +26,7 @@ import be.doebi.aerismill.tessellation.shell.PreviewShellTessellator;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
 import be.doebi.aerismill.tessellation.solid.SolidTessellator;
+import be.doebi.aerismill.ui.dialog.CloseCurrentFileDialog;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -50,7 +51,7 @@ import java.util.prefs.Preferences;
 public class MainController {
 
     private static final String PREF_LAST_OPEN_DIR = "lastStepDirectory";
-    private static final int COPY_FEEDBACK_DURATION_MS = 15000;
+    private static final int COPY_FEEDBACK_DURATION_MS = 10000;
     private static final String ABOUT_TEXT = """
             AerisMill is a CNC-focused engineering application designed to import STEP geometry, build an internal geometric and topological memory model, and eventually generate machining toolpaths. The project emphasizes clear architecture, validation, and pragmatic engineering evolution. This text is temporary and can be refined later.
             """;
@@ -221,22 +222,7 @@ public class MainController {
     }
 
     private boolean confirmCloseCurrentFileAndContinueOpening() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
-        ButtonType closeAndOpenButton = new ButtonType("Close current file and open another", ButtonBar.ButtonData.OK_DONE);
-
-        alert.setTitle("File already open");
-        alert.setHeaderText(null);
-        alert.setContentText("A file is already open. It must be closed before another file can be opened.");
-        alert.getButtonTypes().setAll(cancelButton, closeAndOpenButton);
-        addAppCss(alert.getDialogPane());
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isEmpty() || result.get() != closeAndOpenButton) {
-            return false;
-        }
-
-        return closeCurrentFile();
+        return CloseCurrentFileDialog.confirm(getStage()) && closeCurrentFile();
     }
     private File chooseStepFile() {
         FileChooser fileChooser = createStepFileChooser();
@@ -780,6 +766,7 @@ public class MainController {
         }
     }
 
+    /*
     private void applyGeneratedMesh(File selectedFile, Mesh mesh) {
         meshViewerPane.setMesh(mesh);
 
@@ -799,6 +786,8 @@ public class MainController {
         log("Mesh vertices: " + mesh.vertices().size());
         log("Mesh triangles: " + mesh.triangles().size());
     }
+
+     */
 
     private SolidTessellator createSolidTessellator() {
         GeometryTolerance tolerance = GeometryTolerance.defaults();

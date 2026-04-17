@@ -109,9 +109,7 @@ public class MeshViewerPane extends StackPane {
                 true,
                 SceneAntialiasing.BALANCED
         );
-        /*
-        subScene.setFill(Color.rgb(30, 30, 30));
-        */
+
         subScene.setCamera(camera);
         setCache(false);
         overlayLabel.setCache(false);
@@ -131,16 +129,7 @@ public class MeshViewerPane extends StackPane {
 
         overlayLabel.setMouseTransparent(true);
         overlayLabel.getStyleClass().add("mesh-viewer-overlay-label");
-        /*
-        overlayLabel.setStyle("""
-        -fx-background-color: rgba(20,20,20,0.75);
-        -fx-text-fill: white;
-        -fx-padding: 8 10 8 10;
-        -fx-background-radius: 6;
-        -fx-font-family: Consolas;
-        -fx-font-size: 12px;
-        """);
-        */
+
 
         getChildren().add(overlayLabel);
         StackPane.setAlignment(overlayLabel, Pos.TOP_LEFT);
