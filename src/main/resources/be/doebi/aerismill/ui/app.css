@@ -21,3 +21,9 @@
     -fx-min-height: 28px;
     -fx-pref-height: 28px;
 }
+
+.button.copy-active {
+    -fx-background-color: #2f80ed;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}

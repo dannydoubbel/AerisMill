@@ -26,6 +26,7 @@ import be.doebi.aerismill.tessellation.shell.PreviewShellTessellator;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
 import be.doebi.aerismill.tessellation.solid.SolidTessellator;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -37,8 +38,11 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.util.Duration;
 
 import java.io.File;
+import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.prefs.Preferences;
@@ -46,6 +50,7 @@ import java.util.prefs.Preferences;
 public class MainController {
 
     private static final String PREF_LAST_OPEN_DIR = "lastStepDirectory";
+    private static final int COPY_FEEDBACK_DURATION_MS = 15000;
     private static final String ABOUT_TEXT = """
             AerisMill is a CNC-focused engineering application designed to import STEP geometry, build an internal geometric and topological memory model, and eventually generate machining toolpaths. The project emphasizes clear architecture, validation, and pragmatic engineering evolution. This text is temporary and can be refined later.
             """;
@@ -80,6 +85,8 @@ public class MainController {
     private final MeshViewerPane meshViewerPane = new MeshViewerPane();
     private final AsciiStlReader asciiStlReader = new AsciiStlReader();
     private final BinaryStlReader binaryStlReader = new BinaryStlReader();
+    private final Map<Button, PauseTransition> copyFeedbackTimers = new IdentityHashMap<>();
+    private final Map<Button, String> copyFeedbackOriginalTexts = new IdentityHashMap<>();
 
     private File currentFile;
     private Object currentStepFile; // temporary, until your real model type exists
@@ -473,6 +480,7 @@ public class MainController {
     @FXML
     private void onCopyInfoField(ActionEvent event) {
         copySelectedOrAllText(infoField);
+        showCopyFeedback(event);
     }
 
     @FXML
@@ -483,6 +491,7 @@ public class MainController {
     @FXML
     private void onCopyConsoleOutput(ActionEvent event) {
         copySelectedOrAllText(consoleOutput);
+        showCopyFeedback(event);
     }
 
     @FXML
@@ -494,6 +503,7 @@ public class MainController {
     @FXML
     private void onCopyComConsole(ActionEvent event) {
         copySelectedOrAllText(comConsoleOutput);
+        showCopyFeedback(event);
     }
 
     private void copySelectedOrAllText(TextInputControl control) {
@@ -508,6 +518,34 @@ public class MainController {
         ClipboardContent content = new ClipboardContent();
         content.putString(text == null ? "" : text);
         Clipboard.getSystemClipboard().setContent(content);
+    }
+
+    private void showCopyFeedback(ActionEvent event) {
+        if (!(event.getSource() instanceof Button button)) {
+            return;
+        }
+
+        copyFeedbackOriginalTexts.putIfAbsent(button, button.getText());
+
+        PauseTransition existingTimer = copyFeedbackTimers.remove(button);
+        if (existingTimer != null) {
+            existingTimer.stop();
+        }
+
+        button.setText("Copied");
+        if (!button.getStyleClass().contains("copy-active")) {
+            button.getStyleClass().add("copy-active");
+        }
+
+        PauseTransition timer = new PauseTransition(Duration.millis(COPY_FEEDBACK_DURATION_MS));
+        timer.setOnFinished(finishedEvent -> {
+            String originalText = copyFeedbackOriginalTexts.remove(button);
+            button.setText(originalText == null ? "Copy" : originalText);
+            button.getStyleClass().remove("copy-active");
+            copyFeedbackTimers.remove(button);
+        });
+        copyFeedbackTimers.put(button, timer);
+        timer.playFromStart();
     }
 
 
