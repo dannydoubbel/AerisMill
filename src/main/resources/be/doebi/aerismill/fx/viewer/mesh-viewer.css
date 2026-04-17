@@ -1,0 +1,12 @@
+.mesh-viewer-pane {
+    -fx-background-color: rgb(30, 30, 30);
+}
+
+.mesh-viewer-pane .mesh-viewer-overlay-label {
+    -fx-background-color: rgba(20, 20, 20, 0.75);
+    -fx-text-fill: white;
+    -fx-padding: 8 10 8 10;
+    -fx-background-radius: 6;
+    -fx-font-family: "Consolas";
+    -fx-font-size: 12px;
+}

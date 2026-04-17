@@ -27,6 +27,7 @@ import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
 import be.doebi.aerismill.tessellation.solid.SolidTessellator;
 import be.doebi.aerismill.ui.dialog.CloseCurrentFileDialog;
+import be.doebi.aerismill.ui.dialog.ExitConfirmationDialog;
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -579,24 +580,7 @@ public class MainController {
     }
 
     private boolean confirmExit() {
-        Alert alert = createExitConfirmationAlert();
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.YES;
-    }
-
-    private Alert createExitConfirmationAlert() {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Exit");
-        alert.setHeaderText("Really wanna quit?");
-        alert.setContentText("Unsaved work may be lost.");
-
-        alert.getButtonTypes().setAll(ButtonType.YES, ButtonType.NO);
-        alert.getDialogPane().getStylesheets().add(
-                Objects.requireNonNull(getClass().
-                        getResource("/be/doebi/aerismill/ui/app.css")).toExternalForm()
-        );
-
-        return alert;
+        return ExitConfirmationDialog.confirm(getStage());
     }
 
     private void shutdownMachineServices() {
