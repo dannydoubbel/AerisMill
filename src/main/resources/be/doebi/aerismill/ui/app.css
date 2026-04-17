@@ -11,3 +11,13 @@
     -fx-border-color: #666666;
     -fx-border-width: 1 0 0 0;
 }
+
+#consoleOutputControls .button,
+#consoleOutputControls .check-box,
+#infoFieldControls .button,
+#comConsoleControls .button,
+#serialSendControls .button,
+#serialSendControls .text-field {
+    -fx-min-height: 28px;
+    -fx-pref-height: 28px;
+}

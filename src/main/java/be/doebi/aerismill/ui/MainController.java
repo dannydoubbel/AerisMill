@@ -84,6 +84,7 @@ public class MainController {
     private File currentFile;
     private Object currentStepFile; // temporary, until your real model type exists
     private boolean manualSerialSendDirty = false;
+    private boolean consoleLoggingEnabled = true;
 
     @FXML
     private MachineController machinePaneController;
@@ -93,6 +94,9 @@ public class MainController {
 
     @FXML
     private TextArea consoleOutput;
+
+    @FXML
+    private CheckBox consoleLoggingCheckBox;
 
     @FXML
     private TextArea comConsoleOutput;
@@ -109,9 +113,8 @@ public class MainController {
 
     @FXML
     public void initialize() {
-        AppConsole.setConsoleConsumer(message -> {
-            consoleOutput.appendText(message + System.lineSeparator());
-        });
+        configureConsoleLoggingToggle();
+        AppConsole.setConsoleConsumer(this::appendConsoleOutput);
         mainWorkArea.getChildren().add(0,meshViewerPane);
 
 
@@ -641,6 +644,25 @@ public class MainController {
     }
 
     private void log(String message) {
+        appendConsoleOutput(message);
+    }
+
+    private void configureConsoleLoggingToggle() {
+        if (consoleLoggingCheckBox == null) {
+            return;
+        }
+
+        consoleLoggingEnabled = consoleLoggingCheckBox.isSelected();
+        consoleLoggingCheckBox.selectedProperty().addListener((observable, oldValue, newValue) ->
+                consoleLoggingEnabled = newValue
+        );
+    }
+
+    private void appendConsoleOutput(String message) {
+        if (!consoleLoggingEnabled) {
+            return;
+        }
+
         if (consoleOutput != null) {
             consoleOutput.appendText(message + System.lineSeparator());
         } else {
