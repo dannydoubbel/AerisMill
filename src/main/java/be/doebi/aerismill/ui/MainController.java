@@ -26,6 +26,8 @@ import be.doebi.aerismill.tessellation.shell.PreviewShellTessellator;
 import be.doebi.aerismill.tessellation.shell.ShellTessellator;
 import be.doebi.aerismill.tessellation.solid.DefaultSolidTessellator;
 import be.doebi.aerismill.tessellation.solid.SolidTessellator;
+import be.doebi.aerismill.ui.dialog.AboutDialog;
+import be.doebi.aerismill.ui.dialog.AppDialogs;
 import be.doebi.aerismill.ui.dialog.CloseCurrentFileDialog;
 import be.doebi.aerismill.ui.dialog.ExitConfirmationDialog;
 import javafx.animation.PauseTransition;
@@ -45,8 +47,6 @@ import javafx.util.Duration;
 import java.io.File;
 import java.util.IdentityHashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.prefs.Preferences;
 
 public class MainController {
@@ -293,7 +293,7 @@ public class MainController {
 
     private void handleOpenAsciiStlFileFailure(File selectedFile, Exception ex) {
         log("Failed to load " + selectedFile.getName());
-        showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
+        AppDialogs.showWarning(getStage(), "Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
         ex.printStackTrace();
     }
 
@@ -378,7 +378,7 @@ public class MainController {
 
     private void handleOpenBinaryStlFileFailure(File selectedFile, Exception ex) {
         log("Failed to load " + selectedFile.getName());
-        showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
+        AppDialogs.showWarning(getStage(), "Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
         ex.printStackTrace();
     }
 
@@ -431,7 +431,7 @@ public class MainController {
 
     private void handleOpenStepFileFailure(File selectedFile, Exception e) {
         log("Failed to load " + selectedFile.getName());
-        showWarning("Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
+        AppDialogs.showWarning(getStage(), "Open failed", "Failed to load file:\n" + selectedFile.getAbsolutePath());
         e.printStackTrace();
     }
 
@@ -442,11 +442,11 @@ public class MainController {
     @FXML
     private void onCloseFile(ActionEvent event) {
         if (!hasLoadedFile()) {
-            showInfo("No file loaded", "There is no file to close.");
+            AppDialogs.showInfo(getStage(), "No file loaded", "There is no file to close.");
             return;
         }
 
-        boolean confirmed = showConfirm("Close file", "Are you sure you want to close the current file?");
+        boolean confirmed = AppDialogs.showConfirm(getStage(), "Close file", "Are you sure you want to close the current file?");
         if (!confirmed) {
             return;
         }
@@ -539,23 +539,7 @@ public class MainController {
 
     @FXML
     private void onShowAbout(ActionEvent event) {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.initOwner(getStage());
-        dialog.setTitle("About AerisMill");
-        dialog.setHeaderText("AerisMill");
-
-        TextArea aboutTextArea = new TextArea(ABOUT_TEXT);
-        aboutTextArea.setWrapText(true);
-        aboutTextArea.setEditable(false);
-        aboutTextArea.setPrefColumnCount(48);
-        aboutTextArea.setPrefRowCount(10);
-
-        DialogPane dialogPane = dialog.getDialogPane();
-        dialogPane.setContent(aboutTextArea);
-        dialogPane.getButtonTypes().add(ButtonType.OK);
-        addAppCss(dialogPane);
-
-        dialog.showAndWait();
+        AboutDialog.show(getStage(), ABOUT_TEXT);
     }
 
     private void handleExit(){
@@ -609,17 +593,6 @@ public class MainController {
         });
 
         textManualSerialSend.setOnAction(event -> onManualSerialSend());
-    }
-
-    private boolean showConfirm(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        addAppCss(alert.getDialogPane());
-
-        Optional<ButtonType> result = alert.showAndWait();
-        return result.isPresent() && result.get() == ButtonType.OK;
     }
 
     private boolean hasLoadedFile() {
@@ -701,32 +674,6 @@ public class MainController {
         }
     }
 
-
-
-    private void showWarning(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        addAppCss(alert.getDialogPane());
-        alert.showAndWait();
-    }
-
-    private void showInfo(String title, String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        addAppCss(alert.getDialogPane());
-        alert.showAndWait();
-    }
-
-    private void addAppCss(DialogPane dialogPane) {
-        dialogPane.getStylesheets().add(
-                Objects.requireNonNull(getClass().getResource("/be/doebi/aerismill/ui/app.css")).toExternalForm()
-        );
-    }
-
     private void applyAssemblyResult(AssemblyResult assemblyResult) {
         System.out.println("ASSEMBLY RESULT");
         System.out.println("assembled solids: " + assemblyResult.solids().size());
@@ -801,7 +748,8 @@ public class MainController {
         log("Preview mesh generation failed for " + selectedFile.getName());
         log("Reason: " + e.getClass().getSimpleName() + " - " + e.getMessage());
 
-        showWarning(
+        AppDialogs.showWarning(
+                getStage(),
                 "Preview mesh unavailable",
                 "The STEP file was loaded and assembled, but preview mesh generation is not supported for this file yet.\n\n"
                         + "Reason: " + e.getMessage()
