@@ -472,14 +472,7 @@ public class MainController {
 
     @FXML
     private void onCopyInfoField(ActionEvent event) {
-        if (infoField == null) {
-            return;
-        }
-
-        String text = infoField.getText();
-        ClipboardContent content = new ClipboardContent();
-        content.putString(text == null ? "" : text);
-        Clipboard.getSystemClipboard().setContent(content);
+        copySelectedOrAllText(infoField);
     }
 
     @FXML
@@ -489,14 +482,7 @@ public class MainController {
 
     @FXML
     private void onCopyConsoleOutput(ActionEvent event) {
-        if (infoField == null) {
-            return;
-        }
-
-        String text = consoleOutput.getText();
-        ClipboardContent content = new ClipboardContent();
-        content.putString(text == null ? "" : text);
-        Clipboard.getSystemClipboard().setContent(content);
+        copySelectedOrAllText(consoleOutput);
     }
 
     @FXML
@@ -507,11 +493,18 @@ public class MainController {
 
     @FXML
     private void onCopyComConsole(ActionEvent event) {
-        if (infoField == null) {
+        copySelectedOrAllText(comConsoleOutput);
+    }
+
+    private void copySelectedOrAllText(TextInputControl control) {
+        if (control == null) {
             return;
         }
 
-        String text = comConsoleOutput.getText();
+        String selectedText = control.getSelectedText();
+        String text = selectedText != null && !selectedText.isEmpty()
+                ? selectedText
+                : control.getText();
         ClipboardContent content = new ClipboardContent();
         content.putString(text == null ? "" : text);
         Clipboard.getSystemClipboard().setContent(content);
