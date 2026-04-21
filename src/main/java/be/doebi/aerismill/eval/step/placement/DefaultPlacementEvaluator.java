@@ -101,12 +101,12 @@ public final class DefaultPlacementEvaluator implements PlacementEvaluator {
         Point3 origin = evaluatePoint(location);
 
         Direction axis = placement.getAxis();
-        if (axis == null && placement.getAxisRef() != null) {
+        if (axis == null && isExplicitReference(placement.getAxisRef())) {
             axis = requireDirectionEntity(placement.getAxisRef(), placement.getId(), "axis");
         }
 
         Direction refDirection = placement.getRefDirection();
-        if (refDirection == null && placement.getRefDirectionRef() != null) {
+        if (refDirection == null && isExplicitReference(placement.getRefDirectionRef())) {
             refDirection = requireDirectionEntity(placement.getRefDirectionRef(), placement.getId(), "refDirection");
         }
 
@@ -155,6 +155,10 @@ public final class DefaultPlacementEvaluator implements PlacementEvaluator {
 
         Vec3 perpendicular = candidate.add(z.scale(-candidate.dot(z)));
         return UnitVec3.of(perpendicular);
+    }
+
+    private boolean isExplicitReference(String ref) {
+        return ref != null && !"$".equals(ref) && !"*".equals(ref);
     }
 
     private CartesianPoint requireCartesianPointEntity(String ref, String ownerId, String role) {

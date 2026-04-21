@@ -56,12 +56,9 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         List<Point3> boundaryPoints = shared.collectPreparedBoundaryPoints(preparedLoops);
         List<Point2> projectedBoundaryPoints = shared.collectPreparedProjectedPoints(preparedLoops);
 
-
-
         try {
             PolygonWithHoles2 polygon = shared.buildPolygonWithHoles(preparedLoops);
             List<int[]> triangles = shared.triangulatePolygon(polygon);
-
 
             shared.validateHoleRelationships(polygon);
             shared.validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
@@ -69,9 +66,18 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             shared.validateTrianglesAreNonDegenerate(triangles);
             shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
 
-            return shared.buildFaceMeshPatch(boundaryPoints, triangles,SurfaceFamily.CYLINDRICAL);
+            return shared.buildFaceMeshPatch(boundaryPoints, triangles, SurfaceFamily.CYLINDRICAL);
         } catch (IllegalArgumentException ex) {
             AppConsole.log("CYL_CATCH " + faceLabel(face) + " -> " + ex.getMessage());
+
+            if ("#84523".equals(face.stepId()) && !preparedLoops.isEmpty()) {
+                List<Point2> pts = preparedLoops.getFirst().polygonLoop().points();
+                StringBuilder idx = new StringBuilder("CYL_INDEXED Face #84523");
+                for (int i = 0; i < pts.size(); i++) {
+                    idx.append(" | ").append(i).append("=").append(pts.get(i));
+                }
+                AppConsole.log(idx.toString());
+            }
 
             StringBuilder sb = new StringBuilder();
             sb.append("CYL_DEBUG ")
@@ -112,10 +118,30 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             boolean orthogonalSingleLoop = isOrthogonalSingleLoop(preparedLoops);
             String message = ex.getMessage();
 
+
+
             if (message != null
                     && message.contains("ear clipping")
                     && orthogonalSingleLoop
                     && preparedLoops.size() == 1) {
+
+                if ("#84523".equals(face.stepId())) {
+                    List<Point2> original = preparedLoops.getFirst().polygonLoop().points();
+                    List<Point2> reversed = new ArrayList<>(original);
+                    java.util.Collections.reverse(reversed);
+
+                    try {
+                        PolygonWithHoles2 reversedPolygon = new PolygonWithHoles2(
+                                new PolygonLoop2(reversed),
+                                List.of()
+                        );
+                        List<int[]> reversedTriangles = shared.triangulatePolygon(reversedPolygon);
+                        AppConsole.log("CYL_REVERSED_OK Face #84523 | triangles=" + reversedTriangles.size());
+                    } catch (IllegalArgumentException reverseEx) {
+                        AppConsole.log("CYL_REVERSED_FAIL Face #84523 -> " + reverseEx.getMessage());
+                    }
+                }
+
 
                 AppConsole.log("CYL_ORTHO_FALLBACK " + faceLabel(face));
 
@@ -232,10 +258,20 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             PlanarFaceTessellator.SimplifiedProjectedLoop simplifiedLoop =
                     shared.simplifyProjectedLoop(openBoundaryPoints, projectedBoundaryPoints);
 
+
             simplifiedLoop = removeProjectedCollinearPoints(
                     simplifiedLoop.boundaryPoints(),
                     simplifiedLoop.projectedPoints()
             );
+
+            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
+                AppConsole.log(
+                        "CYL_STAGE after-collinear-1 "
+                                + faceBoundLabel(face, boundIndex)
+                                + " | count=" + simplifiedLoop.projectedPoints().size()
+                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 12)
+                );
+            }
 
             simplifiedLoop = collapseHorizontalPlateaus(
                     face,
@@ -243,8 +279,28 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     simplifiedLoop.projectedPoints()
             );
 
+            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
+                AppConsole.log(
+                        "CYL_STAGE after-plateau "
+                                + faceBoundLabel(face, boundIndex)
+                                + " | count=" + simplifiedLoop.projectedPoints().size()
+                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 12)
+                );
+            }
 
+            simplifiedLoop = removeProjectedCollinearPoints(
+                    simplifiedLoop.boundaryPoints(),
+                    simplifiedLoop.projectedPoints()
+            );
 
+            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
+                AppConsole.log(
+                        "CYL_STAGE after-collinear-2 "
+                                + faceBoundLabel(face, boundIndex)
+                                + " | count=" + simplifiedLoop.projectedPoints().size()
+                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 12)
+                );
+            }
 
 
 
@@ -850,7 +906,13 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
 
             boolean nearlyCollinear = Math.abs(area2) <= collinearEpsilon;
 
-            if (!nearlyCollinear) {
+            boolean between =
+                    curr.x() >= Math.min(prev.x(), next.x()) - collinearEpsilon &&
+                            curr.x() <= Math.max(prev.x(), next.x()) + collinearEpsilon &&
+                            curr.y() >= Math.min(prev.y(), next.y()) - collinearEpsilon &&
+                            curr.y() <= Math.max(prev.y(), next.y()) + collinearEpsilon;
+
+            if (!nearlyCollinear && between) {
                 filteredBoundary.add(boundaryPoints.get(i));
                 filteredProjected.add(curr);
             }
@@ -1074,5 +1136,9 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         }
 
         return new PlanarFaceTessellator.SimplifiedProjectedLoop(filteredBoundary, filteredProjected);
+    }
+
+    private List<Point2> removeCollinearInteriorPoints(List<Point2> points, double eps) {
+        return points;
     }
 }

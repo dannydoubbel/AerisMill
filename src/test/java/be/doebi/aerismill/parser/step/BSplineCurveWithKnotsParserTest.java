@@ -23,6 +23,7 @@ class BSplineCurveWithKnotsParserTest {
         );
 
         List<String> params = List.of(
+                "'curve name'",
                 "2",
                 "(#1,#2,#3)",
                 ".UNSPECIFIED.",
@@ -37,6 +38,7 @@ class BSplineCurveWithKnotsParserTest {
         BSplineCurveWithKnots result = parser.parse(entity, params, Map.of());
 
         assertEquals("#100", result.getId());
+        assertEquals("curve name", result.getName());
         assertEquals(2, result.getDegree());
 
         assertEquals(List.of("#1", "#2", "#3"), result.getControlPointRefs());

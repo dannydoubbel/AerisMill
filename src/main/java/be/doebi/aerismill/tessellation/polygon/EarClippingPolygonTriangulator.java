@@ -1,5 +1,7 @@
 package be.doebi.aerismill.tessellation.polygon;
 
+import be.doebi.aerismill.ui.AppConsole;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -110,6 +112,35 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         List<Integer> remaining = new ArrayList<>(polygonIndices);
         List<int[]> triangles = new ArrayList<>();
 
+        for (int i = 0; i < remaining.size(); i++) {
+            int idx = remaining.get(i);
+            int first = remaining.indexOf(idx);
+            int last = remaining.lastIndexOf(idx);
+            if (first != last) {
+                AppConsole.log(
+                        "EAR_DUPLICATE_INDEX idx=" + idx
+                                + " | first=" + first
+                                + " | last=" + last
+                                + " | point=" + points.get(idx)
+                );
+            }
+        }
+
+        for (int i = 0; i < remaining.size(); i++) {
+            int idx = remaining.get(i);
+            if (remaining.indexOf(idx) != remaining.lastIndexOf(idx)) {
+                throw new IllegalArgumentException(
+                        "Polygon index list contains duplicate vertex index before ear clipping. "
+                                + "idx=" + idx
+                                + " | first=" + remaining.indexOf(idx)
+                                + " | last=" + remaining.lastIndexOf(idx)
+                                + " | polygonIndices=" + remaining
+                );
+            }
+        }
+
+
+
         while (remaining.size() > 3) {
             if (removeOneNearlyCollinearVertex(points, remaining)) {
                 continue;
@@ -141,6 +172,38 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
             }
 
             if (!earFound) {
+
+                if (remaining.size() == 4) {
+                    int a = remaining.get(0);
+                    int b = remaining.get(1);
+                    int c = remaining.get(2);
+                    int d = remaining.get(3);
+
+                    if (!isDegenerateEar(points, a, b, c)
+                            && !isDegenerateEar(points, a, c, d)) {
+                        triangles.add(new int[]{a, b, c});
+                        triangles.add(new int[]{a, c, d});
+                        return triangles;
+                    }
+
+                    if (!isDegenerateEar(points, a, b, d)
+                            && !isDegenerateEar(points, b, c, d)) {
+                        triangles.add(new int[]{a, b, d});
+                        triangles.add(new int[]{b, c, d});
+                        return triangles;
+                    }
+                }
+
+                StringBuilder sb = new StringBuilder("EAR_FAIL remainder");
+                for (int i = 0; i < remaining.size(); i++) {
+                    int idx = remaining.get(i);
+                    Point2 p = points.get(idx);
+                    sb.append(" | ").append(i)
+                            .append(": idx=").append(idx)
+                            .append(" -> ").append(p);
+                }
+                AppConsole.log(sb.toString());
+
                 throw new IllegalArgumentException("Failed to triangulate polygon using ear clipping.");
             }
         }
@@ -242,6 +305,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
 
         for (OuterBridgeCandidate candidate : candidates) {
             List<Integer> merged = buildBridgedPolygonIndices(
+                    allPoints,
                     outerIndices,
                     holeIndices,
                     candidate.outerPosition(),
@@ -633,6 +697,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
     }
 
     List<Integer> buildBridgedPolygonIndices(
+            List<Point2> allPoints,
             List<Integer> outerIndices,
             List<Integer> holeIndices,
             int outerBridgePosition,
@@ -667,11 +732,20 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
             merged.add(holeIndices.get(holeIndex));
         }
 
-        // Repeat the hole bridge vertex to close the hole walk at the bridge.
-        merged.add(holeIndices.get(holeBridgePosition));
+        int holeBridgeIndex = holeIndices.get(holeBridgePosition);
+        int outerBridgeIndex = outerIndices.get(outerBridgePosition);
 
-        // Repeat the outer bridge vertex to return to the outer loop.
-        merged.add(outerIndices.get(outerBridgePosition));
+// Duplicate the bridge points as new appended vertices so the merged
+// polygon walk can revisit the same coordinates without reusing
+// the exact same vertex indices.
+        int duplicatedHoleBridgeIndex = allPoints.size();
+        allPoints.add(allPoints.get(holeBridgeIndex));
+
+        int duplicatedOuterBridgeIndex = allPoints.size();
+        allPoints.add(allPoints.get(outerBridgeIndex));
+
+        merged.add(duplicatedHoleBridgeIndex);
+        merged.add(duplicatedOuterBridgeIndex);
 
         // Continue the rest of the outer loop.
         for (int i = outerBridgePosition + 1; i < outerSize; i++) {
