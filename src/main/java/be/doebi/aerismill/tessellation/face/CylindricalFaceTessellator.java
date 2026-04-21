@@ -70,14 +70,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         } catch (IllegalArgumentException ex) {
             AppConsole.log("CYL_CATCH " + faceLabel(face) + " -> " + ex.getMessage());
 
-            if ("#84523".equals(face.stepId()) && !preparedLoops.isEmpty()) {
-                List<Point2> pts = preparedLoops.getFirst().polygonLoop().points();
-                StringBuilder idx = new StringBuilder("CYL_INDEXED Face #84523");
-                for (int i = 0; i < pts.size(); i++) {
-                    idx.append(" | ").append(i).append("=").append(pts.get(i));
-                }
-                AppConsole.log(idx.toString());
-            }
+
 
             StringBuilder sb = new StringBuilder();
             sb.append("CYL_DEBUG ")
@@ -124,24 +117,6 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     && message.contains("ear clipping")
                     && orthogonalSingleLoop
                     && preparedLoops.size() == 1) {
-
-                if ("#84523".equals(face.stepId())) {
-                    List<Point2> original = preparedLoops.getFirst().polygonLoop().points();
-                    List<Point2> reversed = new ArrayList<>(original);
-                    java.util.Collections.reverse(reversed);
-
-                    try {
-                        PolygonWithHoles2 reversedPolygon = new PolygonWithHoles2(
-                                new PolygonLoop2(reversed),
-                                List.of()
-                        );
-                        List<int[]> reversedTriangles = shared.triangulatePolygon(reversedPolygon);
-                        AppConsole.log("CYL_REVERSED_OK Face #84523 | triangles=" + reversedTriangles.size());
-                    } catch (IllegalArgumentException reverseEx) {
-                        AppConsole.log("CYL_REVERSED_FAIL Face #84523 -> " + reverseEx.getMessage());
-                    }
-                }
-
 
                 AppConsole.log("CYL_ORTHO_FALLBACK " + faceLabel(face));
 
@@ -254,14 +229,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             projectedBoundaryPoints =
                     normalizeLoopToCompactBand(projectedBoundaryPoints, cylinder.radius());
 
-            if ("#18834".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_RAW_NORMALIZED "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + projectedBoundaryPoints.size()
-                                + " | sample=" + samplePoints(projectedBoundaryPoints, 20)
-                );
-            }
+
 
 
             PlanarFaceTessellator.SimplifiedProjectedLoop simplifiedLoop =
@@ -270,24 +238,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                             projectedBoundaryPoints
                     );
 
-            if ("#18834".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_AFTER_SIMPLIFY "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
-                );
-            }
 
-
-            if ("#18834".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_STEP initial "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
-                );
-            }
 
 
 
@@ -296,69 +247,16 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     simplifiedLoop.projectedPoints()
             );
 
-
-            if ("#18834".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_STEP after-collinear-1 "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
-                );
-            }
-
-            if ("#18834".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_STEP after-collinear-2 "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
-                );
-            }
-
-
-
-
-
-
-            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_STAGE after-collinear-1 "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 12)
-                );
-            }
-
             //simplifiedLoop = collapseHorizontalPlateaus(
             //       face,
             //       simplifiedLoop.boundaryPoints(),
             //       simplifiedLoop.projectedPoints()
             //);
 
-            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_STAGE after-plateau "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 12)
-                );
-            }
-
             //simplifiedLoop = removeProjectedCollinearPoints(
             //        simplifiedLoop.boundaryPoints(),
             //        simplifiedLoop.projectedPoints()
             //);
-
-            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_STAGE after-collinear-2 "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 12)
-                );
-            }
-
-
 
             validateBoundaryHasAtLeastThreePoints(
                     simplifiedLoop.boundaryPoints(),
@@ -367,44 +265,13 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     "after-cylindrical-projection"
             );
 
-            if ("#84523".equals(face.stepId()) || "#145264".equals(face.stepId()) || "#104057".equals(face.stepId()) || "#67665".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_FINAL "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | area=" + format(PolygonMath.signedArea(simplifiedLoop.projectedPoints()))
-                                + " | orth=" + orthogonalSegmentStats(simplifiedLoop.projectedPoints())
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
-                );
-            }
-            if ("#18834".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_BEFORE_POLYGON_LOOP "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + simplifiedLoop.projectedPoints().size()
-                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
-                );
-            }
+
             PolygonLoop2 polygonLoop = shared.buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
-            if ("#18834".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_AFTER_POLYGON_LOOP "
-                                + faceBoundLabel(face, boundIndex)
-                                + " | count=" + polygonLoop.points().size()
-                                + " | sample=" + samplePoints(polygonLoop.points(), 20)
-                );
-            }
+
             try {
                 shared.validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
             } catch (IllegalArgumentException ex) {
-                if ("#18834".equals(face.stepId())) {
-                    AppConsole.log(
-                            "CYL_BEFORE_SIMPLE_VALIDATE "
-                                    + faceBoundLabel(face, boundIndex)
-                                    + " | count=" + polygonLoop.points().size()
-                                    + " | sample=" + samplePoints(polygonLoop.points(), 20)
-                    );
-                }
+
                 AppConsole.log(
                         "CYL_SIMPLE "
                                 + faceBoundLabel(face, boundIndex)
@@ -474,12 +341,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
 
         for (Point2 projected : projectedPoints) {
             if (projected == null) {
-                /*
-                throw new IllegalArgumentException(
-                        faceBoundLabel(face, boundIndex)
-                                + ": cylindrical projected boundary points must not contain null points."
-                );
-                 */
+
                 String label = (face == null || boundIndex < 0)
                         ? "Cylindrical boundary"
                         : faceBoundLabel(face, boundIndex);
@@ -990,7 +852,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                             curr.y() >= Math.min(prev.y(), next.y()) - collinearEpsilon &&
                             curr.y() <= Math.max(prev.y(), next.y()) + collinearEpsilon;
 
-            if (!nearlyCollinear && between) {
+            if (!(nearlyCollinear && between)) {
                 filteredBoundary.add(boundaryPoints.get(i));
                 filteredProjected.add(curr);
             }
@@ -1107,116 +969,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
         return Math.abs(area2) <= tolerance.pointEqualityEpsilon() * 10.0;
     }
 
-    private PlanarFaceTessellator.SimplifiedProjectedLoop collapseHorizontalPlateaus(
-            FaceGeom face,
-            List<Point3> boundaryPoints,
-            List<Point2> projectedPoints
-    ) {
-        if (boundaryPoints.size() != projectedPoints.size()) {
-            throw new IllegalArgumentException("Boundary/projected point counts must match.");
-        }
-
-        if (projectedPoints.size() < 4) {
-            return new PlanarFaceTessellator.SimplifiedProjectedLoop(boundaryPoints, projectedPoints);
-        }
-
-        List<Point3> filteredBoundary = new ArrayList<>();
-        List<Point2> filteredProjected = new ArrayList<>();
-
-        int n = projectedPoints.size();
-        double eps = tolerance.pointEqualityEpsilon() * 1000.0;
-
-        for (int i = 0; i < n; i++) {
-            Point2 prev = projectedPoints.get((i - 1 + n) % n);
-            Point2 curr = projectedPoints.get(i);
-            Point2 next = projectedPoints.get((i + 1) % n);
-
-            double minY = Math.min(prev.y(), Math.min(curr.y(), next.y()));
-            double maxY = Math.max(prev.y(), Math.max(curr.y(), next.y()));
-
-            boolean nearHorizontalBand = (maxY - minY) <= eps;
-
-            boolean xBetween =
-                    curr.x() >= Math.min(prev.x(), next.x()) - eps &&
-                            curr.x() <= Math.max(prev.x(), next.x()) + eps;
-
-            boolean interiorHorizontalPlateauPoint = nearHorizontalBand && xBetween;
 
 
 
-
-            boolean nearSameYAsPrev = Math.abs(curr.y() - prev.y()) <= eps;
-            boolean nearSameYAsNext = Math.abs(curr.y() - next.y()) <= eps;
-            boolean prevAndNextNearSameY = Math.abs(prev.y() - next.y()) <= eps;
-
-            boolean currBetweenPrevNext =
-                    curr.x() >= Math.min(prev.x(), next.x()) - eps &&
-                            curr.x() <= Math.max(prev.x(), next.x()) + eps;
-
-            boolean removableBridgePoint =
-                    nearSameYAsPrev &&
-                            nearSameYAsNext &&
-                            prevAndNextNearSameY &&
-                            currBetweenPrevNext;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            Point2 next2 = projectedPoints.get((i + 2) % n);
-
-            double minYForward = Math.min(curr.y(), Math.min(next.y(), next2.y()));
-            double maxYForward = Math.max(curr.y(), Math.max(next.y(), next2.y()));
-
-            boolean forwardHorizontalBand = (maxYForward - minYForward) <= eps;
-
-            boolean currBetweenForward =
-                    curr.x() >= Math.min(next.x(), next2.x()) - eps &&
-                            curr.x() <= Math.max(next.x(), next2.x()) + eps;
-
-
-            boolean removableForwardPlateauPoint = forwardHorizontalBand && currBetweenForward;
-
-
-
-
-
-            boolean removed = interiorHorizontalPlateauPoint || removableForwardPlateauPoint || removableBridgePoint;
-
-            if (face != null && "#104057".equals(face.stepId())) {
-                AppConsole.log(
-                        "CYL_PLATEAU_SCAN Face #104057"
-                                + " | i=" + i
-                                + " | prev=" + prev
-                                + " | curr=" + curr
-                                + " | next=" + next
-                                + " | remove=" + removed
-                );
-            }
-
-            if (!interiorHorizontalPlateauPoint && !removableForwardPlateauPoint && !removableBridgePoint) {
-                filteredBoundary.add(boundaryPoints.get(i));
-                filteredProjected.add(curr);
-            }
-        }
-
-        if (filteredProjected.size() < 3) {
-            return new PlanarFaceTessellator.SimplifiedProjectedLoop(boundaryPoints, projectedPoints);
-        }
-
-        return new PlanarFaceTessellator.SimplifiedProjectedLoop(filteredBoundary, filteredProjected);
-    }
-
-    private List<Point2> removeCollinearInteriorPoints(List<Point2> points, double eps) {
-        return points;
-    }
 }
