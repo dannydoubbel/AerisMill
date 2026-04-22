@@ -229,6 +229,15 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             projectedBoundaryPoints =
                     normalizeLoopToCompactBand(projectedBoundaryPoints, cylinder.radius());
 
+            if ("#104057".equals(face.stepId())) {
+                AppConsole.log(
+                        "CYL104057_RAW "
+                                + faceBoundLabel(face, boundIndex)
+                                + " | count=" + projectedBoundaryPoints.size()
+                                + " | sample=" + samplePoints(projectedBoundaryPoints, 20)
+                );
+            }
+
 
 
 
@@ -246,6 +255,16 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     simplifiedLoop.boundaryPoints(),
                     simplifiedLoop.projectedPoints()
             );
+
+            if ("#104057".equals(face.stepId())) {
+                AppConsole.log(
+                        "CYL104057_AFTER_COLLINEAR1 "
+                                + faceBoundLabel(face, boundIndex)
+                                + " | count=" + simplifiedLoop.projectedPoints().size()
+                                + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
+                );
+            }
+
 
             //simplifiedLoop = collapseHorizontalPlateaus(
             //       face,
@@ -269,6 +288,14 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             PolygonLoop2 polygonLoop = shared.buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
 
             try {
+                if ("#104057".equals(face.stepId())) {
+                    AppConsole.log(
+                            "CYL104057_BEFORE_VALIDATE "
+                                    + faceBoundLabel(face, boundIndex)
+                                    + " | count=" + polygonLoop.points().size()
+                                    + " | sample=" + samplePoints(polygonLoop.points(), 20)
+                    );
+                }
                 shared.validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
             } catch (IllegalArgumentException ex) {
 
@@ -830,6 +857,16 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             Point2 curr = projectedPoints.get(i);
             Point2 next = projectedPoints.get((i + 1) % n);
 
+
+            double eps = tolerance.pointEqualityEpsilon() * 10.0;
+
+            boolean prevHorizontal = Math.abs(curr.y() - prev.y()) <= eps;
+            boolean nextHorizontal = Math.abs(next.y() - curr.y()) <= eps;
+            boolean horizontalChain = prevHorizontal && nextHorizontal;
+
+
+
+
             double area2 =
                     (curr.x() - prev.x()) * (next.y() - prev.y()) -
                             (curr.y() - prev.y()) * (next.x() - prev.x());
@@ -852,7 +889,11 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                             curr.y() >= Math.min(prev.y(), next.y()) - collinearEpsilon &&
                             curr.y() <= Math.max(prev.y(), next.y()) + collinearEpsilon;
 
-            if (!(nearlyCollinear && between)) {
+
+            boolean removable = nearlyCollinear && between && !horizontalChain;
+
+
+            if (!removable) {
                 filteredBoundary.add(boundaryPoints.get(i));
                 filteredProjected.add(curr);
             }
