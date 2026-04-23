@@ -22,6 +22,8 @@ public class PlanarFaceTessellator implements FaceTessellator {
     private final PlaneProjector planeProjector;
     private final GeometryTolerance tolerance;
 
+
+
     public PlanarFaceTessellator(
             EdgeDiscretizer edgeDiscretizer,
             PolygonTriangulator polygonTriangulator,
@@ -44,22 +46,108 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
 
         List<PreparedLoop> preparedLoops = prepareProjectedPolygonLoops(face, plane);
+        preparedLoops = reorderPreparedLoopsOuterFirst(preparedLoops);
+
+        if ("#26867".equals(face.stepId())) {
+            AppConsole.log("PLANAR26867_LOOP_COUNT " + preparedLoops.size());
+            for (int i = 0; i < preparedLoops.size(); i++) {
+                List<Point2> pts = preparedLoops.get(i).polygonLoop().points();
+                String first = pts.isEmpty() ? "[]" : pts.get(0).toString();
+                String last = pts.isEmpty() ? "[]" : pts.get(pts.size() - 1).toString();
+
+                AppConsole.log(
+                        "PLANAR26867_LOOP " + i
+                                + " | count=" + pts.size()
+                                + " | area=" + PolygonMath.signedArea(pts)
+                                + " | first=" + first
+                                + " | last=" + last
+                );
+            }
+        }
+
         PolygonWithHoles2 polygon = buildPolygonWithHoles(preparedLoops);
+
         validateHoleRelationships(polygon);
 
-        List<int[]> triangles = triangulatePolygon(polygon);
+        TriangulationResult triangulation = triangulatePolygon(polygon);
 
-        List<Point3> boundaryPoints = collectPreparedBoundaryPoints(preparedLoops);
-        List<Point2> projectedBoundaryPoints = collectPreparedProjectedPoints(preparedLoops);
+        List<Point2> projectedBoundaryPoints = triangulation.points();
+        List<int[]> triangles = triangulation.triangles();
+
+        List<Point2> originalProjectedBoundaryPoints = collectPreparedProjectedPoints(preparedLoops);
+        List<Point3> originalBoundaryPoints = collectPreparedBoundaryPoints(preparedLoops);
+
+        List<Point3> boundaryPoints = alignBoundaryPointsToTriangulation(
+                originalProjectedBoundaryPoints,
+                originalBoundaryPoints,
+                projectedBoundaryPoints
+        );
+
+        if (originalProjectedBoundaryPoints.size() != projectedBoundaryPoints.size()) {
+            AppConsole.log(
+                    "PLANAR_ORDER_SIZE_MISMATCH"
+                            + " | face=" + face.stepId()
+                            + " | originalProjectedCount=" + originalProjectedBoundaryPoints.size()
+                            + " | triangulatedProjectedCount=" + projectedBoundaryPoints.size()
+            );
+        } else {
+            boolean exactOrderMatch = true;
+
+            for (int i = 0; i < projectedBoundaryPoints.size(); i++) {
+                Point2 a = originalProjectedBoundaryPoints.get(i);
+                Point2 b = projectedBoundaryPoints.get(i);
+
+                if (!a.equals(b)) {
+                    exactOrderMatch = false;
+
+                    AppConsole.log(
+                            "PLANAR_ORDER_MISMATCH"
+                                    + " | face=" + face.stepId()
+                                    + " | index=" + i
+                                    + " | original=" + a
+                                    + " | triangulated=" + b
+                    );
+                    break;
+                }
+            }
+
+            if (exactOrderMatch) {
+                AppConsole.log("PLANAR_ORDER_MATCH | face=" + face.stepId());
+            }
+        }
+
+        AppConsole.log(
+                "PLANAR_TRI_VS_3D"
+                        + " | face=" + face.stepId()
+                        + " | projectedCount=" + projectedBoundaryPoints.size()
+                        + " | boundary3dCount=" + boundaryPoints.size()
+        );
+
+        if (projectedBoundaryPoints.size() != boundaryPoints.size()) {
+            throw new IllegalArgumentException(
+                    "Planar triangulation 2D/3D count mismatch: "
+                            + "face=" + face.stepId()
+                            + " | projectedCount=" + projectedBoundaryPoints.size()
+                            + " | boundary3dCount=" + boundaryPoints.size()
+            );
+        }
+
+
+
+
+
+
+
+
 
 
 
         validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
-        validateTriangleIndices(boundaryPoints, triangles);
+        validateTriangleIndices(projectedBoundaryPoints, triangles);
         validateTrianglesAreNonDegenerate(triangles);
         validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
 
-        return buildFaceMeshPatch(boundaryPoints, triangles,SurfaceFamily.PLANAR);
+        return buildFaceMeshPatch(boundaryPoints, triangles, SurfaceFamily.PLANAR);
     }
 
     List<Point3> collapseConsecutiveDuplicateBoundaryPoints(List<Point3> boundaryPoints) {
@@ -165,12 +253,18 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
         return new PolygonWithHoles2(outerLoop, List.of());
     }
-
+    /*
     List<int[]> triangulatePolygon(PolygonWithHoles2 polygon) {
         if (polygon == null) {
             throw new IllegalArgumentException("Polygon must not be null.");
         }
         return polygonTriangulator.triangulate(polygon);
+    }*/
+    TriangulationResult triangulatePolygon(PolygonWithHoles2 polygon) {
+        if (polygon == null) {
+            throw new IllegalArgumentException("Polygon must not be null.");
+        }
+        return polygonTriangulator.triangulateWithPoints(polygon);
     }
 
     FaceMeshPatch buildFaceMeshPatch(
@@ -262,7 +356,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
         }
     }
 
-    void validateTriangleIndices(List<Point3> boundaryPoints, List<int[]> triangleIndices) {
+    void validateTriangleIndices(List<Point2> boundaryPoints, List<int[]> triangleIndices) {
         if (boundaryPoints == null) {
             throw new IllegalArgumentException("Boundary points must not be null.");
         }
@@ -507,10 +601,67 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 "after-projected-simplification"
         );
 
+
         PolygonLoop2 polygonLoop = buildOuterPolygonLoop(projectedSnapshot.finalProjected());
+
+        polygonLoop = removeRepeatedVertexTouches(polygonLoop);
+
+        if ("#26867".equals(face.stepId())) {
+            AppConsole.log("PLANAR26867_BEFORE_VALIDATE count=" + polygonLoop.points().size());
+
+            StringBuilder sb = new StringBuilder("PLANAR26867_INDEXED");
+            for (int i = 0; i < polygonLoop.points().size(); i++) {
+                sb.append(" | ").append(i).append("=").append(polygonLoop.points().get(i));
+            }
+            AppConsole.log(sb.toString());
+        }
+
+
+
+
+
+
+        if ("#26867".equals(face.stepId())) {
+            List<Point2> pts = polygonLoop.points();
+            double eps = tolerance.pointEqualityEpsilon() * 10.0;
+
+            for (int i = 0; i < pts.size(); i++) {
+                for (int j = i + 1; j < pts.size(); j++) {
+                    Point2 a = pts.get(i);
+                    Point2 b = pts.get(j);
+
+                    boolean same =
+                            Math.abs(a.x() - b.x()) <= eps &&
+                                    Math.abs(a.y() - b.y()) <= eps;
+
+                    if (same) {
+                        AppConsole.log(
+                                "PLANAR_REPEAT Face #26867"
+                                        + " | i=" + i + " " + a
+                                        + " | j=" + j + " " + b
+                        );
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
         validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
 
-        return new PreparedLoop(projectedSnapshot.boundaryPoints(), polygonLoop);
+        List<Point3> alignedBoundaryPoints = alignBoundaryPointsToFinalPolygonLoop(
+                projectedSnapshot.boundaryPoints(),
+                projectedSnapshot.finalProjected(),
+                polygonLoop.points()
+        );
+
+        return new PreparedLoop(alignedBoundaryPoints, polygonLoop);
     }
 
 
@@ -1425,4 +1576,210 @@ public class PlanarFaceTessellator implements FaceTessellator {
             List<Point2> finalProjected
     ) {}
 
+    private PolygonLoop2 removeRepeatedVertexTouches(PolygonLoop2 loop) {
+        if (loop == null || loop.points() == null || loop.points().isEmpty()) {
+            return loop;
+        }
+
+        List<Point2> points = loop.points();
+        double eps = tolerance.pointEqualityEpsilon() * 10.0;
+
+        List<Point2> filtered = new ArrayList<>();
+        List<Integer> removedIndices = new ArrayList<>();
+
+        for (int i = 0; i < points.size(); i++) {
+            Point2 curr = points.get(i);
+
+            boolean alreadySeen = false;
+            for (Point2 kept : filtered) {
+                boolean same =
+                        Math.abs(curr.x() - kept.x()) <= eps &&
+                                Math.abs(curr.y() - kept.y()) <= eps;
+
+                if (same) {
+                    alreadySeen = true;
+                    break;
+                }
+            }
+
+            if (alreadySeen) {
+                removedIndices.add(i);
+                continue;
+            }
+
+            filtered.add(curr);
+        }
+
+        if (!removedIndices.isEmpty()) {
+            AppConsole.log(
+                    "PLANAR_REPEAT_REMOVED count=" + removedIndices.size()
+                            + " | removedIndices=" + removedIndices
+            );
+        }
+
+        if (filtered.size() < 3) {
+            return loop;
+        }
+
+        return new PolygonLoop2(filtered);
+    }
+
+    private List<PreparedLoop> reorderPreparedLoopsOuterFirst(List<PreparedLoop> preparedLoops) {
+        if (preparedLoops == null || preparedLoops.size() <= 1) {
+            return preparedLoops;
+        }
+
+        List<PreparedLoop> reordered = new ArrayList<>(preparedLoops);
+
+        int outerIndex = 0;
+        double maxAbsArea = Double.NEGATIVE_INFINITY;
+
+        for (int i = 0; i < reordered.size(); i++) {
+            List<Point2> pts = reordered.get(i).polygonLoop().points();
+            double absArea = Math.abs(PolygonMath.signedArea(pts));
+            if (absArea > maxAbsArea) {
+                maxAbsArea = absArea;
+                outerIndex = i;
+            }
+        }
+
+        if (outerIndex == 0) {
+            return reordered;
+        }
+
+        PreparedLoop outer = reordered.remove(outerIndex);
+        reordered.addFirst(outer);
+        return reordered;
+    }
+
+
+    public record TriangulationResult(
+            List<Point2> points,
+            //List<Integer> sourceIndices,
+            List<int[]> triangles
+    ) {}
+
+
+
+    private List<Point3> alignBoundaryPointsToTriangulation(
+            List<Point2> originalProjectedPoints,
+            List<Point3> originalBoundaryPoints,
+            List<Point2> triangulatedProjectedPoints
+    ) {
+        if (originalProjectedPoints == null) {
+            throw new IllegalArgumentException("Original projected points must not be null.");
+        }
+        if (originalBoundaryPoints == null) {
+            throw new IllegalArgumentException("Original boundary points must not be null.");
+        }
+        if (triangulatedProjectedPoints == null) {
+            throw new IllegalArgumentException("Triangulated projected points must not be null.");
+        }
+        if (originalProjectedPoints.size() != originalBoundaryPoints.size()) {
+            throw new IllegalArgumentException(
+                    "Original projected/3D boundary point count mismatch: "
+                            + originalProjectedPoints.size() + " vs " + originalBoundaryPoints.size()
+            );
+        }
+
+        List<Point3> aligned = new ArrayList<>(triangulatedProjectedPoints.size());
+        boolean[] used = new boolean[originalProjectedPoints.size()];
+
+        for (Point2 triangulatedPoint : triangulatedProjectedPoints) {
+            int matchIndex = -1;
+
+            // First try to consume an unused exact match.
+            for (int i = 0; i < originalProjectedPoints.size(); i++) {
+                if (used[i]) {
+                    continue;
+                }
+                if (originalProjectedPoints.get(i).equals(triangulatedPoint)) {
+                    matchIndex = i;
+                    used[i] = true;
+                    break;
+                }
+            }
+
+            // If none left, allow reuse of an existing exact match.
+            // This is what we want for duplicated bridge vertices.
+            if (matchIndex < 0) {
+                for (int i = 0; i < originalProjectedPoints.size(); i++) {
+                    if (originalProjectedPoints.get(i).equals(triangulatedPoint)) {
+                        matchIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (matchIndex < 0) {
+                throw new IllegalArgumentException(
+                        "Could not align triangulated projected point back to 3D boundary point: "
+                                + triangulatedPoint
+                );
+            }
+
+            aligned.add(originalBoundaryPoints.get(matchIndex));
+        }
+
+        return aligned;
+    }
+
+    private List<Point3> alignBoundaryPointsToFinalPolygonLoop(
+            List<Point3> originalBoundaryPoints,
+            List<Point2> originalProjectedPoints,
+            List<Point2> finalProjectedPoints
+    ) {
+        if (originalBoundaryPoints == null) {
+            throw new IllegalArgumentException("Original boundary points must not be null.");
+        }
+        if (originalProjectedPoints == null) {
+            throw new IllegalArgumentException("Original projected points must not be null.");
+        }
+        if (finalProjectedPoints == null) {
+            throw new IllegalArgumentException("Final projected points must not be null.");
+        }
+        if (originalBoundaryPoints.size() != originalProjectedPoints.size()) {
+            throw new IllegalArgumentException(
+                    "Original projected/3D boundary point count mismatch: "
+                            + originalProjectedPoints.size() + " vs " + originalBoundaryPoints.size()
+            );
+        }
+
+        List<Point3> aligned = new ArrayList<>(finalProjectedPoints.size());
+        boolean[] used = new boolean[originalProjectedPoints.size()];
+
+        for (Point2 finalPoint : finalProjectedPoints) {
+            int matchIndex = -1;
+
+            for (int i = 0; i < originalProjectedPoints.size(); i++) {
+                if (used[i]) {
+                    continue;
+                }
+                if (originalProjectedPoints.get(i).equals(finalPoint)) {
+                    matchIndex = i;
+                    used[i] = true;
+                    break;
+                }
+            }
+
+            if (matchIndex < 0) {
+                for (int i = 0; i < originalProjectedPoints.size(); i++) {
+                    if (originalProjectedPoints.get(i).equals(finalPoint)) {
+                        matchIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            if (matchIndex < 0) {
+                throw new IllegalArgumentException(
+                        "Could not align final projected point back to 3D boundary point: " + finalPoint
+                );
+            }
+
+            aligned.add(originalBoundaryPoints.get(matchIndex));
+        }
+
+        return aligned;
+    }
 }

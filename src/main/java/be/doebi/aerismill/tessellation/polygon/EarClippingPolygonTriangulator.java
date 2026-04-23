@@ -1,5 +1,7 @@
 package be.doebi.aerismill.tessellation.polygon;
 
+import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
+import be.doebi.aerismill.tessellation.face.PlanarFaceTessellator;
 import be.doebi.aerismill.ui.AppConsole;
 
 import java.util.ArrayList;
@@ -9,8 +11,14 @@ import java.util.List;
 
 public class EarClippingPolygonTriangulator implements PolygonTriangulator {
 
+    private final GeometryTolerance tolerance;
+
+    public EarClippingPolygonTriangulator(GeometryTolerance tolerance) {
+        this.tolerance = tolerance;
+    }
+
     @Override
-    public List<int[]> triangulate(PolygonWithHoles2 polygon) {
+    public PlanarFaceTessellator.TriangulationResult triangulateWithPoints(PolygonWithHoles2 polygon) {
         if (polygon == null) {
             throw new IllegalArgumentException("Polygon must not be null.");
         }
@@ -51,7 +59,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         return triangulatePolygonWithHoles(polygon.outer(), polygon.holes());
     }
 
-    List<int[]> triangulatePolygonWithHoles(PolygonLoop2 outer, List<PolygonLoop2> holes) {
+    PlanarFaceTessellator.TriangulationResult triangulatePolygonWithHoles(PolygonLoop2 outer, List<PolygonLoop2> holes) {
         if (outer == null) {
             throw new IllegalArgumentException("Outer loop must not be null.");
         }
@@ -98,7 +106,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         return triangulateSimplePolygon(allPoints, mergedIndices);
     }
 
-    List<int[]> triangulateSimplePolygon(List<Point2> points, List<Integer> polygonIndices) {
+    PlanarFaceTessellator.TriangulationResult triangulateSimplePolygon(List<Point2> points, List<Integer> polygonIndices) {
         if (points == null) {
             throw new IllegalArgumentException("Points must not be null.");
         }
@@ -183,14 +191,20 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                             && !isDegenerateEar(points, a, c, d)) {
                         triangles.add(new int[]{a, b, c});
                         triangles.add(new int[]{a, c, d});
-                        return triangles;
+                        return new PlanarFaceTessellator.TriangulationResult(
+                                points,
+                                triangles
+                        );
                     }
 
                     if (!isDegenerateEar(points, a, b, d)
                             && !isDegenerateEar(points, b, c, d)) {
                         triangles.add(new int[]{a, b, d});
                         triangles.add(new int[]{b, c, d});
-                        return triangles;
+                        return new PlanarFaceTessellator.TriangulationResult(
+                                points,
+                                triangles
+                        );
                     }
                 }
 
@@ -223,7 +237,10 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         }
 
         triangles.add(new int[]{a, b, c});
-        return triangles;
+        return new PlanarFaceTessellator.TriangulationResult(
+                points,
+                triangles
+        );
     }
 
     List<Integer> buildNormalizedOuterIndices(List<Point2> outerPoints) {
@@ -263,6 +280,15 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         int holeBridgeIndex = holeIndices.get(holeBridgePosition);
         Point2 holeBridgePoint = allPoints.get(holeBridgeIndex);
 
+        AppConsole.log(
+                "BRIDGE_HOLE_POINT"
+                        + " | holeBridgePosition=" + holeBridgePosition
+                        + " | holeBridgeIndex=" + holeBridgeIndex
+                        + " | point=" + holeBridgePoint
+                        + " | outerSize=" + outerIndices.size()
+                        + " | holeSize=" + holeIndices.size()
+                        + " | allPointsSizeBefore=" + allPoints.size()
+        );
 
         List<OuterBridgeCandidate> candidates = new ArrayList<>();
 
@@ -312,10 +338,74 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                     holeBridgePosition
             );
 
-            if (isSimpleMergedLoop(allPoints, merged, candidate.outerPosition(), holeIndices.size())) {
+            int outerBridgeIndex = outerIndices.get(candidate.outerPosition());
+            int maxMergedIndex = merged.stream()
+                    .mapToInt(Integer::intValue)
+                    .max()
+                    .orElse(-1);
+
+            int minMergedIndex = merged.stream()
+                    .mapToInt(Integer::intValue)
+                    .min()
+                    .orElse(-1);
+
+            String mergedPreviewStart = merged.stream()
+                    .limit(12)
+                    .map(String::valueOf)
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("");
+
+            String mergedPreviewEnd = merged.stream()
+                    .skip(Math.max(0, merged.size() - 12))
+                    .map(String::valueOf)
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("");
+
+            AppConsole.log(
+                    "BRIDGE_CANDIDATE"
+                            + " | outerPosition=" + candidate.outerPosition()
+                            + " | outerIndex=" + outerBridgeIndex
+                            + " | holeBridgeIndex=" + holeBridgeIndex
+                            + " | outerPoint=" + allPoints.get(outerBridgeIndex)
+                            + " | rightSide=" + candidate.rightSide()
+                            + " | verticalPenalty=" + candidate.verticalPenalty()
+                            + " | distanceSquared=" + candidate.distanceSquared()
+            );
+
+            AppConsole.log(
+                    "BRIDGE_MERGED"
+                            + " | outerPosition=" + candidate.outerPosition()
+                            + " | mergedSize=" + merged.size()
+                            + " | minMergedIndex=" + minMergedIndex
+                            + " | maxMergedIndex=" + maxMergedIndex
+                            + " | allPointsSizeAfter=" + allPoints.size()
+                            + " | outerSize=" + outerIndices.size()
+                            + " | holeSize=" + holeIndices.size()
+                            + " | mergedStart=[" + mergedPreviewStart + "]"
+                            + " | mergedEnd=[" + mergedPreviewEnd + "]"
+            );
+
+            boolean simple = isSimpleMergedLoop(
+                    allPoints,
+                    merged,
+                    candidate.outerPosition(),
+                    holeIndices.size()
+            );
+
+            AppConsole.log(
+                    "BRIDGE_CANDIDATE_RESULT"
+                            + " | outerPosition=" + candidate.outerPosition()
+                            + " | simple=" + simple
+                            + " | mergedSize=" + merged.size()
+                            + " | maxMergedIndex=" + maxMergedIndex
+                            + " | allPointsSize=" + allPoints.size()
+            );
+
+            if (simple) {
                 return merged;
             }
         }
+
         throw new IllegalArgumentException(
                 "Failed to bridge polygon hole into outer loop without creating self-intersection."
         );
@@ -370,7 +460,29 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                 Point2 c = allPoints.get(cIndex);
                 Point2 d = allPoints.get(dIndex);
 
+                if (pointsShareEndpoint(a, b, c, d)) {
+                    continue;
+                }
+
+
+
+
+
                 if (segmentsIntersectInclusive(a, b, c, d)) {
+
+                    AppConsole.log(
+                            "BRIDGE_INTERSECTION"
+                                    + " | i=" + i + " edge=(" + a + " -> " + b + ")"
+                                    + " | j=" + j + " edge=(" + c + " -> " + d + ")"
+                                    + " | aIndex=" + aIndex
+                                    + " | bIndex=" + bIndex
+                                    + " | cIndex=" + cIndex
+                                    + " | dIndex=" + dIndex
+                    );
+
+
+
+
                     return false;
                 }
             }
@@ -691,10 +803,13 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         return new PolygonLoop2(mergedPoints);
     }
 
+    /*
     private List<int[]> triangulateSimpleLoop(PolygonLoop2 loop) {
         List<Point2> points = loop.points();
         return triangulateSimplePolygon(points, buildNormalizedOuterIndices(points));
     }
+
+     */
 
     List<Integer> buildBridgedPolygonIndices(
             List<Point2> allPoints,
@@ -854,5 +969,19 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         double epsilon = 1.0e-6 * scale;
 
         return twiceArea <= epsilon;
+    }
+
+    private boolean pointsShareEndpoint(Point2 a, Point2 b, Point2 c, Point2 d) {
+        double eps = tolerance.pointEqualityEpsilon() * 10.0;
+
+        return samePoint(a, c, eps)
+                || samePoint(a, d, eps)
+                || samePoint(b, c, eps)
+                || samePoint(b, d, eps);
+    }
+
+    private boolean samePoint(Point2 p1, Point2 p2, double eps) {
+        return Math.abs(p1.x() - p2.x()) <= eps
+                && Math.abs(p1.y() - p2.y()) <= eps;
     }
 }

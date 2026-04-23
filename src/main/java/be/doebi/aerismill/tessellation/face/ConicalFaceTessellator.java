@@ -50,13 +50,12 @@ public final class ConicalFaceTessellator implements FaceTessellator {
         PolygonWithHoles2 polygon = shared.buildPolygonWithHoles(preparedLoops);
         shared.validateHoleRelationships(polygon);
 
-        List<int[]> triangles = shared.triangulatePolygon(polygon);
-
+        List<int[]> triangles = shared.triangulatePolygon(polygon).triangles();
         List<Point3> boundaryPoints = shared.collectPreparedBoundaryPoints(preparedLoops);
         List<Point2> projectedBoundaryPoints = shared.collectPreparedProjectedPoints(preparedLoops);
 
         shared.validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
-        shared.validateTriangleIndices(boundaryPoints, triangles);
+        shared.validateTriangleIndices(projectedBoundaryPoints, triangles);
         shared.validateTrianglesAreNonDegenerate(triangles);
         shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
 

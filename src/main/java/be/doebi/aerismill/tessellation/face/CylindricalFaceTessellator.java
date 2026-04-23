@@ -53,32 +53,28 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                 prepareProjectedPolygonLoops(face, cylinder);
         preparedLoops = reorderPreparedLoopsOuterFirst(preparedLoops);
 
-        List<Point3> boundaryPoints = shared.collectPreparedBoundaryPoints(preparedLoops);
-        List<Point2> projectedBoundaryPoints = shared.collectPreparedProjectedPoints(preparedLoops);
+        PolygonWithHoles2 polygon = shared.buildPolygonWithHoles(preparedLoops);
+        PlanarFaceTessellator.TriangulationResult triangulation = shared.triangulatePolygon(polygon);
 
         try {
-            PolygonWithHoles2 polygon = shared.buildPolygonWithHoles(preparedLoops);
-            List<int[]> triangles = shared.triangulatePolygon(polygon);
+            List<Point3> triangulatedBoundaryPoints = shared.collectPreparedBoundaryPoints(preparedLoops);
+            List<Point2> triangulatedProjectedPoints = triangulation.points();
+            List<int[]> triangles = triangulation.triangles();
 
-            shared.validateHoleRelationships(polygon);
-            shared.validateTrianglesNotEmpty(triangles, face, preparedLoops, boundaryPoints);
-            shared.validateTriangleIndices(boundaryPoints, triangles);
+            shared.validateTrianglesNotEmpty(triangles, face, preparedLoops, triangulatedBoundaryPoints);
+            shared.validateTriangleIndices(triangulatedProjectedPoints, triangles);
             shared.validateTrianglesAreNonDegenerate(triangles);
-            shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, triangles);
+            shared.validateTrianglesHavePositiveArea(triangulatedProjectedPoints, triangles);
 
-            return shared.buildFaceMeshPatch(boundaryPoints, triangles, SurfaceFamily.CYLINDRICAL);
+            return shared.buildFaceMeshPatch(triangulatedBoundaryPoints, triangles, SurfaceFamily.CYLINDRICAL);
         } catch (IllegalArgumentException ex) {
             AppConsole.log("CYL_CATCH " + faceLabel(face) + " -> " + ex.getMessage());
-
-
 
             StringBuilder sb = new StringBuilder();
             sb.append("CYL_DEBUG ")
                     .append(faceLabel(face))
                     .append(" | loopCount=")
                     .append(preparedLoops.size());
-
-
 
             for (int i = 0; i < preparedLoops.size(); i++) {
                 PlanarFaceTessellator.PreparedLoop preparedLoop = preparedLoops.get(i);
@@ -105,13 +101,10 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                         .append(", sample=").append(samplePoints(points, 10));
             }
 
-
             AppConsole.log(sb.toString());
 
             boolean orthogonalSingleLoop = isOrthogonalSingleLoop(preparedLoops);
             String message = ex.getMessage();
-
-
 
             if (message != null
                     && message.contains("ear clipping")
@@ -124,13 +117,17 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                 List<int[]> fallbackTriangles = tryOrthogonalSingleLoopFallbackTriangles(points);
 
                 try {
-                    shared.validateTrianglesNotEmpty(fallbackTriangles, face, preparedLoops, boundaryPoints);
-                    shared.validateTriangleIndices(boundaryPoints, fallbackTriangles);
+                    List<Point3> fallbackBoundaryPoints = shared.collectPreparedBoundaryPoints(preparedLoops);
+                    List<Point2> fallbackProjectedBoundaryPoints = shared.collectPreparedProjectedPoints(preparedLoops);
+
+                    shared.validateTrianglesNotEmpty(fallbackTriangles, face, preparedLoops, fallbackBoundaryPoints);
+
+                    shared.validateTriangleIndices(fallbackProjectedBoundaryPoints, fallbackTriangles);
                     shared.validateTrianglesAreNonDegenerate(fallbackTriangles);
-                    shared.validateTrianglesHavePositiveArea(projectedBoundaryPoints, fallbackTriangles);
+                    shared.validateTrianglesHavePositiveArea(fallbackProjectedBoundaryPoints, fallbackTriangles);
 
                     AppConsole.log("CYL_ORTHO_FALLBACK_OK " + faceLabel(face));
-                    return shared.buildFaceMeshPatch(boundaryPoints, fallbackTriangles,SurfaceFamily.CYLINDRICAL);
+                    return shared.buildFaceMeshPatch(fallbackBoundaryPoints, fallbackTriangles, SurfaceFamily.CYLINDRICAL);
                 } catch (IllegalArgumentException fallbackEx) {
                     AppConsole.log("CYL_ORTHO_FALLBACK_FAIL " + faceLabel(face) + " -> " + fallbackEx.getMessage());
                 }
@@ -140,10 +137,7 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     && message.contains("ear clipping")
                     && orthogonalSingleLoop) {
                 AppConsole.log("CYL_ORTHO_FALLBACK " + faceLabel(face));
-
             }
-
-
 
             throw ex;
         }
@@ -229,9 +223,9 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             projectedBoundaryPoints =
                     normalizeLoopToCompactBand(projectedBoundaryPoints, cylinder.radius());
 
-            if ("#104057".equals(face.stepId())) {
+            if ("#26867".equals(face.stepId())) {
                 AppConsole.log(
-                        "CYL104057_RAW "
+                        "CYL26867_RAW "
                                 + faceBoundLabel(face, boundIndex)
                                 + " | count=" + projectedBoundaryPoints.size()
                                 + " | sample=" + samplePoints(projectedBoundaryPoints, 20)
@@ -256,9 +250,9 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
                     simplifiedLoop.projectedPoints()
             );
 
-            if ("#104057".equals(face.stepId())) {
+            if ("#26867".equals(face.stepId())) {
                 AppConsole.log(
-                        "CYL104057_AFTER_COLLINEAR1 "
+                        "CYL26867_AFTER_COLLINEAR1 "
                                 + faceBoundLabel(face, boundIndex)
                                 + " | count=" + simplifiedLoop.projectedPoints().size()
                                 + " | sample=" + samplePoints(simplifiedLoop.projectedPoints(), 20)
@@ -288,13 +282,18 @@ public final class CylindricalFaceTessellator implements FaceTessellator {
             PolygonLoop2 polygonLoop = shared.buildOuterPolygonLoop(simplifiedLoop.projectedPoints());
 
             try {
-                if ("#104057".equals(face.stepId())) {
+                if ("#26867".equals(face.stepId())) {
                     AppConsole.log(
-                            "CYL104057_BEFORE_VALIDATE "
+                            "CYL26867_BEFORE_VALIDATE "
                                     + faceBoundLabel(face, boundIndex)
                                     + " | count=" + polygonLoop.points().size()
                                     + " | sample=" + samplePoints(polygonLoop.points(), 20)
                     );
+                    StringBuilder sb = new StringBuilder("PLANAR26867_INDEXED");
+                    for (int i = 0; i < polygonLoop.points().size(); i++) {
+                        sb.append(" | ").append(i).append("=").append(polygonLoop.points().get(i));
+                    }
+                    AppConsole.log(sb.toString());
                 }
                 shared.validateProjectedBoundaryIsSimple(polygonLoop, face, boundIndex);
             } catch (IllegalArgumentException ex) {

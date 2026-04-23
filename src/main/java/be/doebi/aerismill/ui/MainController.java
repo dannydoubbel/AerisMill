@@ -16,7 +16,6 @@ import be.doebi.aerismill.tessellation.curve.DefaultEdgeDiscretizer;
 import be.doebi.aerismill.tessellation.curve.EdgeDiscretizer;
 import be.doebi.aerismill.tessellation.face.DefaultFaceTessellator;
 import be.doebi.aerismill.tessellation.face.FaceTessellator;
-import be.doebi.aerismill.tessellation.face.PlanarFaceTessellator;
 import be.doebi.aerismill.tessellation.polygon.EarClippingPolygonTriangulator;
 import be.doebi.aerismill.tessellation.polygon.PolygonTriangulator;
 import be.doebi.aerismill.tessellation.projection.DefaultPlaneProjector;
@@ -41,7 +40,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import javafx.util.Duration;
 
 import java.io.File;
@@ -729,7 +727,7 @@ public class MainController {
         // Use your real concrete triangulator here.
         // If RecordingPolygonTriangulator is currently your only concrete implementation, it can do for now.
         // PolygonTriangulator polygonTriangulator = new RecordingPolygonTriangulator();
-        PolygonTriangulator polygonTriangulator = new EarClippingPolygonTriangulator();
+        PolygonTriangulator polygonTriangulator = new EarClippingPolygonTriangulator(tolerance);
 
         FaceTessellator faceTessellator = new DefaultFaceTessellator /* PlanarFaceTessellator*/(
                 edgeDiscretizer,

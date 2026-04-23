@@ -1,5 +1,6 @@
 package be.doebi.aerismill.tessellation.polygon;
 
+import be.doebi.aerismill.model.geom.tolerance.GeometryTolerance;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -8,10 +9,11 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EarClippingPolygonTriangulatorTest {
+    private final GeometryTolerance tolerance = GeometryTolerance.defaults();
 
     @Test
     void triangulate_triangle_returnsSingleTriangle() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = polygon(
                 p(0, 0),
@@ -22,12 +24,12 @@ class EarClippingPolygonTriangulatorTest {
         List<int[]> triangles = triangulator.triangulate(polygon);
 
         assertEquals(1, triangles.size());
-        assertTriangleReferencesDistinctVertices(triangles.get(0));
+        assertTriangleReferencesDistinctVertices(triangles.getFirst());
     }
 
     @Test
     void triangulate_convexQuad_returnsTwoTriangles() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = polygon(
                 p(0, 0),
@@ -44,7 +46,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_concavePolygon_returnsExpectedTriangleCount() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = polygon(
                 p(0, 0),
@@ -62,7 +64,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_handlesClockwiseOuterLoop() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = polygon(
                 p(0, 0),
@@ -79,7 +81,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_polygonWithSingleHole_returnsTriangles() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = new PolygonWithHoles2(
                 new PolygonLoop2(List.of(
@@ -109,7 +111,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_rejectsNullPolygon() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         IllegalArgumentException ex = assertThrows(
                 IllegalArgumentException.class,
@@ -121,7 +123,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_rejectsOuterLoopWithTooFewPoints() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = polygon(
                 p(0, 0),
@@ -138,19 +140,34 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void buildBridgedPolygonIndices_repeatsBridgeVerticesInExpectedOrder() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
+
+        List<Point2> allPoints = new ArrayList<>(List.of(
+                new Point2(0.0, 0.0), // 0
+                new Point2(1.0, 0.0), // 1
+                new Point2(1.0, 1.0), // 2
+                new Point2(0.0, 1.0), // 3
+                new Point2(0.2, 0.2), // 4
+                new Point2(0.3, 0.2), // 5
+                new Point2(0.25, 0.3) // 6
+        ));
 
         List<Integer> outer = List.of(0, 1, 2, 3);
         List<Integer> hole = List.of(4, 5, 6);
 
         List<Integer> result = triangulator.buildBridgedPolygonIndices(
+                allPoints,
                 outer,
                 hole,
                 1,
                 0
         );
 
-        assertEquals(List.of(0, 1, 4, 5, 6, 4, 1, 2, 3), result);
+        assertEquals(9, allPoints.size());
+        assertEquals(List.of(0, 1, 4, 5, 6, 7, 8, 2, 3), result);
+
+        assertEquals(allPoints.get(4), allPoints.get(7));
+        assertEquals(allPoints.get(1), allPoints.get(8));
     }
 
     @Test
@@ -275,7 +292,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_singleHoleSquare_returnsTriangles() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = new PolygonWithHoles2(
                 new PolygonLoop2(List.of(
@@ -308,7 +325,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_acceptsMultipleHoles() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonWithHoles2 polygon = new PolygonWithHoles2(
                 new PolygonLoop2(List.of(
@@ -406,7 +423,7 @@ class EarClippingPolygonTriangulatorTest {
 
     @Test
     void triangulate_polygonWithHole_returnsIndicesWithinOriginalOuterAndHolePointSpace() {
-        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator();
+        EarClippingPolygonTriangulator triangulator = new EarClippingPolygonTriangulator(tolerance);
 
         PolygonLoop2 outer = new PolygonLoop2(List.of(
                 new Point2(0.0, 0.0),
@@ -449,6 +466,7 @@ class EarClippingPolygonTriangulatorTest {
                 java.util.Set<Integer> visibleOuterPositions,
                 java.util.Set<Integer> validOuterPositions
         ) {
+            super(GeometryTolerance.defaults());
             this.visibleOuterPositions = visibleOuterPositions;
             this.validOuterPositions = validOuterPositions;
         }

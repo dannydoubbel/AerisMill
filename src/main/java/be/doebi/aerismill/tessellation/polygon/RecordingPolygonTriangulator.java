@@ -1,5 +1,7 @@
 package be.doebi.aerismill.tessellation.polygon;
 
+import be.doebi.aerismill.tessellation.face.PlanarFaceTessellator;
+
 import java.util.List;
 
 public final class RecordingPolygonTriangulator implements PolygonTriangulator {
@@ -7,9 +9,13 @@ public final class RecordingPolygonTriangulator implements PolygonTriangulator {
     private List<int[]> result = List.of();
 
     @Override
-    public List<int[]> triangulate(PolygonWithHoles2 polygon) {
+    public PlanarFaceTessellator.TriangulationResult triangulateWithPoints(PolygonWithHoles2 polygon) {
         this.recordedPolygon = polygon;
-        return result;
+        return new PlanarFaceTessellator.TriangulationResult(
+                List.of(),
+//                List.of(),
+                result
+        );
     }
 
     public void stubResult(List<int[]> result) {
