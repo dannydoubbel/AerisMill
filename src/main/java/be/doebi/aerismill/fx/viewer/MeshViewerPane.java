@@ -567,10 +567,11 @@ public class MeshViewerPane extends StackPane {
             Mesh planarMesh = meshes.planarMesh();
             Mesh cylindricalMesh = meshes.cylindricalMesh();
             Mesh conicalMesh = meshes.conicalMesh();
+            Mesh toroidalMesh = meshes.toroidalMesh();
 
             Group debugGroup = new Group();
 
-            Mesh combinedMesh = combineNonEmptyMeshes(planarMesh, cylindricalMesh, conicalMesh);
+            Mesh combinedMesh = combineNonEmptyMeshes(planarMesh, cylindricalMesh, conicalMesh,toroidalMesh);
             currentMesh = combinedMesh;
 
             if (planarMesh != null && !planarMesh.isEmpty()) {
@@ -596,6 +597,17 @@ public class MeshViewerPane extends StackPane {
                 debugGroup.getChildren().add(conicalView);
             }
 
+            int toroidalVertexOffset =
+                    vertexCountOf(planarMesh) +
+                            vertexCountOf(cylindricalMesh) +
+                            vertexCountOf(conicalMesh);
+            if (toroidalMesh != null && !toroidalMesh.isEmpty()) {
+                MeshView toroidalView = meshViewFactory.create(toroidalMesh);
+                configureMeshPicking(toroidalView, toroidalMesh, toroidalVertexOffset);
+                toroidalView.setMaterial(new PhongMaterial(Color.ORANGE)); // distinct color
+                debugGroup.getChildren().add(toroidalView);
+            }
+
             modelContent.getChildren().setAll(debugGroup);
 
             if (combinedMesh != null && !combinedMesh.isEmpty()) {
@@ -616,6 +628,7 @@ public class MeshViewerPane extends StackPane {
         Mesh planarMesh = debugMeshes.planarMesh();
         Mesh cylindricalMesh = debugMeshes.cylindricalMesh();
         Mesh conicalMesh = debugMeshes.conicalMesh();
+        Mesh toroidalMesh = debugMeshes.toroidalMesh();
 
         MeshBounds bounds = combinedMesh.bounds();
 
@@ -631,6 +644,7 @@ public class MeshViewerPane extends StackPane {
                         "Planar   : " + triangleCountOf(planarMesh) + System.lineSeparator() +
                         "Cylindrical: " + triangleCountOf(cylindricalMesh) + System.lineSeparator() +
                         "Conical  : " + triangleCountOf(conicalMesh) + System.lineSeparator() +
+                        "Toroidal : " + triangleCountOf(toroidalMesh) + System.lineSeparator() +
                         "Import   : " + timing.importMillis() + " ms" + System.lineSeparator() +
                         "Assembly : " + timing.assemblyMillis() + " ms" + System.lineSeparator() +
                         "Mesh     : " + timing.meshMillis() + " ms" + System.lineSeparator() +

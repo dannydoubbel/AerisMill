@@ -18,6 +18,8 @@ import java.util.List;
 public class PreviewShellTessellator implements ShellTessellator {
 
     private final FaceTessellator faceTessellator;
+    List<MeshVertex> toroidalVertices = new ArrayList<>();
+    List<MeshTriangle> toroidalTriangles = new ArrayList<>();
 
     public PreviewShellTessellator(FaceTessellator faceTessellator) {
         if (faceTessellator == null) {
@@ -177,10 +179,12 @@ public class PreviewShellTessellator implements ShellTessellator {
                 FaceMeshPatch patch = faceTessellator.tessellate(face);
                 validateFaceMeshPatch(patch);
 
+
                 switch (patch.surfaceFamily()) {
                     case PLANAR -> appendPatch(planarVertices, planarTriangles, patch);
                     case CYLINDRICAL -> appendPatch(cylindricalVertices, cylindricalTriangles, patch);
                     case CONICAL -> appendPatch(conicalVertices, conicalTriangles, patch);
+                    case TOROIDAL -> appendPatch(toroidalVertices, toroidalTriangles, patch);
                 }
 
                 succeededFaces++;
@@ -203,10 +207,12 @@ public class PreviewShellTessellator implements ShellTessellator {
         Mesh planarMesh = buildMesh(planarVertices, planarTriangles);
         Mesh cylindricalMesh = buildMesh(cylindricalVertices, cylindricalTriangles);
         Mesh conicalMesh = buildMesh(conicalVertices, conicalTriangles);
+        Mesh toroidalMesh = buildMesh(toroidalVertices, toroidalTriangles);
 
         if ((planarMesh == null || planarMesh.isEmpty())
                 && (cylindricalMesh == null || cylindricalMesh.isEmpty())
-                && (conicalMesh == null || conicalMesh.isEmpty())) {
+                && (conicalMesh == null || conicalMesh.isEmpty())
+                && (toroidalMesh == null || toroidalMesh.isEmpty())) {
 
             String firstReason = skippedReasons.isEmpty()
                     ? "No face produced previewable mesh."
@@ -221,6 +227,7 @@ public class PreviewShellTessellator implements ShellTessellator {
                 planarMesh,
                 cylindricalMesh,
                 conicalMesh,
+                toroidalMesh,
                 totalFaces,
                 succeededFaces,
                 failedFaces

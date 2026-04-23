@@ -6,6 +6,7 @@ public record DebugSurfaceFamilyMeshes(
         Mesh planarMesh,
         Mesh cylindricalMesh,
         Mesh conicalMesh,
+        Mesh toroidalMesh,   // <-- add this
         int totalFaces,
         int succeededFaces,
         int failedFaces

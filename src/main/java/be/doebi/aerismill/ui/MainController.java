@@ -788,13 +788,21 @@ public class MainController {
         Mesh planar = debugMeshes.planarMesh();
         Mesh cylindrical = debugMeshes.cylindricalMesh();
         Mesh conical = debugMeshes.conicalMesh();
+        Mesh toroidal = debugMeshes.toroidalMesh();
 
         int vertexCount =
-                countVertices(planar) + countVertices(cylindrical) + countVertices(conical);
-        int triangleCount =
-                countTriangles(planar) + countTriangles(cylindrical) + countTriangles(conical);
+                countVertices(planar)
+                        + countVertices(cylindrical)
+                        + countVertices(conical)
+                        + countVertices(toroidal);
 
-        Mesh combinedMesh = firstNonEmpty(planar, cylindrical, conical);
+        int triangleCount =
+                countTriangles(planar)
+                        + countTriangles(cylindrical)
+                        + countTriangles(conical)
+                        + countTriangles(toroidal);
+
+        Mesh combinedMesh = firstNonEmpty(planar, cylindrical, conical, toroidal);
         if (combinedMesh != null) {
             MeshBounds bounds = combinedMesh.bounds();
 
@@ -819,6 +827,7 @@ public class MainController {
         log("Planar triangles: " + countTriangles(planar));
         log("Cylindrical triangles: " + countTriangles(cylindrical));
         log("Conical triangles: " + countTriangles(conical));
+        log("Toroidal triangles: " + countTriangles(toroidal));
     }
 
     private int countVertices(Mesh mesh) {

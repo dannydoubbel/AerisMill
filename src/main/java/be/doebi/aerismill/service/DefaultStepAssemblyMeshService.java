@@ -244,6 +244,7 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
         Mesh planar = null;
         Mesh cylindrical = null;
         Mesh conical = null;
+        Mesh toroidal = null;
 
         int totalFaces = 0;
         int succeededFaces = 0;
@@ -273,8 +274,9 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 boolean hasPlanar = debugMeshes.planarMesh() != null && !debugMeshes.planarMesh().isEmpty();
                 boolean hasCylindrical = debugMeshes.cylindricalMesh() != null && !debugMeshes.cylindricalMesh().isEmpty();
                 boolean hasConical = debugMeshes.conicalMesh() != null && !debugMeshes.conicalMesh().isEmpty();
+                boolean hasToroidal = debugMeshes.toroidalMesh() != null && !debugMeshes.toroidalMesh().isEmpty();
 
-                if (!hasPlanar && !hasCylindrical && !hasConical) {
+                if (!hasPlanar && !hasCylindrical && !hasConical && !hasToroidal) {
                     String reason = "Solid " + solidAssemblyResult.stepId() + ": debug mesh has no previewable families";
                     failureReasons.add(reason);
                     AppConsole.log(reason);
@@ -284,6 +286,7 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 planar = appendIfNotNull(planar, debugMeshes.planarMesh());
                 cylindrical = appendIfNotNull(cylindrical, debugMeshes.cylindricalMesh());
                 conical = appendIfNotNull(conical, debugMeshes.conicalMesh());
+                toroidal = appendIfNotNull(toroidal, debugMeshes.toroidalMesh());
 
                 foundAnyPreviewable = true;
 
@@ -293,6 +296,7 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                                 + ": planar=" + countTriangles(debugMeshes.planarMesh())
                                 + ", cylindrical=" + countTriangles(debugMeshes.cylindricalMesh())
                                 + ", conical=" + countTriangles(debugMeshes.conicalMesh())
+                                + ", toroidal=" + countTriangles(debugMeshes.toroidalMesh())
                 );
 
             } catch (IllegalArgumentException | UnsupportedOperationException ex) {
@@ -316,6 +320,7 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 planar,
                 cylindrical,
                 conical,
+                toroidal,
                 totalFaces,
                 succeededFaces,
                 failedFaces

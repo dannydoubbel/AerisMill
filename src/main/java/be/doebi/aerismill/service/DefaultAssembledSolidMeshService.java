@@ -208,6 +208,7 @@ public class DefaultAssembledSolidMeshService implements AssembledSolidMeshServi
                 appendIfNotNull(base.planarMesh(), addition.planarMesh()),
                 appendIfNotNull(base.cylindricalMesh(), addition.cylindricalMesh()),
                 appendIfNotNull(base.conicalMesh(), addition.conicalMesh()),
+                appendIfNotNull(base.toroidalMesh(), addition.toroidalMesh()),
                 base.totalFaces() + addition.totalFaces(),
                 base.succeededFaces() + addition.succeededFaces(),
                 base.failedFaces() + addition.failedFaces()
