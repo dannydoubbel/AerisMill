@@ -568,10 +568,17 @@ public class MeshViewerPane extends StackPane {
             Mesh cylindricalMesh = meshes.cylindricalMesh();
             Mesh conicalMesh = meshes.conicalMesh();
             Mesh toroidalMesh = meshes.toroidalMesh();
+            Mesh bSplineMesh = meshes.bSplineMesh();
 
             Group debugGroup = new Group();
 
-            Mesh combinedMesh = combineNonEmptyMeshes(planarMesh, cylindricalMesh, conicalMesh,toroidalMesh);
+            Mesh combinedMesh = combineNonEmptyMeshes(
+                    planarMesh,
+                    cylindricalMesh,
+                    conicalMesh,
+                    toroidalMesh,
+                    bSplineMesh
+            );
             currentMesh = combinedMesh;
 
             if (planarMesh != null && !planarMesh.isEmpty()) {
@@ -608,6 +615,22 @@ public class MeshViewerPane extends StackPane {
                 debugGroup.getChildren().add(toroidalView);
             }
 
+            int bSplineVertexOffset =
+                    vertexCountOf(planarMesh) +
+                            vertexCountOf(cylindricalMesh) +
+                            vertexCountOf(conicalMesh) +
+                            vertexCountOf(toroidalMesh);
+            if (bSplineMesh != null && !bSplineMesh.isEmpty()) {
+                MeshView bSplineView = meshViewFactory.create(bSplineMesh);
+                configureMeshPicking(bSplineView, bSplineMesh, bSplineVertexOffset);
+                bSplineView.setMaterial(new PhongMaterial(Color.BROWN));
+                debugGroup.getChildren().add(bSplineView);
+            }
+
+
+
+
+
             modelContent.getChildren().setAll(debugGroup);
 
             if (combinedMesh != null && !combinedMesh.isEmpty()) {
@@ -629,6 +652,7 @@ public class MeshViewerPane extends StackPane {
         Mesh cylindricalMesh = debugMeshes.cylindricalMesh();
         Mesh conicalMesh = debugMeshes.conicalMesh();
         Mesh toroidalMesh = debugMeshes.toroidalMesh();
+        Mesh bSplineMesh = debugMeshes.bSplineMesh();
 
         MeshBounds bounds = combinedMesh.bounds();
 
@@ -641,10 +665,21 @@ public class MeshViewerPane extends StackPane {
                         "Diagonal : " + format(bounds.diagonal()) + System.lineSeparator() +
                         "Faces OK : " + debugMeshes.succeededFaces() + " / " + debugMeshes.totalFaces() + System.lineSeparator() +
                         "Faces bad: " + debugMeshes.failedFaces() + System.lineSeparator() +
-                        "Planar   : " + triangleCountOf(planarMesh) + System.lineSeparator() +
+                        "Planar   : " +  triangleCountOf(planarMesh) + System.lineSeparator() +
                         "Cylindrical: " + triangleCountOf(cylindricalMesh) + System.lineSeparator() +
                         "Conical  : " + triangleCountOf(conicalMesh) + System.lineSeparator() +
                         "Toroidal : " + triangleCountOf(toroidalMesh) + System.lineSeparator() +
+                        "BSpline : " + triangleCountOf(bSplineMesh) + System.lineSeparator() +
+                        "Planarf   : " +  debugMeshes.planarFaceCount() + System.lineSeparator() +
+                        "Cylindricalf: " + debugMeshes.cylindricalFaceCount() + System.lineSeparator() +
+                        "Conicalf  : " + debugMeshes.conicalFaceCount() + System.lineSeparator() +
+                        "Toroidalf : " + debugMeshes.toroidalFaceCount()+ System.lineSeparator() +
+                        "BSplinef : " + debugMeshes.bSplineFaceCount() + System.lineSeparator() +
+
+
+
+
+
                         "Import   : " + timing.importMillis() + " ms" + System.lineSeparator() +
                         "Assembly : " + timing.assemblyMillis() + " ms" + System.lineSeparator() +
                         "Mesh     : " + timing.meshMillis() + " ms" + System.lineSeparator() +

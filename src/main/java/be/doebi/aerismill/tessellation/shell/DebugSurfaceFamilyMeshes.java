@@ -6,8 +6,14 @@ public record DebugSurfaceFamilyMeshes(
         Mesh planarMesh,
         Mesh cylindricalMesh,
         Mesh conicalMesh,
-        Mesh toroidalMesh,   // <-- add this
+        Mesh toroidalMesh,
+        Mesh bSplineMesh,
         int totalFaces,
         int succeededFaces,
-        int failedFaces
+        int failedFaces,
+        int planarFaceCount,
+        int cylindricalFaceCount,
+        int conicalFaceCount,
+        int toroidalFaceCount,
+        int bSplineFaceCount
 ) {}

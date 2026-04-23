@@ -41,6 +41,20 @@ public class DefaultShellTessellator implements ShellTessellator {
             }
 
             FaceMeshPatch patch = faceTessellator.tessellate(face);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             validateFaceMeshPatch(patch);
 
             int vertexOffset = combinedVertices.size();

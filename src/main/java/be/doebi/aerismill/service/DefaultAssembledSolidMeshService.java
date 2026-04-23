@@ -209,11 +209,33 @@ public class DefaultAssembledSolidMeshService implements AssembledSolidMeshServi
                 appendIfNotNull(base.cylindricalMesh(), addition.cylindricalMesh()),
                 appendIfNotNull(base.conicalMesh(), addition.conicalMesh()),
                 appendIfNotNull(base.toroidalMesh(), addition.toroidalMesh()),
+                appendIfNotNull(base.bSplineMesh(),addition.bSplineMesh()),
+                base.planarFaceCount(),
+                base.cylindricalFaceCount(),
+                base.conicalFaceCount(),
+                base.toroidalFaceCount(),
+                base.bSplineFaceCount(),
                 base.totalFaces() + addition.totalFaces(),
                 base.succeededFaces() + addition.succeededFaces(),
                 base.failedFaces() + addition.failedFaces()
         );
     }
+    /*
+     record DebugSurfaceFamilyMeshes(
+        Mesh planarMesh,
+        Mesh cylindricalMesh,
+        Mesh conicalMesh,
+        Mesh toroidalMesh,
+        Mesh bSplineMesh,
+        int totalFaces,
+        int succeededFaces,
+        int failedFaces,
+        int planarFaceCount,
+        int cylindricalFaceCount,
+        int conicalFaceCount,
+        int toroidalFaceCount,
+        int bSplineFaceCount
+     */
 
     private Mesh appendIfNotNull(Mesh base, Mesh addition) {
         if (addition == null || addition.isEmpty()) {

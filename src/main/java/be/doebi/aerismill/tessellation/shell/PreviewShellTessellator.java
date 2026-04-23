@@ -18,8 +18,7 @@ import java.util.List;
 public class PreviewShellTessellator implements ShellTessellator {
 
     private final FaceTessellator faceTessellator;
-    List<MeshVertex> toroidalVertices = new ArrayList<>();
-    List<MeshTriangle> toroidalTriangles = new ArrayList<>();
+
 
     public PreviewShellTessellator(FaceTessellator faceTessellator) {
         if (faceTessellator == null) {
@@ -160,12 +159,24 @@ public class PreviewShellTessellator implements ShellTessellator {
         List<MeshVertex> conicalVertices = new ArrayList<>();
         List<MeshTriangle> conicalTriangles = new ArrayList<>();
 
+        List<MeshVertex> toroidalVertices = new ArrayList<>();
+        List<MeshTriangle> toroidalTriangles = new ArrayList<>();
+
+        List<MeshVertex> bSplineVertices = new ArrayList<>();
+        List<MeshTriangle> bSplineTriangles = new ArrayList<>();
+
+
         List<String> skippedReasons = new ArrayList<>();
 
 
         int totalFaces = 0;
         int succeededFaces = 0;
         int failedFaces = 0;
+        int planarFaceCount = 0;
+        int cylindricalFaceCount = 0;
+        int conicalFaceCount = 0;
+        int toroidalFaceCount = 0;
+        int bSplineFaceCount = 0;
 
 
         for (FaceGeom face : shell.faces()) {
@@ -181,10 +192,26 @@ public class PreviewShellTessellator implements ShellTessellator {
 
 
                 switch (patch.surfaceFamily()) {
-                    case PLANAR -> appendPatch(planarVertices, planarTriangles, patch);
-                    case CYLINDRICAL -> appendPatch(cylindricalVertices, cylindricalTriangles, patch);
-                    case CONICAL -> appendPatch(conicalVertices, conicalTriangles, patch);
-                    case TOROIDAL -> appendPatch(toroidalVertices, toroidalTriangles, patch);
+                    case PLANAR -> {
+                        appendPatch(planarVertices, planarTriangles, patch);
+                        planarFaceCount++;
+                    }
+                    case CYLINDRICAL -> {
+                        appendPatch(cylindricalVertices, cylindricalTriangles, patch);
+                        cylindricalFaceCount++;
+                    }
+                    case CONICAL -> {
+                        appendPatch(conicalVertices, conicalTriangles, patch);
+                        conicalFaceCount++;
+                    }
+                    case TOROIDAL -> {
+                        appendPatch(toroidalVertices, toroidalTriangles, patch);
+                        toroidalFaceCount++;
+                    }
+                    case BSPLINE -> {
+                        appendPatch(bSplineVertices,bSplineTriangles,patch);
+                        bSplineFaceCount++;
+                    }
                 }
 
                 succeededFaces++;
@@ -208,11 +235,14 @@ public class PreviewShellTessellator implements ShellTessellator {
         Mesh cylindricalMesh = buildMesh(cylindricalVertices, cylindricalTriangles);
         Mesh conicalMesh = buildMesh(conicalVertices, conicalTriangles);
         Mesh toroidalMesh = buildMesh(toroidalVertices, toroidalTriangles);
+        Mesh bSplineMesh = buildMesh(bSplineVertices,bSplineTriangles);
 
         if ((planarMesh == null || planarMesh.isEmpty())
                 && (cylindricalMesh == null || cylindricalMesh.isEmpty())
                 && (conicalMesh == null || conicalMesh.isEmpty())
-                && (toroidalMesh == null || toroidalMesh.isEmpty())) {
+                && (toroidalMesh == null || toroidalMesh.isEmpty())
+                && (bSplineMesh == null || bSplineMesh.isEmpty())
+        ) {
 
             String firstReason = skippedReasons.isEmpty()
                     ? "No face produced previewable mesh."
@@ -228,11 +258,32 @@ public class PreviewShellTessellator implements ShellTessellator {
                 cylindricalMesh,
                 conicalMesh,
                 toroidalMesh,
+                bSplineMesh,
                 totalFaces,
                 succeededFaces,
-                failedFaces
+                failedFaces,
+                planarFaceCount,
+                cylindricalFaceCount,
+                conicalFaceCount,
+                toroidalFaceCount,
+                bSplineFaceCount
         );
     }
+    /*
+     Mesh planarMesh,
+        Mesh cylindricalMesh,
+        Mesh conicalMesh,
+        Mesh toroidalMesh,
+        Mesh bSplineMesh,
+        int totalFaces,
+        int succeededFaces,
+        int failedFaces,
+        int planarFaceCount,
+        int cylindricalFaceCount,
+        int conicalFaceCount,
+        int toroidalFaceCount,
+        int bSplineFaceCount
+     */
 
 
     private void appendPatch(

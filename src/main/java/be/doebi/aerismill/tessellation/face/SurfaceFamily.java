@@ -4,5 +4,6 @@ public enum SurfaceFamily {
     PLANAR,
     CYLINDRICAL,
     CONICAL,
-    TOROIDAL
+    TOROIDAL,
+    BSPLINE
 }

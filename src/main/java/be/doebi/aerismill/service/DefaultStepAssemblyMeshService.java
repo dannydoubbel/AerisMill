@@ -245,10 +245,17 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
         Mesh cylindrical = null;
         Mesh conical = null;
         Mesh toroidal = null;
+        Mesh bSpline = null;
 
         int totalFaces = 0;
         int succeededFaces = 0;
         int failedFaces = 0;
+
+        int planarFaceCount = 0;
+        int cylindricalFaceCount = 0;
+        int conicalFaceCount = 0;
+        int toroidalFaceCount = 0;
+        int bSplineFaceCount = 0;
 
         List<String> failureReasons = new ArrayList<>();
         boolean foundAnyPreviewable = false;
@@ -263,20 +270,39 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 continue;
             }
 
+
             try {
                 DebugSurfaceFamilyMeshes debugMeshes =
-                        assembledSolidMeshService.generateDebugSurfaceFamilyMeshes(assembledSolid);
+                assembledSolidMeshService.generateDebugSurfaceFamilyMeshes(assembledSolid);
 
                 totalFaces += debugMeshes.totalFaces();
                 succeededFaces += debugMeshes.succeededFaces();
                 failedFaces += debugMeshes.failedFaces();
 
+
+
+
+                planarFaceCount += debugMeshes.planarFaceCount();
+                cylindricalFaceCount += debugMeshes.cylindricalFaceCount();
+                conicalFaceCount += debugMeshes.conicalFaceCount();
+                toroidalFaceCount += debugMeshes.toroidalFaceCount();
+                bSplineFaceCount += debugMeshes.bSplineFaceCount();
+
+
+
+
+
+
+
+
+
                 boolean hasPlanar = debugMeshes.planarMesh() != null && !debugMeshes.planarMesh().isEmpty();
                 boolean hasCylindrical = debugMeshes.cylindricalMesh() != null && !debugMeshes.cylindricalMesh().isEmpty();
                 boolean hasConical = debugMeshes.conicalMesh() != null && !debugMeshes.conicalMesh().isEmpty();
                 boolean hasToroidal = debugMeshes.toroidalMesh() != null && !debugMeshes.toroidalMesh().isEmpty();
+                boolean hasBSpline = debugMeshes.bSplineMesh() != null && !debugMeshes.bSplineMesh().isEmpty();
 
-                if (!hasPlanar && !hasCylindrical && !hasConical && !hasToroidal) {
+                if (!hasPlanar && !hasCylindrical && !hasConical && !hasToroidal && !hasBSpline) {
                     String reason = "Solid " + solidAssemblyResult.stepId() + ": debug mesh has no previewable families";
                     failureReasons.add(reason);
                     AppConsole.log(reason);
@@ -287,6 +313,7 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 cylindrical = appendIfNotNull(cylindrical, debugMeshes.cylindricalMesh());
                 conical = appendIfNotNull(conical, debugMeshes.conicalMesh());
                 toroidal = appendIfNotNull(toroidal, debugMeshes.toroidalMesh());
+                bSpline = appendIfNotNull(bSpline, debugMeshes.bSplineMesh());
 
                 foundAnyPreviewable = true;
 
@@ -297,6 +324,7 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                                 + ", cylindrical=" + countTriangles(debugMeshes.cylindricalMesh())
                                 + ", conical=" + countTriangles(debugMeshes.conicalMesh())
                                 + ", toroidal=" + countTriangles(debugMeshes.toroidalMesh())
+                                + ", bspline=" + countTriangles(debugMeshes.bSplineMesh())
                 );
 
             } catch (IllegalArgumentException | UnsupportedOperationException ex) {
@@ -321,9 +349,15 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 cylindrical,
                 conical,
                 toroidal,
+                bSpline,
                 totalFaces,
                 succeededFaces,
-                failedFaces
+                failedFaces,
+                planarFaceCount,
+                cylindricalFaceCount,
+                conicalFaceCount,
+                toroidalFaceCount,
+                bSplineFaceCount
         );
     }
 
