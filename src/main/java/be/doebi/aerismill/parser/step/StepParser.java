@@ -122,7 +122,7 @@ public class StepParser {
         String typeName = rightSide.substring(0, firstParenIndex).trim();
         StepEntityType type = StepEntityType.fromNameOrNull(typeName);
         if (type == null) {
-            System.out.println("[SKIP UNKNOWN TYPE] " + id + " | " + typeName);
+            // System.out.println("[SKIP UNKNOWN TYPE] " + id + " | " + typeName);
             return null;
         }
 

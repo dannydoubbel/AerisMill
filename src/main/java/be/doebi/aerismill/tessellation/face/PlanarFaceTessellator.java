@@ -22,6 +22,9 @@ public class PlanarFaceTessellator implements FaceTessellator {
     private final PlaneProjector planeProjector;
     private final GeometryTolerance tolerance;
 
+    static int  timesPrintedA = 0;
+    static int  timesPrintedB = 0;
+
 
 
     public PlanarFaceTessellator(
@@ -38,6 +41,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
 
     @Override
     public FaceMeshPatch tessellate(FaceGeom face) {
+
         if (!(face.surface() instanceof PlaneSurface3 plane)) {
             throw new IllegalArgumentException(faceLabel(face) + ": only planar faces are supported for now.");
         }
@@ -83,45 +87,73 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 projectedBoundaryPoints
         );
 
-        if (originalProjectedBoundaryPoints.size() != projectedBoundaryPoints.size()) {
-            AppConsole.log(
-                    "PLANAR_ORDER_SIZE_MISMATCH"
-                            + " | face=" + face.stepId()
-                            + " | originalProjectedCount=" + originalProjectedBoundaryPoints.size()
-                            + " | triangulatedProjectedCount=" + projectedBoundaryPoints.size()
-            );
-        } else {
-            boolean exactOrderMatch = true;
 
-            for (int i = 0; i < projectedBoundaryPoints.size(); i++) {
-                Point2 a = originalProjectedBoundaryPoints.get(i);
-                Point2 b = projectedBoundaryPoints.get(i);
 
-                if (!a.equals(b)) {
-                    exactOrderMatch = false;
 
-                    AppConsole.log(
-                            "PLANAR_ORDER_MISMATCH"
-                                    + " | face=" + face.stepId()
-                                    + " | index=" + i
-                                    + " | original=" + a
-                                    + " | triangulated=" + b
-                    );
-                    break;
+
+
+        if (preparedLoops.size() == 1) {
+            if (originalProjectedBoundaryPoints.size() != projectedBoundaryPoints.size()) {
+                AppConsole.log(
+                        "PLANAR_ORDER_SIZE_MISMATCH"
+                                + " | face=" + face.stepId()
+                                + " | originalProjectedCount=" + originalProjectedBoundaryPoints.size()
+                                + " | triangulatedProjectedCount=" + projectedBoundaryPoints.size()
+                );
+            } else {
+                boolean exactOrderMatch = true;
+
+                for (int i = 0; i < projectedBoundaryPoints.size(); i++) {
+                    Point2 a = originalProjectedBoundaryPoints.get(i);
+                    Point2 b = projectedBoundaryPoints.get(i);
+
+                    if (!a.equals(b)) {
+                        exactOrderMatch = false;
+
+                        AppConsole.log(
+                                "PLANAR_ORDER_MISMATCH"
+                                        + " | face=" + face.stepId()
+                                        + " | index=" + i
+                                        + " | original=" + a
+                                        + " | triangulated=" + b
+                        );
+                        break;
+                    }
                 }
-            }
 
-            if (exactOrderMatch) {
-                AppConsole.log("PLANAR_ORDER_MATCH | face=" + face.stepId());
+                if (exactOrderMatch) {
+                    // optional success log
+                }
             }
         }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        /*
         AppConsole.log(
+                ""
+
                 "PLANAR_TRI_VS_3D"
                         + " | face=" + face.stepId()
                         + " | projectedCount=" + projectedBoundaryPoints.size()
                         + " | boundary3dCount=" + boundaryPoints.size()
+
+
         );
+        */
 
         if (projectedBoundaryPoints.size() != boundaryPoints.size()) {
             throw new IllegalArgumentException(
@@ -439,7 +471,10 @@ public class PlanarFaceTessellator implements FaceTessellator {
                 Point2 prevA = projectedBoundaryPoints.get((ia - 1 + vertexCount) % vertexCount);
                 Point2 nextC = projectedBoundaryPoints.get((ic + 1) % vertexCount);
 
+                /*
                 AppConsole.log(
+                        ""
+
                         "DEGEN_CONTEXT "
                                 + " tri=" + Arrays.toString(triangle)
                                 + " | a=" + a
@@ -447,7 +482,11 @@ public class PlanarFaceTessellator implements FaceTessellator {
                                 + " c=" + c
                                 + " | prevA=" + prevA
                                 + " nextC=" + nextC
+
+
                 );
+
+                 */
             }
 
 

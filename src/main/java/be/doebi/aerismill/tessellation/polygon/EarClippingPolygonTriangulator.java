@@ -208,6 +208,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                     }
                 }
 
+                /*
                 StringBuilder sb = new StringBuilder("EAR_FAIL remainder");
                 for (int i = 0; i < remaining.size(); i++) {
                     int idx = remaining.get(i);
@@ -217,6 +218,8 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                             .append(" -> ").append(p);
                 }
                 AppConsole.log(sb.toString());
+
+                 */
 
                 throw new IllegalArgumentException("Failed to triangulate polygon using ear clipping.");
             }
@@ -280,7 +283,9 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
         int holeBridgeIndex = holeIndices.get(holeBridgePosition);
         Point2 holeBridgePoint = allPoints.get(holeBridgeIndex);
 
+        /*
         AppConsole.log(
+                ""
                 "BRIDGE_HOLE_POINT"
                         + " | holeBridgePosition=" + holeBridgePosition
                         + " | holeBridgeIndex=" + holeBridgeIndex
@@ -289,6 +294,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                         + " | holeSize=" + holeIndices.size()
                         + " | allPointsSizeBefore=" + allPoints.size()
         );
+        */
 
         List<OuterBridgeCandidate> candidates = new ArrayList<>();
 
@@ -361,7 +367,9 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                     .reduce((a, b) -> a + "," + b)
                     .orElse("");
 
+            /*
             AppConsole.log(
+
                     "BRIDGE_CANDIDATE"
                             + " | outerPosition=" + candidate.outerPosition()
                             + " | outerIndex=" + outerBridgeIndex
@@ -373,6 +381,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
             );
 
             AppConsole.log(
+                    ""
                     "BRIDGE_MERGED"
                             + " | outerPosition=" + candidate.outerPosition()
                             + " | mergedSize=" + merged.size()
@@ -384,6 +393,7 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                             + " | mergedStart=[" + mergedPreviewStart + "]"
                             + " | mergedEnd=[" + mergedPreviewEnd + "]"
             );
+            */
 
             boolean simple = isSimpleMergedLoop(
                     allPoints,
@@ -392,7 +402,10 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                     holeIndices.size()
             );
 
+            /*
             AppConsole.log(
+                    ""
+
                     "BRIDGE_CANDIDATE_RESULT"
                             + " | outerPosition=" + candidate.outerPosition()
                             + " | simple=" + simple
@@ -400,6 +413,8 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                             + " | maxMergedIndex=" + maxMergedIndex
                             + " | allPointsSize=" + allPoints.size()
             );
+
+             */
 
             if (simple) {
                 return merged;
@@ -469,8 +484,10 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
 
 
                 if (segmentsIntersectInclusive(a, b, c, d)) {
-
+                    /*
                     AppConsole.log(
+                            ""
+
                             "BRIDGE_INTERSECTION"
                                     + " | i=" + i + " edge=(" + a + " -> " + b + ")"
                                     + " | j=" + j + " edge=(" + c + " -> " + d + ")"
@@ -478,7 +495,11 @@ public class EarClippingPolygonTriangulator implements PolygonTriangulator {
                                     + " | bIndex=" + bIndex
                                     + " | cIndex=" + cIndex
                                     + " | dIndex=" + dIndex
+
+
                     );
+
+                     */
 
 
 
