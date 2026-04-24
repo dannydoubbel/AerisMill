@@ -66,9 +66,14 @@ public final class DefaultFaceTessellator implements FaceTessellator {
             return bSplineFaceTessellator.tessellate(face);
         }
 
+        String surfaceName = face == null || face.surface() == null
+                ? "<unknown>"
+                : face.surface().getClass().getSimpleName();
+
         throw new IllegalArgumentException(
                 (face == null || face.stepId() == null ? "Face <unknown>" : "Face " + face.stepId())
-                        + ": only planar, cylindrical, conical, toroidal and bSpline to faces are supported for now."
+                        + " [" + surfaceName + "]"
+                        + ": only planar, cylindrical, conical, toroidal and bSpline faces are supported for now."
         );
     }
 }

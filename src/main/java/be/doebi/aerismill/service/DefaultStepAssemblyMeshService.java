@@ -33,7 +33,8 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
     }
 
     public DefaultStepAssemblyMeshService(AssembledSolidMeshService assembledSolidMeshService) {
-        this(assembledSolidMeshService, message -> {});
+        this(assembledSolidMeshService, message -> {
+        });
     }
 
     @Override
@@ -200,26 +201,8 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
             Mesh mesh,
             int triangleCount,
             int vertexCount
-    ) {}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    ) {
+    }
 
 
     private Mesh appendIfNotNull(Mesh base, Mesh addition) {
@@ -256,6 +239,11 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
         int conicalFaceCount = 0;
         int toroidalFaceCount = 0;
         int bSplineFaceCount = 0;
+        int sphericalUnsupported = 0;
+        int planarBridgeFail = 0;
+        int triangulationFail = 0;
+        int cylindricalSelfIntersect = 0;
+        int unknownFail = 0;
 
         List<String> failureReasons = new ArrayList<>();
         boolean foundAnyPreviewable = false;
@@ -273,13 +261,11 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
 
             try {
                 DebugSurfaceFamilyMeshes debugMeshes =
-                assembledSolidMeshService.generateDebugSurfaceFamilyMeshes(assembledSolid);
+                        assembledSolidMeshService.generateDebugSurfaceFamilyMeshes(assembledSolid);
 
                 totalFaces += debugMeshes.totalFaces();
                 succeededFaces += debugMeshes.succeededFaces();
                 failedFaces += debugMeshes.failedFaces();
-
-
 
 
                 planarFaceCount += debugMeshes.planarFaceCount();
@@ -288,7 +274,12 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 toroidalFaceCount += debugMeshes.toroidalFaceCount();
                 bSplineFaceCount += debugMeshes.bSplineFaceCount();
 
+                sphericalUnsupported += debugMeshes.sphericalUnsupported();
+                planarBridgeFail += debugMeshes.planarBridgeFail();
+                triangulationFail += debugMeshes.triangulationFail();
+                cylindricalSelfIntersect += debugMeshes.cylindricalSelfIntersect();
 
+                unknownFail += debugMeshes.unknownFail();
 
 
 
@@ -331,6 +322,16 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 String reason = "Solid " + solidAssemblyResult.stepId() + ": " + ex.getMessage();
                 failureReasons.add(reason);
                 AppConsole.log(reason);
+
+
+
+
+
+
+
+
+
+
             }
         }
 
@@ -357,16 +358,18 @@ public class DefaultStepAssemblyMeshService implements StepAssemblyMeshService {
                 cylindricalFaceCount,
                 conicalFaceCount,
                 toroidalFaceCount,
-                bSplineFaceCount
+                bSplineFaceCount,
+                sphericalUnsupported,
+                planarBridgeFail,
+                triangulationFail,
+                cylindricalSelfIntersect,
+                unknownFail
         );
     }
 
     private int countTriangles(Mesh mesh) {
         return mesh == null ? 0 : mesh.triangleCount();
     }
-
-
-
 
 
 }

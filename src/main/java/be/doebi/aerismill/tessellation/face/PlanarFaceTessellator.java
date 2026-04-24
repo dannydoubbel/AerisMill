@@ -22,8 +22,7 @@ public class PlanarFaceTessellator implements FaceTessellator {
     private final PlaneProjector planeProjector;
     private final GeometryTolerance tolerance;
 
-    static int  timesPrintedA = 0;
-    static int  timesPrintedB = 0;
+
 
 
 

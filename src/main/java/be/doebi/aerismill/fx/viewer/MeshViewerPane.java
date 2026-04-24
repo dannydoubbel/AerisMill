@@ -676,9 +676,11 @@ public class MeshViewerPane extends StackPane {
                         "Toroidalf : " + debugMeshes.toroidalFaceCount()+ System.lineSeparator() +
                         "BSplinef : " + debugMeshes.bSplineFaceCount() + System.lineSeparator() +
 
-
-
-
+                        "sphericalUnsupported: " + debugMeshes.sphericalUnsupported() + System.lineSeparator() +
+                        "planarBridgeFail  : " + debugMeshes.planarBridgeFail() + System.lineSeparator() +
+                        "triangulationFail : " + debugMeshes.triangulationFail()+ System.lineSeparator() +
+                        "cylindricalSelfIntersect : " + debugMeshes.cylindricalSelfIntersect()+ System.lineSeparator() +
+                        "unknowFail : " + debugMeshes.unknownFail()+System.lineSeparator() +
 
                         "Import   : " + timing.importMillis() + " ms" + System.lineSeparator() +
                         "Assembly : " + timing.assemblyMillis() + " ms" + System.lineSeparator() +

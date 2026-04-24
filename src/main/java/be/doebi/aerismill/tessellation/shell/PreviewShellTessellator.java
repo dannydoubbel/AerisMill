@@ -177,6 +177,11 @@ public class PreviewShellTessellator implements ShellTessellator {
         int conicalFaceCount = 0;
         int toroidalFaceCount = 0;
         int bSplineFaceCount = 0;
+        int sphericalUnsupported = 0;
+        int planarBridgeFail = 0;
+        int triangulationFail = 0;
+        int cylindricalSelfIntersect = 0;
+        int unknownFail = 0;
 
 
         for (FaceGeom face : shell.faces()) {
@@ -223,11 +228,40 @@ public class PreviewShellTessellator implements ShellTessellator {
                         ? "null"
                         : face.surface().getClass().getSimpleName();
 
+                String message = ex.getMessage();
+
                 String reason = "Face " + face.stepId()
-                        + " [" + surfaceType + "]: " + ex.getMessage();
+                        + " [" + surfaceType + "]: " + message;
 
                 skippedReasons.add(reason);
                 AppConsole.log(reason);
+                boolean classified = false;
+
+                if ("SphericalSurface3".equals(surfaceType)) {
+                    sphericalUnsupported++;
+                    classified = true;
+                } else if (message != null && message.contains("Failed to bridge polygon hole into outer loop")) {
+                    planarBridgeFail++;
+                    classified = true;
+                } else if (message != null && (
+                        message.contains("Failed to triangulate polygon using ear clipping")
+                                || message.contains("Final ear-clipping remainder is degenerate")
+                )) {
+                    triangulationFail++;
+                    classified = true;
+                } else if ("CylindricalSurface3".equals(surfaceType)
+                        && message != null
+                        && message.contains("projected boundary must not self-intersect")) {
+                    cylindricalSelfIntersect++;
+                    classified = true;
+                }
+                if (!classified) {
+                    unknownFail++;
+
+                    if (unknownFail <= 5) { // limit spam
+                        AppConsole.log("UNKNOWN_FAIL | " + reason);
+                    }
+                }
             }
         }
 
@@ -266,7 +300,12 @@ public class PreviewShellTessellator implements ShellTessellator {
                 cylindricalFaceCount,
                 conicalFaceCount,
                 toroidalFaceCount,
-                bSplineFaceCount
+                bSplineFaceCount,
+                sphericalUnsupported,
+                planarBridgeFail,
+                triangulationFail,
+                cylindricalSelfIntersect,
+                unknownFail
         );
     }
     /*

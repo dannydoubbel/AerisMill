@@ -209,32 +209,44 @@ public class DefaultAssembledSolidMeshService implements AssembledSolidMeshServi
                 appendIfNotNull(base.cylindricalMesh(), addition.cylindricalMesh()),
                 appendIfNotNull(base.conicalMesh(), addition.conicalMesh()),
                 appendIfNotNull(base.toroidalMesh(), addition.toroidalMesh()),
-                appendIfNotNull(base.bSplineMesh(),addition.bSplineMesh()),
-                base.planarFaceCount(),
-                base.cylindricalFaceCount(),
-                base.conicalFaceCount(),
-                base.toroidalFaceCount(),
-                base.bSplineFaceCount(),
+                appendIfNotNull(base.bSplineMesh(), addition.bSplineMesh()),
+
                 base.totalFaces() + addition.totalFaces(),
                 base.succeededFaces() + addition.succeededFaces(),
-                base.failedFaces() + addition.failedFaces()
+                base.failedFaces() + addition.failedFaces(),
+
+                base.planarFaceCount() + addition.planarFaceCount(),
+                base.cylindricalFaceCount() + addition.cylindricalFaceCount(),
+                base.conicalFaceCount() + addition.conicalFaceCount(),
+                base.toroidalFaceCount() + addition.toroidalFaceCount(),
+                base.bSplineFaceCount() + addition.bSplineFaceCount(),
+
+                base.sphericalUnsupported() + addition.sphericalUnsupported(),
+                base.planarBridgeFail() + addition.planarBridgeFail(),
+                base.triangulationFail() + addition.triangulationFail(),
+                base.cylindricalSelfIntersect() + addition.cylindricalSelfIntersect(),
+                base.unknownFail() + addition.unknownFail()
         );
     }
     /*
      record DebugSurfaceFamilyMeshes(
-        Mesh planarMesh,
-        Mesh cylindricalMesh,
-        Mesh conicalMesh,
-        Mesh toroidalMesh,
-        Mesh bSplineMesh,
-        int totalFaces,
-        int succeededFaces,
-        int failedFaces,
-        int planarFaceCount,
-        int cylindricalFaceCount,
-        int conicalFaceCount,
-        int toroidalFaceCount,
-        int bSplineFaceCount
+        planarMesh,
+        cylindricalMesh,
+        conicalMesh,
+        toroidalMesh,
+        bSplineMesh,
+        totalFaces,
+        succeededFaces,
+        failedFaces,
+        planarFaceCount,
+        cylindricalFaceCount,
+        conicalFaceCount,
+        toroidalFaceCount,
+        bSplineFaceCount,
+        sphericalUnsupported,
+        planarBridgeFail,
+        triangulationFail,
+        cylindricalSelfIntersect
      */
 
     private Mesh appendIfNotNull(Mesh base, Mesh addition) {

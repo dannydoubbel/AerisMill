@@ -15,5 +15,11 @@ public record DebugSurfaceFamilyMeshes(
         int cylindricalFaceCount,
         int conicalFaceCount,
         int toroidalFaceCount,
-        int bSplineFaceCount
-) {}
+        int bSplineFaceCount,
+        int sphericalUnsupported,
+        int planarBridgeFail,
+        int triangulationFail,
+        int cylindricalSelfIntersect,
+        int unknownFail
+) {
+}
